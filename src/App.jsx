@@ -12,8 +12,28 @@ import Aboutus from "./pages/Aboutus";
 import Programs from "./pages/Programs";
 import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
+import Results from "./components/Results";
+import Testimonials from "./components/Testimonials";
+import Locations from "./components/Locations";
+import ParentDashboard from "./pages/ParentDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
+import Footer from "./components/Footer";
+
+// Theme-based colors
+const getThemeColors = (theme) => ({
+  background: theme === "dark" ? "#121212" : "#f9fafb",
+  backgroundSecondary: theme === "dark" ? "#1f2937" : "#f3f4f6",
+  text: theme === "dark" ? "#ffffff" : "#1f2937",
+  textMuted:
+    theme === "dark" ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)",
+  border: theme === "dark" ? "#374151" : "#e5e7eb",
+  primary: theme === "dark" ? "#3b82f6" : "#0070f3",
+  spinner: theme === "dark" ? "#ffffff" : "#0070f3",
+  spinnerBg:
+    theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+});
 
 // Animation wrapper for route transitions
 const AnimatedRoutes = () => {
@@ -26,6 +46,11 @@ const AnimatedRoutes = () => {
         <Route path="/programs" element={<Programs />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/testimonials" element={<Testimonials />} />
+        <Route path="/locations" element={<Locations />} />
+        <Route path="/parent_dashboard" element={<ParentDashboard />} />
+        <Route path="/admin_dashboard" element={<AdminDashboard />} />
       </Routes>
     </AnimatePresence>
   );
@@ -34,6 +59,7 @@ const AnimatedRoutes = () => {
 function App() {
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
+  const colors = getThemeColors(theme);
 
   useEffect(() => {
     // Simulate initial loading
@@ -48,7 +74,7 @@ function App() {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
-          background: theme === "dark" ? "#121212" : "#ffffff",
+          background: colors.background,
           transition: "background 0.3s ease",
         }}
       >
@@ -57,9 +83,10 @@ function App() {
             width: "50px",
             height: "50px",
             borderRadius: "50%",
-            border: "5px solid rgba(0, 0, 0, 0.1)",
-            borderTopColor: theme === "dark" ? "#ffffff" : "#0070f3",
+            border: `5px solid ${colors.spinnerBg}`,
+            borderTopColor: colors.spinner,
             animation: "spin 1s linear infinite",
+            transition: "border-color 0.3s ease",
           }}
         />
       </div>
@@ -72,8 +99,8 @@ function App() {
       <div
         className="min-h-screen flex flex-col"
         style={{
-          background: theme === "dark" ? "#121212" : "#f9fafb",
-          color: theme === "dark" ? "#ffffff" : "#1f2937",
+          background: colors.background,
+          color: colors.text,
           transition: "all 0.3s ease",
         }}
       >
@@ -88,16 +115,17 @@ function App() {
         >
           <AnimatedRoutes />
         </main>
+        <Footer />
         <footer
           style={{
             textAlign: "center",
             padding: "1.5rem",
-            background: theme === "dark" ? "#1f2937" : "#f3f4f6",
-            borderTop: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
+            background: colors.backgroundSecondary,
+            borderTop: `1px solid ${colors.border}`,
             transition: "all 0.3s ease",
           }}
         >
-          <p style={{ fontSize: "0.875rem", opacity: 0.8 }}>
+          <p style={{ fontSize: "0.875rem", opacity: 0.8, color: colors.text }}>
             © {new Date().getFullYear()} SharpR. All rights reserved.
           </p>
         </footer>

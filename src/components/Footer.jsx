@@ -1,467 +1,248 @@
-/* eslint-disable no-unused-vars */
 import React from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
-import {
-  FaTwitter,
-  FaFacebook,
-  FaInstagram,
-  FaLinkedin,
-  FaGithub,
-  FaMapMarkerAlt,
-  FaEnvelope,
-  FaPhone,
-} from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { FaLinkedin, FaTwitter, FaEnvelope } from "react-icons/fa";
+
+const themeColors = {
+  light: {
+    footerBg: "#f3f4f6",
+    footerText: "#1f2937",
+    border: "#e5e7eb",
+    ctaBg: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)",
+    ctaText: "#fff",
+    ctaBtnBg: "#fff",
+    ctaBtnText: "#6366f1",
+    ctaBtnShadow: "0 4px 16px rgba(99,102,241,0.12)",
+    social: "#6366f1",
+    link: "#6366f1",
+  },
+  dark: {
+    footerBg: "#1f2937",
+    footerText: "#e5e7eb",
+    border: "#374151",
+    ctaBg: "linear-gradient(90deg, #4b5563 0%, #6366f1 100%)",
+    ctaText: "#fff",
+    ctaBtnBg: "#fff",
+    ctaBtnText: "#4b5563",
+    ctaBtnShadow: "0 4px 16px rgba(99,102,241,0.18)",
+    social: "#8b5cf6",
+    link: "#8b5cf6",
+  },
+};
+
+const socials = [
+  {
+    href: "mailto:contact@yourdomain.com",
+    icon: <FaEnvelope />,
+    label: "Email",
+  },
+  {
+    href: "https://linkedin.com",
+    icon: <FaLinkedin />,
+    label: "LinkedIn",
+  },
+  {
+    href: "https://twitter.com",
+    icon: <FaTwitter />,
+    label: "Twitter",
+  },
+];
 
 const Footer = () => {
   const { theme } = useTheme();
-
-  const footerStyle = {
-    background: theme === "dark" ? "#111827" : "#1f2937",
-    color: "#ffffff",
-    position: "relative",
-    overflow: "hidden",
-  };
-
-  const overlayStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundImage:
-      'url(\'data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z" fill="%239C92AC" fill-opacity="0.04" fill-rule="evenodd"/%3E%3C/svg%3E\')',
-    opacity: 0.6,
-  };
-
-  const containerStyle = {
-    maxWidth: "1280px",
-    margin: "0 auto",
-    padding: "2.5rem 1.5rem 1.5rem",
-    position: "relative",
-    zIndex: 10,
-  };
-
-  const logoContainerStyle = {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: "1rem",
-  };
-
-  const logoBoxStyle = {
-    width: "2.5rem",
-    height: "2.5rem",
-    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-    borderRadius: "0.5rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: "0.75rem",
-  };
-
-  const logoInnerStyle = {
-    width: "1.25rem",
-    height: "1.25rem",
-    background: "#ffffff",
-    borderRadius: "0.25rem",
-  };
-
-  const headingStyle = {
-    fontSize: "1.125rem",
-    fontWeight: 600,
-    marginBottom: "1rem",
-    paddingBottom: "0.5rem",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-    position: "relative",
-  };
-
-  const headingAfterStyle = {
-    content: '""',
-    position: "absolute",
-    bottom: "-1px",
-    left: 0,
-    width: "3rem",
-    height: "2px",
-    background: "linear-gradient(to right, #6366f1, #8b5cf6)",
-  };
-
-  const linkStyle = {
-    color: "rgba(255, 255, 255, 0.7)",
-    transition: "all 0.2s ease",
-    display: "inline-block",
-    ":hover": {
-      color: "#ffffff",
-      transform: "translateX(5px)",
-    },
-  };
-
-  const socialIconStyle = {
-    background: "rgba(255, 255, 255, 0.1)",
-    width: "2.25rem",
-    height: "2.25rem",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "all 0.3s ease",
-  };
-
-  const contactItemStyle = {
-    display: "flex",
-    marginBottom: "0.75rem",
-  };
-
-  const contactIconStyle = {
-    color: "#8b5cf6",
-    marginRight: "0.75rem",
-    marginTop: "0.25rem",
-  };
+  const colors = themeColors[theme] || themeColors.light;
 
   return (
-    <footer style={footerStyle}>
-      <div style={overlayStyle}></div>
+    <footer
+      style={{
+        background: colors.footerBg,
+        color: colors.footerText,
+        borderTop: `1px solid ${colors.border}`,
+        marginTop: "3rem",
+        paddingTop: 0,
+        transition: "background 0.3s, color 0.3s",
+      }}
+    >
+      {/* CTA Section */}
+      <div
+        style={{
+          background: colors.ctaBg,
+          color: colors.ctaText,
+          padding: "2.5rem 1rem 2rem 1rem",
+          textAlign: "center",
+          borderRadius: "1.25rem",
+          maxWidth: 900,
+          margin: "0 auto",
+          marginTop: "-2.5rem",
+          boxShadow: "0 8px 32px rgba(99,102,241,0.10)",
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        <h2
+          style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem" }}
+        >
+          Ready to sharpen your future?
+        </h2>
+        <p
+          style={{ fontSize: "1.1rem", opacity: 0.95, marginBottom: "1.5rem" }}
+        >
+          Join our learning community and unlock your potential with Sharpr.
+        </p>
+        <Link
+          to="/signup"
+          style={{
+            display: "inline-block",
+            background: colors.ctaBtnBg,
+            color: colors.ctaBtnText,
+            fontWeight: 600,
+            fontSize: "1.1rem",
+            borderRadius: "0.75rem",
+            padding: "0.85rem 2.2rem",
+            boxShadow: colors.ctaBtnShadow,
+            textDecoration: "none",
+            transition: "all 0.2s",
+            border: "none",
+          }}
+        >
+          Get Started
+        </Link>
+      </div>
 
-      <div className="container mx-auto px-6 pt-10 pb-6" style={containerStyle}>
-        {/* Top section with columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Logo and Description */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+      {/* Footer Main */}
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: "2.5rem 1rem 1.5rem 1rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.5rem",
+        }}
+      >
+        {/* Logo and Links */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.7rem",
+          }}
+        >
+          <Link
+            to="/"
+            style={{
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
           >
-            <div style={logoContainerStyle}>
-              <motion.div
-                style={logoBoxStyle}
-                whileHover={{ rotate: 10, scale: 1.1 }}
-              >
-                <div style={logoInnerStyle}></div>
-              </motion.div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Sharpr</h2>
-            </div>
-
-            <p
+            <img
+              src="/src/assets/logo-01.jpg"
+              alt="Sharpr Logo"
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
-                marginBottom: "1.5rem",
-                lineHeight: 1.6,
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                objectFit: "cover",
+                background: "#000",
+              }}
+            />
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: "1.25rem",
+                color: colors.footerText,
               }}
             >
-              Empowering the next generation of tech professionals with
-              cutting-edge education and practical skills.
-            </p>
-
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              {[
-                { icon: <FaTwitter size={16} />, href: "https://twitter.com" },
-                {
-                  icon: <FaFacebook size={16} />,
-                  href: "https://facebook.com",
-                },
-                {
-                  icon: <FaInstagram size={16} />,
-                  href: "https://instagram.com",
-                },
-                {
-                  icon: <FaLinkedin size={16} />,
-                  href: "https://linkedin.com",
-                },
-                { icon: <FaGithub size={16} />, href: "https://github.com" },
-              ].map((social, index) => (
-                <motion.a
-                  key={index}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={socialIconStyle}
-                  whileHover={{
-                    y: -5,
-                    backgroundColor: "#8b5cf6",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.2)",
-                  }}
-                >
-                  {social.icon}
-                </motion.a>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+              Sharpr
+            </span>
+          </Link>
+          <div
+            style={{
+              fontSize: "0.98rem",
+              color: colors.footerText,
+              opacity: 0.8,
+            }}
           >
-            <h3 style={headingStyle}>
-              Quick Links
-              <span style={headingAfterStyle}></span>
-            </h3>
-
-            <ul
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.625rem",
-              }}
-            >
-              {[
-                { label: "Home", href: "/" },
-                { label: "About Us", href: "/aboutus" },
-                { label: "Programs", href: "/programs" },
-                { label: "Contact", href: "/contact" },
-                { label: "Blog", href: "/blog" },
-              ].map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <Link
-                    to={link.href}
-                    style={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      transition: "color 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                    onMouseEnter={(e) => (e.target.style.color = "#ffffff")}
-                    onMouseLeave={(e) =>
-                      (e.target.style.color = "rgba(255, 255, 255, 0.7)")
-                    }
-                  >
-                    <span style={{ fontSize: "0.75rem" }}>►</span>
-                    {link.label}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Programs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h3 style={headingStyle}>
-              Programs
-              <span style={headingAfterStyle}></span>
-            </h3>
-
-            <ul
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.625rem",
-              }}
-            >
-              {[
-                "Web Development",
-                "Data Science",
-                "Mobile App Development",
-                "UI/UX Design",
-                "Cloud Computing",
-              ].map((program, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <Link
-                    to="/programs"
-                    style={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      transition: "color 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                    onMouseEnter={(e) => (e.target.style.color = "#ffffff")}
-                    onMouseLeave={(e) =>
-                      (e.target.style.color = "rgba(255, 255, 255, 0.7)")
-                    }
-                  >
-                    <span style={{ fontSize: "0.75rem" }}>►</span>
-                    {program}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <h3 style={headingStyle}>
-              Contact Us
-              <span style={headingAfterStyle}></span>
-            </h3>
-
-            <div style={{ color: "rgba(255, 255, 255, 0.7)" }}>
-              <div style={contactItemStyle}>
-                <FaMapMarkerAlt style={contactIconStyle} />
-                <p>
-                  123 Tech Street
-                  <br />
-                  San Francisco, CA 94103
-                </p>
-              </div>
-
-              <div style={contactItemStyle}>
-                <FaEnvelope style={contactIconStyle} />
-                <a
-                  href="mailto:info@sharpr.edu"
-                  style={{
-                    transition: "color 0.2s ease",
-                    textDecoration: "underline",
-                    textDecorationColor: "transparent",
-                    textUnderlineOffset: "0.2em",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = "#ffffff";
-                    e.target.style.textDecorationColor = "#8b5cf6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = "rgba(255, 255, 255, 0.7)";
-                    e.target.style.textDecorationColor = "transparent";
-                  }}
-                >
-                  info@sharpr.edu
-                </a>
-              </div>
-
-              <div style={contactItemStyle}>
-                <FaPhone style={contactIconStyle} />
-                <a
-                  href="tel:+15551234567"
-                  style={{
-                    transition: "color 0.2s ease",
-                    textDecoration: "underline",
-                    textDecorationColor: "transparent",
-                    textUnderlineOffset: "0.2em",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = "#ffffff";
-                    e.target.style.textDecorationColor = "#8b5cf6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = "rgba(255, 255, 255, 0.7)";
-                    e.target.style.textDecorationColor = "transparent";
-                  }}
-                >
-                  +1 (555) 123-4567
-                </a>
-              </div>
-
-              {/* Newsletter Signup */}
-              <motion.div
-                style={{
-                  marginTop: "1.5rem",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  padding: "1.25rem",
-                  borderRadius: "0.5rem",
-                }}
-                whileHover={{
-                  boxShadow: "0 0 15px rgba(139, 92, 246, 0.15)",
-                }}
-              >
-                <h4
-                  style={{
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.75rem",
-                    color: "#ffffff",
-                  }}
-                >
-                  Subscribe to our newsletter
-                </h4>
-
-                <div
-                  style={{
-                    display: "flex",
-                    position: "relative",
-                  }}
-                >
-                  <input
-                    type="email"
-                    placeholder="Your email"
-                    style={{
-                      width: "100%",
-                      padding: "0.625rem 1rem",
-                      paddingRight: "3rem",
-                      borderRadius: "0.375rem",
-                      background: "rgba(255, 255, 255, 0.1)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "#ffffff",
-                      fontSize: "0.875rem",
-                      outline: "none",
-                      transition: "all 0.3s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#8b5cf6";
-                      e.target.style.boxShadow =
-                        "0 0 0 2px rgba(139, 92, 246, 0.25)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                      e.target.style.boxShadow = "none";
-                    }}
-                  />
-                  <motion.button
-                    style={{
-                      position: "absolute",
-                      right: "0.25rem",
-                      top: "0.25rem",
-                      bottom: "0.25rem",
-                      padding: "0 0.75rem",
-                      background: "#8b5cf6",
-                      color: "#ffffff",
-                      borderRadius: "0.25rem",
-                      border: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span style={{ fontSize: "0.75rem" }}>→</span>
-                  </motion.button>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
+            Sharper Minds. Stronger Futures.
+          </div>
         </div>
 
-        {/* Copyright */}
-        <motion.div
+        {/* Socials */}
+        <div style={{ display: "flex", gap: "1.2rem", margin: "0.5rem 0" }}>
+          {socials.map((s, i) => (
+            <a
+              key={i}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              style={{
+                color: colors.social,
+                fontSize: "1.45rem",
+                transition: "color 0.2s",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              {s.icon}
+            </a>
+          ))}
+        </div>
+
+        {/* Footer Links */}
+        <div
           style={{
-            marginTop: "3rem",
-            paddingTop: "1.5rem",
-            borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-            textAlign: "center",
-            color: "rgba(255, 255, 255, 0.6)",
-            fontSize: "0.875rem",
+            display: "flex",
+            gap: "1.5rem",
+            flexWrap: "wrap",
+            justifyContent: "center",
           }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
         >
-          <p>
-            © {new Date().getFullYear()} Sharpr Education. All rights reserved.
-          </p>
-        </motion.div>
+          <Link
+            to="/aboutus"
+            style={{
+              color: colors.link,
+              textDecoration: "none",
+              fontWeight: 500,
+            }}
+          >
+            About
+          </Link>
+          <Link
+            to="/programs"
+            style={{
+              color: colors.link,
+              textDecoration: "none",
+              fontWeight: 500,
+            }}
+          >
+            Programs
+          </Link>
+          <Link
+            to="/contact"
+            style={{
+              color: colors.link,
+              textDecoration: "none",
+              fontWeight: 500,
+            }}
+          >
+            Contact
+          </Link>
+          <Link
+            to="/privacy"
+            style={{
+              color: colors.link,
+              textDecoration: "none",
+              fontWeight: 500,
+            }}
+          >
+            Privacy Policy
+          </Link>
+        </div>
       </div>
     </footer>
   );

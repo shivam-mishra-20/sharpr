@@ -2,16 +2,564 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { FaArrowRight, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaPhoneAlt,
+  FaRegCalendarAlt,
+  FaBars,
+  FaTimes,
+  FaSun,
+  FaMoon,
+} from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
 
 const navItems = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/aboutus" },
   { label: "Programs", to: "/programs" },
+  { label: "Results", to: "/results" },
+  { label: "Testimonials", to: "/testimonials" },
+  { label: "Locations", to: "/locations" },
   { label: "Contact", to: "/contact" },
-  { label: "Sign Up", to: "/signup" },
+  { label: "SignUp", to: "/signup" },
 ];
+
+const navLinkUnderline = {
+  rest: { scaleX: 0, opacity: 0, transition: { duration: 0.2 } },
+  hover: { scaleX: 1, opacity: 1, transition: { duration: 0.3 } },
+  active: { scaleX: 1, opacity: 1, transition: { duration: 0.3 } },
+};
+
+function ThemeToggle({ theme, toggleTheme }) {
+  return (
+    <motion.button
+      onClick={toggleTheme}
+      whileHover={{ scale: 1.15, rotate: 15 }}
+      whileTap={{ scale: 0.95 }}
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: "50%",
+        border: "none",
+        background: theme === "dark" ? "#333" : "#f3f4f6",
+        color: theme === "dark" ? "#f9d71c" : "#5662e9", // Yellow sun in dark, blue moon in light
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 18,
+        cursor: "pointer",
+        boxShadow: "0 2px 8px 0 rgba(0,0,0,0.1)",
+        transition: "all 0.3s ease",
+      }}
+      aria-label="Toggle theme"
+    >
+      {theme === "dark" ? <FaSun /> : <FaMoon />}
+    </motion.button>
+  );
+}
+
+function DesktopNav({ theme, toggleTheme }) {
+  return (
+    <div
+      className="navbar-desktop"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        justifyContent: "space-between",
+        minHeight: 60, // Reduced from 72
+        background: theme === "dark" ? "#18181b" : "#fff",
+        color: theme === "dark" ? "#fff" : "#222",
+        transition: "background 0.3s, color 0.3s",
+        padding: "0 0.5rem", // Added horizontal padding
+      }}
+    >
+      {/* Logo and tagline */}
+      <Link
+        to="/"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: "0.6rem", // Reduced gap
+          textDecoration: "none",
+          flexShrink: 0,
+        }}
+      >
+        <motion.img
+          src="/src/assets/logo-01.jpg"
+          alt="Sharpr Logo"
+          whileHover={{ scale: 1.08, rotate: 5 }}
+          style={{
+            width: 40, // Reduced from 48
+            height: 40, // Reduced from 48
+            borderRadius: "50%",
+            objectFit: "cover",
+            background: "#000",
+            display: "block",
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            fontFamily: "Poppins",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "clamp(1.1rem, 1.3vw, 1.5rem)", // Slightly smaller
+              fontWeight: 700,
+              color: theme === "dark" ? "#fff" : "#222",
+              letterSpacing: "0.01em",
+              lineHeight: 1,
+            }}
+          >
+            Sharpr
+          </span>
+          <span
+            style={{
+              fontSize: "clamp(0.45rem, 0.6vw, 0.65rem)", // Slightly smaller
+              color: theme === "dark" ? "#bbb" : "#757575",
+              fontWeight: 300,
+              marginTop: 2,
+              letterSpacing: "0.01em",
+              lineHeight: 1.2,
+            }}
+          >
+            Sharper Minds. Stronger Futures.
+          </span>
+        </div>
+      </Link>
+
+      {/* Nav Links */}
+      <div
+        className="nav-links-container"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "clamp(0.5rem, 1vw, 1.5rem)", // Reduced gap
+          marginLeft: "0.5rem", // Reduced margin
+          marginRight: "0.5rem",
+          overflow: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          justifyContent: "center",
+          flex: 1,
+        }}
+      >
+        {navItems.map((item, idx) => (
+          <NavLink
+            key={idx}
+            to={item.to}
+            style={({ isActive }) => ({
+              position: "relative",
+              fontSize: "clamp(0.75rem, 0.85vw, 0.95rem)", // Smaller font size
+              fontWeight: 500,
+              color: isActive
+                ? theme === "dark"
+                  ? "#fff"
+                  : "#111"
+                : theme === "dark"
+                ? "#bbb"
+                : "#444",
+              textDecoration: "none",
+              padding: "0.4rem 0.25rem", // Reduced padding
+              transition: "color 0.2s",
+              outline: "none",
+              background: "none",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              whiteSpace: "nowrap",
+            })}
+          >
+            {({ isActive }) => (
+              <motion.span
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  cursor: "pointer",
+                  padding: "0 2px",
+                  color:
+                    theme === "dark"
+                      ? isActive
+                        ? "#fff"
+                        : "#bbb"
+                      : isActive
+                      ? "#000"
+                      : "#444",
+                }}
+                initial="rest"
+                whileHover="hover"
+                animate={isActive ? "active" : "rest"}
+              >
+                {item.label}
+                <motion.div
+                  variants={navLinkUnderline}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: -4,
+                    height: 3,
+                    borderRadius: 2,
+                    background:
+                      "linear-gradient(90deg, #e75480 0%, #6366f1 100%)",
+                    transformOrigin: "left",
+                  }}
+                />
+              </motion.span>
+            )}
+          </NavLink>
+        ))}
+      </div>
+
+      {/* Right Buttons */}
+      <div
+        className="nav-actions"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          flexShrink: 0,
+          marginLeft: "0.25rem",
+          marginRight: "0.5rem",
+        }}
+      >
+        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+        <motion.a
+          href="tel:+11234567890"
+          whileHover={{
+            scale: 1.03,
+            boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.3rem",
+            padding: "0.4rem 0.6rem",
+            borderRadius: "8px",
+            border: `1px solid ${theme === "dark" ? "#333" : "#ddd"}`,
+            background: theme === "dark" ? "#fff" : "#18181b",
+            color: theme === "dark" ? "#111" : "#fff",
+            fontWeight: 500,
+            fontSize: "0.75rem",
+            textDecoration: "none",
+            transition: "all 0.2s",
+            cursor: "pointer",
+            minWidth: "fit-content",
+            justifyContent: "center",
+          }}
+        >
+          <FaPhoneAlt style={{ color: "#e75480", fontSize: "0.7rem" }} />
+          <span>Call Now</span>
+        </motion.a>
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+        >
+          <Link
+            to="/book-demo"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.3rem",
+              padding: "0.4rem 0.6rem",
+              borderRadius: "8px",
+              background: theme === "dark" ? "#e75480" : "#000",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              textDecoration: "none",
+              border: "none",
+              cursor: "pointer",
+              minWidth: "fit-content",
+              justifyContent: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <FaRegCalendarAlt style={{ color: "#fff", fontSize: "0.7rem" }} />
+            <span>Book Free Demo</span>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function MobileNav({
+  theme,
+  toggleTheme,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  location,
+}) {
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location, setMobileMenuOpen]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleClickOutside = (e) => {
+      if (e.target.closest(".mobile-menu-container")) return;
+      setMobileMenuOpen(false);
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [mobileMenuOpen, setMobileMenuOpen]);
+
+  return (
+    <div
+      className="navbar-mobile"
+      style={{
+        width: "100vw", // Changed from 100% to 100vw
+        background: theme === "dark" ? "#18181b" : "#fff",
+        color: theme === "dark" ? "#fff" : "#222",
+        transition: "background 0.3s, color 0.3s",
+        padding: "0.2rem 0",
+        position: "relative", // Ensure stacking context
+        left: 0, // Ensure alignment
+        overflowX: "hidden", // Prevent horizontal scroll
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          minHeight: 50,
+          padding: "0.2rem 0",
+        }}
+      >
+        {/* Logo */}
+        <Link
+          to="/"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: "0.5rem", // Reduced gap
+            textDecoration: "none",
+          }}
+        >
+          <img
+            src="/src/assets/logo-01.jpg"
+            alt="Sharpr Logo"
+            style={{
+              width: 45, // Reduced size
+              height: 45, // Reduced size
+              borderRadius: "60%",
+              objectFit: "cover",
+              background: "#000",
+              display: "block",
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              fontFamily: "Poppins",
+              fontStyle: "bold",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "1.1rem", // Smaller
+                fontWeight: 700,
+                color: theme === "dark" ? "#fff" : "#222",
+                letterSpacing: "0.01em",
+                lineHeight: 1,
+              }}
+            >
+              Sharpr
+            </span>
+            <span
+              style={{
+                fontSize: "0.55rem", // Smaller
+                color: theme === "dark" ? "#bbb" : "#757575",
+                fontWeight: 300,
+                marginTop: 2,
+              }}
+            >
+              Sharper Minds. Stronger Futures.
+            </span>
+          </div>
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobileMenuOpen((v) => !v);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            style={{
+              background: theme === "dark" ? "#333" : "#f3f4f6",
+              border: "none",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              fontSize: 18,
+              color: theme === "dark" ? "#fff" : "#222",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+            }}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
+          </motion.button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            className="mobile-menu-container"
+            key="mobile-menu"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{
+              background: theme === "dark" ? "#23232b" : "#fff",
+              color: theme === "dark" ? "#fff" : "#222",
+              borderRadius: "0 0 16px 16px",
+              marginTop: 4,
+              boxShadow: "0 4px 24px 0 rgba(0,0,0,0.12)",
+              padding: "0.75rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+              overflow: "hidden",
+              position: "fixed", // Changed from absolute to fixed
+              left: 0,
+              top: 50, // Just below the navbar
+              width: "100vw", // Full viewport width
+              zIndex: 1000,
+              maxWidth: "100vw", // Prevent overflow
+            }}
+          >
+            <div
+              style={{
+                maxHeight: "60vh",
+                overflowY: "auto",
+                padding: "0.5rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              {navItems.map((item, idx) => (
+                <NavLink
+                  key={idx}
+                  to={item.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={({ isActive }) => ({
+                    display: "block",
+                    fontSize: "1rem",
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive
+                      ? theme === "dark"
+                        ? "#fff"
+                        : "#111"
+                      : theme === "dark"
+                      ? "#bbb"
+                      : "#444",
+                    borderLeft: isActive
+                      ? "3px solid #e75480"
+                      : "3px solid transparent",
+                    padding: "0.7rem 1rem",
+                    borderRadius: 8,
+                    background: isActive
+                      ? theme === "dark"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.03)"
+                      : "transparent",
+                    transition: "all 0.2s",
+                    textDecoration: "none",
+                    position: "relative",
+                  })}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+            {/* Mobile menu buttons */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.75rem",
+                justifyContent: "center",
+                padding: "1rem 0.5rem 0.5rem 0.5rem",
+                borderTop: `1px solid ${theme === "dark" ? "#333" : "#eee"}`,
+                marginTop: "0.5rem",
+              }}
+            >
+              <Link
+                to="/book-demo"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "10px",
+                  background: theme === "dark" ? "#e75480" : "#000",
+                  color: "#fff",
+                  fontWeight: 600,
+                  boxShadow:
+                    theme === "dark"
+                      ? "0 3px 10px rgba(231,84,128,0.2)"
+                      : "0 3px 10px rgba(0,0,0,0.1)",
+                  width: "100%",
+                  maxWidth: "250px",
+                  textDecoration: "none",
+                  fontSize: "0.9rem",
+                }}
+              >
+                <FaRegCalendarAlt style={{ color: "#fff" }} />
+                Book Free Demo
+              </Link>
+              <a
+                href="tel:+11234567890"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "10px",
+                  border: `2px solid ${theme === "dark" ? "#333" : "#ddd"}`,
+                  background: theme === "dark" ? "#fff" : "#18181b",
+                  color: theme === "dark" ? "#111" : "#333",
+                  fontWeight: 600,
+                  width: "100%",
+                  maxWidth: "250px",
+                  fontSize: "0.9rem",
+                  textDecoration: "none",
+                }}
+              >
+                <FaPhoneAlt style={{ color: "#e75480" }} />
+                Call Now
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -27,336 +575,66 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
+  const [isMobileState, setIsMobileState] = useState(
+    typeof window !== "undefined" && window.innerWidth < 1080
+  );
+
   useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location]);
+    const handleResize = () => {
+      setIsMobileState(window.innerWidth < 1080);
+    };
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Check on mount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const navbarStyle = {
-    position: "sticky",
+    position: "fixed",
+    left: 0,
     top: 0,
-    width: "100%",
+    width: "100vw", // Changed from calc(100% + 12px) to 100vw
     zIndex: 1000,
-    padding: scrolled ? "0.75rem 1.5rem" : "1rem 1.5rem",
-    background:
-      theme === "dark"
-        ? scrolled
-          ? "rgba(17, 24, 39, 0.95)"
-          : "linear-gradient(to right, #0f0c29, #302b63, #24243e)"
-        : scrolled
-        ? "rgba(255, 255, 255, 0.95)"
-        : "linear-gradient(to right, #8e2de2, #4a00e0)",
-    backdropFilter: scrolled ? "blur(8px)" : "none",
-    boxShadow: scrolled ? "0 4px 20px rgba(0, 0, 0, 0.1)" : "none",
-    color: theme === "dark" ? "#ffffff" : "#ffffff",
+
+    background: theme === "dark" ? "#18181b" : "#fff",
+    color: theme === "dark" ? "#fff" : "#222",
+    borderBottom: theme === "dark" ? "1px solid #333" : "1px solid #eaeaea",
+    boxShadow: scrolled
+      ? "0 4px 12px rgba(0,0,0,0.06)"
+      : "0 1px 6px rgba(0,0,0,0.02)",
     transition: "all 0.3s ease",
+    overflowX: "hidden", // Prevent horizontal scroll
   };
 
-  const logoContainerStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-  };
-
-  const logoStyle = {
-    width: "2.25rem",
-    height: "2.25rem",
-    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-    borderRadius: "12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-  };
-
-  const logoInnerStyle = {
-    width: "1.25rem",
-    height: "1.25rem",
-    background: "#ffffff",
-    borderRadius: "4px",
-    transform: "rotate(45deg)",
-  };
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
-    <motion.nav
-      style={navbarStyle}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-    >
+    <nav style={navbarStyle}>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          maxWidth: 1400,
+          margin: "0 auto",
+          width: "100%",
+          position: "relative",
+          paddingRight: "1rem",
+          overflowX: "hidden", // Prevent horizontal scroll
         }}
       >
-        {/* Logo */}
-        <Link to="/" style={logoContainerStyle}>
-          <motion.div
-            style={logoStyle}
-            whileHover={{
-              rotate: 20,
-              scale: 1.1,
-              boxShadow: "0 15px 25px -5px rgba(0, 0, 0, 0.2)",
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <motion.div style={logoInnerStyle} />
-          </motion.div>
-          <span
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              background: "linear-gradient(to right, #ffffff, #e0e0e0)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Sharpr
-          </span>
-        </Link>
-
-        {/* Nav Links - Desktop */}
-        <div
-          style={{
-            display: "none",
-            alignItems: "center",
-            gap: "2.5rem",
-            "@media (min-width: 768px)": { display: "flex" },
-          }}
-          className="hidden md:flex"
-        >
-          {navItems.map((item, index) => (
-            <NavLink
-              key={index}
-              to={item.to}
-              style={({ isActive }) => ({
-                position: "relative",
-                fontSize: "0.95rem",
-                fontWeight: 500,
-                color: isActive
-                  ? theme === "dark"
-                    ? "#a78bfa"
-                    : "#ffffff"
-                  : theme === "dark"
-                  ? "#e5e7eb"
-                  : "#f3f4f6",
-                transition: "all 0.3s ease",
-              })}
-            >
-              {({ isActive }) => (
-                <motion.span
-                  whileHover={{
-                    color: theme === "dark" ? "#a78bfa" : "#ffffff",
-                    scale: 1.05,
-                  }}
-                  style={{ display: "inline-block" }}
-                >
-                  {item.label}
-                  {isActive && (
-                    <motion.div
-                      layoutId="navIndicator"
-                      style={{
-                        position: "absolute",
-                        bottom: "-6px",
-                        left: 0,
-                        right: 0,
-                        height: "3px",
-                        background:
-                          "linear-gradient(to right, #8b5cf6, #6366f1)",
-                        borderRadius: "3px",
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 25,
-                      }}
-                    />
-                  )}
-                </motion.span>
-              )}
-            </NavLink>
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1.5rem",
-          }}
-        >
-          {/* Theme Toggle */}
-          <motion.button
-            onClick={toggleTheme}
-            style={{
-              width: "2.5rem",
-              height: "2.5rem",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background:
-                theme === "dark"
-                  ? "rgba(255, 255, 255, 0.1)"
-                  : "rgba(0, 0, 0, 0.1)",
-              border: "none",
-              cursor: "pointer",
-              color: theme === "dark" ? "#ffffff" : "#000000",
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <span style={{ fontSize: "1.1rem" }}>
-              {theme === "dark" ? "☀️" : "🌙"}
-            </span>
-          </motion.button>
-
-          {/* Enroll Button */}
-          <motion.div
-            className="hidden md:block"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              display: "none",
-              "@media (min-width: 768px)": { display: "block" },
-            }}
-          >
-            <Link
-              to="/enroll"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.65rem 1.5rem",
-                borderRadius: "9999px",
-                background: "linear-gradient(to right, #4f46e5, #7c3aed)",
-                color: "#ffffff",
-                fontWeight: 600,
-                boxShadow:
-                  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                transition: "all 0.3s ease",
-                backgroundSize: "200% auto",
-                backgroundPosition: "left center",
-                ":hover": {
-                  backgroundPosition: "right center",
-                },
-              }}
-            >
-              <div
-                style={{
-                  width: "1.5rem",
-                  height: "1.5rem",
-                  borderRadius: "50%",
-                  background: "rgba(255, 255, 255, 0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <FaArrowRight size={10} />
-              </div>
-              Enroll now
-            </Link>
-          </motion.div>
-
-          {/* Mobile Menu Button */}
-          <motion.button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="block md:hidden"
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1.5rem",
-              color: theme === "dark" ? "#ffffff" : "#ffffff",
-              display: "block",
-              "@media (min-width: 768px)": { display: "none" },
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              overflow: "hidden",
-              marginTop: "1rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                padding: "1.5rem 0",
-              }}
-            >
-              {navItems.map((item, index) => (
-                <NavLink
-                  key={index}
-                  to={item.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={({ isActive }) => ({
-                    display: "block",
-                    padding: "0.5rem 0",
-                    fontSize: "1.1rem",
-                    fontWeight: isActive ? 700 : 500,
-                    color: isActive
-                      ? theme === "dark"
-                        ? "#a78bfa"
-                        : "#ffffff"
-                      : theme === "dark"
-                      ? "#e5e7eb"
-                      : "rgba(255, 255, 255, 0.8)",
-                    borderLeft: isActive
-                      ? "3px solid #a78bfa"
-                      : "3px solid transparent",
-                    paddingLeft: "0.75rem",
-                  })}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-
-              <Link
-                to="/enroll"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  marginTop: "0.5rem",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  background: "linear-gradient(to right, #4f46e5, #7c3aed)",
-                  color: "#ffffff",
-                  fontWeight: 600,
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  width: "fit-content",
-                }}
-              >
-                Enroll now <FaArrowRight />
-              </Link>
-            </div>
-          </motion.div>
+        {isMobileState ? (
+          <MobileNav
+            theme={theme}
+            toggleTheme={toggleTheme}
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+            location={location}
+          />
+        ) : (
+          <DesktopNav theme={theme} toggleTheme={toggleTheme} />
         )}
-      </AnimatePresence>
-    </motion.nav>
+      </div>
+    </nav>
   );
 };
 
