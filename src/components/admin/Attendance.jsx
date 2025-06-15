@@ -9,7 +9,22 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { FaEdit, FaTrash, FaPlus, FaSync } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "../../context/ThemeContext";
+import {
+  FaEdit,
+  FaTrash,
+  FaPlus,
+  FaSync,
+  FaSearch,
+  FaFilter,
+  FaTimes,
+  FaCalendarAlt,
+  FaUserGraduate,
+  FaSchool,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
 
 const classOptions = [
   "Class 1",
@@ -140,74 +155,249 @@ const AttendanceDashboard = () => {
     .filter((a) => (filterStatus ? a.status === filterStatus : true))
     .sort((a, b) => (b.date > a.date ? 1 : -1));
 
+  const { theme } = useTheme();
+
+  // Theme-based colors
+  const colors = {
+    background: theme === "dark" ? "#0f172a" : "#f8fafc",
+    card: theme === "dark" ? "#1e293b" : "#ffffff",
+    cardBorder: theme === "dark" ? "#334155" : "#e2e8f0",
+    text: theme === "dark" ? "#f1f5f9" : "#1e293b",
+    textSecondary: theme === "dark" ? "#94a3b8" : "#64748b",
+    accent: theme === "dark" ? "#3b82f6" : "#4f46e5",
+    accentLight:
+      theme === "dark" ? "rgba(59, 130, 246, 0.1)" : "rgba(79, 70, 229, 0.1)",
+    warning: theme === "dark" ? "#f59e0b" : "#f59e0b",
+    danger: theme === "dark" ? "#ef4444" : "#ef4444",
+    success: theme === "dark" ? "#10b981" : "#10b981",
+    border: theme === "dark" ? "#334155" : "#e2e8f0",
+    inputBg: theme === "dark" ? "#1e293b" : "#ffffff",
+    inputBorder: theme === "dark" ? "#475569" : "#e2e8f0",
+    inputText: theme === "dark" ? "#f1f5f9" : "#1e293b",
+    tableHeader: theme === "dark" ? "#1e293b" : "#f8fafc",
+    tableRow: theme === "dark" ? "#0f172a" : "#ffffff",
+    tableRowAlt: theme === "dark" ? "#1e293b" : "#f8fafc",
+    tableBorder: theme === "dark" ? "#334155" : "#f1f5f9",
+    shadow:
+      theme === "dark"
+        ? "0 4px 12px rgba(0, 0, 0, 0.25)"
+        : "0 4px 12px rgba(0, 0, 0, 0.05)",
+    buttonShadow:
+      theme === "dark"
+        ? "0 4px 12px rgba(59, 130, 246, 0.25)"
+        : "0 4px 12px rgba(79, 70, 229, 0.25)",
+    status: {
+      present: theme === "dark" ? "#10b981" : "#10b981",
+      absent: theme === "dark" ? "#ef4444" : "#ef4444",
+    },
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.4 } },
+  };
+
+  const buttonVariants = {
+    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    tap: { scale: 0.98, transition: { duration: 0.2 } },
+  };
+
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-        Attendance Management
-      </h1>
-      <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: 24,
+        color: colors.text,
+      }}
+    >
+      <motion.h1
+        variants={itemVariants}
         style={{
-          marginBottom: 16,
+          fontSize: 28,
+          fontWeight: 700,
+          marginBottom: 8,
+          color: colors.text,
           display: "flex",
+          alignItems: "center",
           gap: 12,
-          flexWrap: "wrap",
         }}
       >
-        <button
+        <FaUserGraduate style={{ color: colors.accent }} />
+        Attendance Management
+      </motion.h1>
+
+      <motion.p
+        variants={itemVariants}
+        style={{
+          fontSize: 16,
+          color: colors.textSecondary,
+          marginBottom: 24,
+          maxWidth: 800,
+        }}
+      >
+        Record and monitor student attendance across all classes.
+      </motion.p>
+
+      {/* Search & Filter Bar */}
+      <motion.div
+        variants={itemVariants}
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          gap: 16,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
           onClick={handleAdd}
           style={{
-            background: "#4f46e5",
+            background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
             color: "#fff",
             border: "none",
-            borderRadius: 8,
-            padding: "8px 18px",
+            borderRadius: 10,
+            padding: "12px 20px",
             fontWeight: 600,
             fontSize: 15,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 10,
+            boxShadow: colors.buttonShadow,
           }}
         >
-          <FaPlus /> Add Attendance
-        </button>
-        <button
+          <FaPlus size={14} /> Add Attendance
+        </motion.button>
+
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
           onClick={fetchData}
           style={{
-            background: "#fff",
-            color: "#4f46e5",
-            border: "1px solid #4f46e5",
-            borderRadius: 8,
-            padding: "8px 18px",
+            background: colors.card,
+            color: colors.accent,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 10,
+            padding: "12px 20px",
             fontWeight: 600,
             fontSize: 15,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 10,
           }}
         >
-          <FaSync /> Refresh
-        </button>
-        <input
-          type="text"
-          placeholder="Search by student name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          <FaSync size={14} /> Refresh
+        </motion.button>
+
+        <div
           style={{
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "1px solid #ddd",
-            minWidth: 180,
+            flex: 1,
+            minWidth: 220,
+            maxWidth: 300,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: colors.card,
+            borderRadius: 10,
+            padding: "4px 16px",
+            border: `1px solid ${colors.border}`,
           }}
-        />
+        >
+          <FaSearch style={{ color: colors.textSecondary }} />
+          <input
+            type="text"
+            placeholder="Search by student name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "10px 0",
+              border: "none",
+              width: "100%",
+              fontSize: 15,
+              backgroundColor: "transparent",
+              color: colors.text,
+              outline: "none",
+            }}
+          />
+          {search && (
+            <motion.button
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setSearch("")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: colors.textSecondary,
+                cursor: "pointer",
+                padding: 4,
+              }}
+            >
+              <FaTimes size={14} />
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Filter Set */}
+      <motion.div
+        variants={itemVariants}
+        style={{
+          display: "flex",
+          gap: 16,
+          marginBottom: 24,
+          flexWrap: "wrap",
+          alignItems: "center",
+          background: colors.tableHeader,
+          padding: "12px 16px",
+          borderRadius: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <FaFilter size={14} style={{ color: colors.textSecondary }} />
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: colors.textSecondary,
+            }}
+          >
+            Filter:
+          </span>
+        </div>
+
         <select
           value={filterClass}
           onChange={(e) => setFilterClass(e.target.value)}
           style={{
-            padding: "8px 12px",
+            padding: 10,
             borderRadius: 8,
-            border: "1px solid #ddd",
+            border: `1px solid ${colors.border}`,
+            background: colors.card,
+            color: colors.text,
+            fontSize: 14,
+            minWidth: 140,
           }}
         >
           <option value="">All Classes</option>
@@ -217,23 +407,32 @@ const AttendanceDashboard = () => {
             </option>
           ))}
         </select>
+
         <input
           type="date"
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
           style={{
-            padding: "8px 12px",
+            padding: 10,
             borderRadius: 8,
-            border: "1px solid #ddd",
+            border: `1px solid ${colors.border}`,
+            background: colors.card,
+            color: colors.text,
+            fontSize: 14,
           }}
         />
+
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           style={{
-            padding: "8px 12px",
+            padding: 10,
             borderRadius: 8,
-            border: "1px solid #ddd",
+            border: `1px solid ${colors.border}`,
+            background: colors.card,
+            color: colors.text,
+            fontSize: 14,
+            minWidth: 140,
           }}
         >
           <option value="">All Status</option>
@@ -243,324 +442,678 @@ const AttendanceDashboard = () => {
             </option>
           ))}
         </select>
-      </div>
-      {/* Attendance Table */}
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          overflow: "auto",
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#f3f4f6" }}>
-            <tr>
-              <th
-                style={{
-                  padding: "12px 16px",
-                  textAlign: "left",
-                }}
-              >
-                Date
-              </th>
-              <th
-                style={{
-                  padding: "12px 16px",
-                  textAlign: "left",
-                }}
-              >
-                Class
-              </th>
-              <th
-                style={{
-                  padding: "12px 16px",
-                  textAlign: "left",
-                }}
-              >
-                Student
-              </th>
-              <th
-                style={{
-                  padding: "12px 16px",
-                  textAlign: "left",
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  padding: "12px 16px",
-                  textAlign: "left",
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: "center", padding: 24 }}>
-                  Loading...
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: "center", padding: 24 }}>
-                  No records found.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((rec) => (
-                <tr key={rec.id}>
-                  <td style={{ padding: "10px 16px" }}>{rec.date}</td>
-                  <td style={{ padding: "10px 16px" }}>{rec.class}</td>
-                  <td style={{ padding: "10px 16px" }}>
-                    {getStudentName(rec.studentId)}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 16px",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {rec.status}
-                  </td>
-                  <td style={{ padding: "10px 16px" }}>
-                    <button
-                      onClick={() => handleEdit(rec)}
-                      style={{
-                        background: "#fbbf24",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 6,
-                        padding: "6px 12px",
-                        marginRight: 8,
-                        cursor: "pointer",
-                        fontWeight: 600,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <FaEdit /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(rec.id)}
-                      style={{
-                        background: "#ef4444",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 6,
-                        padding: "6px 12px",
-                        cursor: "pointer",
-                        fontWeight: 600,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <FaTrash /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* Add/Edit Modal */}
-      {showForm && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.2)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <form
-            onSubmit={handleFormSubmit}
+
+        {(filterClass || filterDate || filterStatus || search) && (
+          <motion.button
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            onClick={() => {
+              setFilterClass("");
+              setFilterDate("");
+              setFilterStatus("");
+              setSearch("");
+            }}
             style={{
-              background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 340,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+              background: colors.card,
+              color: colors.textSecondary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 8,
+              padding: "10px 16px",
+              fontWeight: 500,
+              fontSize: 14,
+              cursor: "pointer",
               display: "flex",
-              flexDirection: "column",
-              gap: 18,
-              maxWidth: 420,
-              width: "100%",
-              position: "relative",
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            <h2
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                margin: 0,
-              }}
-            >
-              {editId ? "Edit Attendance" : "Add Attendance"}
-            </h2>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <label>Date *</label>
-              <input
-                required
-                type="date"
-                value={form.date}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
-                style={{
-                  padding: 10,
-                  borderRadius: 6,
-                  border: "1px solid #ddd",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <label>Class *</label>
-              <select
-                required
-                value={form.class}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, class: e.target.value }))
-                }
-                style={{
-                  padding: 10,
-                  borderRadius: 6,
-                  border: "1px solid #ddd",
-                }}
-              >
-                <option value="">Select Class</option>
-                {classOptions.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <label>Student *</label>
-              <select
-                required
-                value={form.studentId}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, studentId: e.target.value }))
-                }
-                style={{
-                  padding: 10,
-                  borderRadius: 6,
-                  border: "1px solid #ddd",
-                }}
-              >
-                <option value="">Select Student</option>
-                {students
-                  .filter((s) => !form.class || s.class === form.class)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {(s.firstName || "") + " " + (s.lastName || "")}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <label>Status *</label>
-              <select
-                required
-                value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value }))
-                }
-                style={{
-                  padding: 10,
-                  borderRadius: 6,
-                  border: "1px solid #ddd",
-                }}
-              >
-                {statusOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                marginTop: 8,
-              }}
-            >
-              <button
-                type="submit"
-                style={{
-                  background: "#4f46e5",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                }}
-              >
-                {editId ? "Update" : "Add"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: 8,
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+            <FaTimes size={12} /> Clear Filters
+          </motion.button>
+        )}
+      </motion.div>
+
+      {/* Attendance Table */}
+      <motion.div
+        variants={itemVariants}
+        style={{
+          background: colors.card,
+          borderRadius: 16,
+          boxShadow: colors.shadow,
+          overflow: "hidden",
+          border: `1px solid ${colors.cardBorder}`,
+          transition: "all 0.3s ease",
+        }}
+      >
+        <div style={{ overflowX: "auto", width: "100%" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead style={{ background: colors.tableHeader }}>
+              <tr>
+                <th
+                  style={{
+                    padding: 16,
+                    textAlign: "left",
+                    color: colors.text,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <FaCalendarAlt size={14} style={{ color: colors.accent }} />
+                    Date
+                  </div>
+                </th>
+                <th
+                  style={{
+                    padding: 16,
+                    textAlign: "left",
+                    color: colors.text,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <FaSchool size={14} style={{ color: colors.accent }} />
+                    Class
+                  </div>
+                </th>
+                <th
+                  style={{
+                    padding: 16,
+                    textAlign: "left",
+                    color: colors.text,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <FaUserGraduate
+                      size={14}
+                      style={{ color: colors.accent }}
+                    />
+                    Student
+                  </div>
+                </th>
+                <th
+                  style={{
+                    padding: 16,
+                    textAlign: "left",
+                    color: colors.text,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  Status
+                </th>
+                <th
+                  style={{
+                    padding: 16,
+                    textAlign: "center",
+                    color: colors.text,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", padding: 32 }}>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1,
+                        ease: "linear",
+                      }}
+                      style={{ display: "inline-block", marginRight: 10 }}
+                    >
+                      <FaUserGraduate size={16} color={colors.accent} />
+                    </motion.div>
+                    Loading attendance records...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    style={{
+                      textAlign: "center",
+                      padding: 32,
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    No attendance records found matching your filters.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((rec, index) => (
+                  <motion.tr
+                    key={rec.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    style={{
+                      borderBottom: `1px solid ${colors.tableBorder}`,
+                      background:
+                        index % 2 === 0 ? colors.tableRow : colors.tableRowAlt,
+                    }}
+                    whileHover={{
+                      backgroundColor:
+                        theme === "dark"
+                          ? "rgba(59, 130, 246, 0.1)"
+                          : "rgba(79, 70, 229, 0.05)",
+                    }}
+                  >
+                    <td style={{ padding: 14, color: colors.text }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontWeight: 500,
+                        }}
+                      >
+                        <FaCalendarAlt
+                          size={14}
+                          style={{ color: colors.accent }}
+                        />
+                        {rec.date}
+                      </div>
+                    </td>
+                    <td style={{ padding: 14 }}>
+                      <span
+                        style={{
+                          background: colors.accentLight,
+                          color: colors.accent,
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          fontSize: 13,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {rec.class}
+                      </span>
+                    </td>
+                    <td
+                      style={{
+                        padding: 14,
+                        fontWeight: 500,
+                        color: colors.text,
+                      }}
+                    >
+                      {getStudentName(rec.studentId)}
+                    </td>
+                    <td style={{ padding: 14 }}>
+                      {rec.status === "present" ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: `${colors.status.present}15`,
+                            color: colors.status.present,
+                            padding: "4px 10px",
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            fontSize: 13,
+                            width: "fit-content",
+                          }}
+                        >
+                          <FaCheckCircle size={14} />
+                          Present
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: `${colors.status.absent}15`,
+                            color: colors.status.absent,
+                            padding: "4px 10px",
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            fontSize: 13,
+                            width: "fit-content",
+                          }}
+                        >
+                          <FaTimesCircle size={14} />
+                          Absent
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: 14, textAlign: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleEdit(rec)}
+                          style={{
+                            background: colors.warning,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            fontSize: 14,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <FaEdit size={14} /> Edit
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDelete(rec.id)}
+                          style={{
+                            background: colors.danger,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            fontSize: 14,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <FaTrash size={14} /> Delete
+                        </motion.button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
-    </div>
+      </motion.div>
+
+      {/* Add/Edit Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(2px)",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              style={{
+                width: "100%",
+                maxWidth: 500,
+                maxHeight: "90vh",
+                overflow: "auto",
+                padding: 0,
+                borderRadius: 16,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                background: colors.card,
+              }}
+            >
+              <form
+                onSubmit={handleFormSubmit}
+                style={{
+                  padding: 32,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 20,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 700,
+                      margin: 0,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <FaUserGraduate style={{ color: colors.accent }} />
+                    {editId ? "Edit Attendance" : "Add Attendance"}
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    style={{
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      color: colors.text,
+                      fontSize: 20,
+                    }}
+                    aria-label="Close"
+                  >
+                    ×
+                  </motion.button>
+                </div>
+
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 15,
+                    }}
+                  >
+                    <FaCalendarAlt size={14} style={{ color: colors.accent }} />
+                    Date *
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={form.date}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, date: e.target.value }))
+                    }
+                    style={{
+                      padding: 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg,
+                      color: colors.text,
+                      fontSize: 15,
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 15,
+                    }}
+                  >
+                    <FaSchool size={14} style={{ color: colors.accent }} />
+                    Class *
+                  </label>
+                  <select
+                    required
+                    value={form.class}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, class: e.target.value }))
+                    }
+                    style={{
+                      padding: 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg,
+                      color: colors.text,
+                      fontSize: 15,
+                    }}
+                  >
+                    <option value="">Select Class</option>
+                    {classOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 15,
+                    }}
+                  >
+                    <FaUserGraduate
+                      size={14}
+                      style={{ color: colors.accent }}
+                    />
+                    Student *
+                  </label>
+                  <select
+                    required
+                    value={form.studentId}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, studentId: e.target.value }))
+                    }
+                    style={{
+                      padding: 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg,
+                      color: colors.text,
+                      fontSize: 15,
+                    }}
+                  >
+                    <option value="">Select Student</option>
+                    {students
+                      .filter((s) => !form.class || s.class === form.class)
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {(s.firstName || "") + " " + (s.lastName || "")}
+                        </option>
+                      ))}
+                  </select>
+                  {form.class &&
+                    students.filter((s) => s.class === form.class).length ===
+                      0 && (
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                          marginTop: 4,
+                          padding: "8px 12px",
+                          background:
+                            theme === "dark"
+                              ? "rgba(59, 130, 246, 0.1)"
+                              : "rgba(79, 70, 229, 0.1)",
+                          borderRadius: 6,
+                        }}
+                      >
+                        No students found in this class
+                      </div>
+                    )}
+                </div>
+
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: 15,
+                    }}
+                  >
+                    Status *
+                  </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      marginTop: 4,
+                    }}
+                  >
+                    {statusOptions.map((s) => (
+                      <label
+                        key={s}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          cursor: "pointer",
+                          padding: "10px 16px",
+                          borderRadius: 8,
+                          border: `1px solid ${
+                            form.status === s
+                              ? s === "present"
+                                ? colors.success
+                                : colors.danger
+                              : colors.border
+                          }`,
+                          background:
+                            form.status === s
+                              ? s === "present"
+                                ? `${colors.success}15`
+                                : `${colors.danger}15`
+                              : "transparent",
+                          flex: 1,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          value={s}
+                          checked={form.status === s}
+                          onChange={() => setForm((f) => ({ ...f, status: s }))}
+                          style={{ display: "none" }}
+                        />
+                        {s === "present" ? (
+                          <FaCheckCircle size={18} color={colors.success} />
+                        ) : (
+                          <FaTimesCircle size={18} color={colors.danger} />
+                        )}
+                        <span
+                          style={{
+                            textTransform: "capitalize",
+                            fontWeight: 500,
+                            color:
+                              form.status === s
+                                ? s === "present"
+                                  ? colors.success
+                                  : colors.danger
+                                : colors.text,
+                          }}
+                        >
+                          {s}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 16,
+                    marginTop: 16,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <motion.button
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={buttonVariants}
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    style={{
+                      background: "transparent",
+                      color: colors.accent,
+                      border: `1px solid ${colors.accent}`,
+                      borderRadius: 10,
+                      padding: "12px 24px",
+                      fontWeight: 600,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      minWidth: 100,
+                    }}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={buttonVariants}
+                    type="submit"
+                    style={{
+                      background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 10,
+                      padding: "12px 32px",
+                      fontWeight: 600,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      boxShadow: colors.buttonShadow,
+                      minWidth: 120,
+                    }}
+                  >
+                    {editId ? "Update" : "Add"}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

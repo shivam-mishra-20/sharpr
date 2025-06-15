@@ -523,8 +523,10 @@ const AdminOverview = () => {
     if (showFeeForm && fees.length > 0) {
       // Sort by updatedAt or createdAt descending
       const sorted = [...fees].sort((a, b) => {
-        const aTime = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
-        const bTime = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+        const aTime =
+          a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+        const bTime =
+          b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
         return bTime - aTime;
       });
       const f = sorted[0];
@@ -2478,7 +2480,7 @@ const AdminOverview = () => {
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-                       padding: "24px",
+            padding: "24px",
             boxShadow: colors.shadow,
             transition: "all 0.3s ease",
             display: "flex",

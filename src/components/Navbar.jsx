@@ -9,10 +9,15 @@ import {
   FaTimes,
   FaSun,
   FaMoon,
+  FaUserCircle,
 } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
-const navItems = [
+// Define base navigation items without SignUp/Dashboard that will change
+const baseNavItems = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/aboutus" },
   { label: "Programs", to: "/programs" },
@@ -20,7 +25,6 @@ const navItems = [
   { label: "Testimonials", to: "/testimonials" },
   { label: "Locations", to: "/locations" },
   { label: "Contact", to: "/contact" },
-  { label: "SignUp", to: "/signup" },
 ];
 
 const navLinkUnderline = {
@@ -57,7 +61,7 @@ function ThemeToggle({ theme, toggleTheme }) {
   );
 }
 
-function DesktopNav({ theme, toggleTheme }) {
+function DesktopNav({ theme, toggleTheme, navItems }) {
   return (
     <div
       className="navbar-desktop"
@@ -294,6 +298,7 @@ function MobileNav({
   mobileMenuOpen,
   setMobileMenuOpen,
   location,
+  navItems,
 }) {
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -566,6 +571,56 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Get user role from Firestore
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role);
+          } else {
+            // Default to parent if no role found
+            setUserRole("parent");
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          setUserRole("parent"); // Default fallback
+        }
+      } else {
+        setUser(null);
+        setUserRole(null);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Construct navItems based on authentication state
+  const navItems = [...baseNavItems];
+
+  // Add the appropriate Dashboard or SignUp item
+  if (!loading) {
+    if (user) {
+      // If user is logged in, add Dashboard with appropriate link
+      const dashboardPath =
+        userRole === "admin" ? "/admin_dashboard" : "/parent_dashboard";
+      navItems.push({
+        label: "Dashboard",
+        to: dashboardPath,
+        icon: <FaUserCircle />,
+      });
+    } else {
+      // If user is not logged in, add SignUp
+      navItems.push({ label: "SignUp", to: "/signup" });
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -594,7 +649,6 @@ const Navbar = () => {
     top: 0,
     width: "100vw", // Changed from calc(100% + 12px) to 100vw
     zIndex: 1000,
-
     background: theme === "dark" ? "#18181b" : "#fff",
     color: theme === "dark" ? "#fff" : "#222",
     borderBottom: theme === "dark" ? "1px solid #333" : "1px solid #eaeaea",
@@ -629,9 +683,14 @@ const Navbar = () => {
             mobileMenuOpen={mobileMenuOpen}
             setMobileMenuOpen={setMobileMenuOpen}
             location={location}
+            navItems={navItems}
           />
         ) : (
-          <DesktopNav theme={theme} toggleTheme={toggleTheme} />
+          <DesktopNav
+            theme={theme}
+            toggleTheme={toggleTheme}
+            navItems={navItems}
+          />
         )}
       </div>
     </nav>
