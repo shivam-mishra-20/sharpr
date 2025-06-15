@@ -17,6 +17,15 @@ import Testimonials from "./components/Testimonials";
 import Locations from "./components/Locations";
 import ParentDashboard from "./pages/ParentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminOverview from "./components/admin/Overview";
+import AdminStudents from "./components/admin/Students";
+import AdminAttendance from "./components/admin/Attendance";
+import AdminHomework from "./components/admin/Homework";
+import AdminTestResults from "./components/admin/TestResults";
+import AdminFeeManagement from "./components/admin/FeeManagement";
+import AdminNotices from "./components/admin/Notices";
+import AdminSettings from "./components/admin/Settings";
+import AdminHelp from "./components/admin/Help";
 import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
@@ -50,7 +59,18 @@ const AnimatedRoutes = () => {
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/locations" element={<Locations />} />
         <Route path="/parent_dashboard" element={<ParentDashboard />} />
-        <Route path="/admin_dashboard" element={<AdminDashboard />} />
+        <Route path="/admin_dashboard/*" element={<AdminDashboard />}>
+          <Route index element={<AdminOverview />} />
+          <Route path="overview" element={<AdminOverview />} />
+          <Route path="students" element={<AdminStudents />} />
+          <Route path="attendance" element={<AdminAttendance />} />
+          <Route path="homework" element={<AdminHomework />} />
+          <Route path="test-results" element={<AdminTestResults />} />
+          <Route path="fee-management" element={<AdminFeeManagement />} />
+          <Route path="notices" element={<AdminNotices />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="help" element={<AdminHelp />} />
+        </Route>
       </Routes>
     </AnimatePresence>
   );
@@ -115,7 +135,7 @@ function App() {
         >
           <AnimatedRoutes />
         </main>
-        <Footer />
+
         <footer
           style={{
             textAlign: "center",

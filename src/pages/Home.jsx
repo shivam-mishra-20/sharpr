@@ -42,6 +42,7 @@ const Home = () => {
       <Results />
       <Testimonials />
       <Locations />
+      <Footer />
     </>
   );
 };
