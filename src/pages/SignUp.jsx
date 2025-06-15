@@ -13,7 +13,8 @@ const ADMIN_EMAIL = "Admin@sharpr.in";
 const ADMIN_PASSWORD = "Sharpr@2024!Admin#";
 
 const SignUp = () => {
-  const [tab, setTab] = useState("parent_register");
+  // Changed default tab to parent_login since registration is commented out
+  const [tab, setTab] = useState("parent_login");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -60,6 +61,7 @@ const SignUp = () => {
     setError("");
   };
 
+  /* Commented out Parent Registration
   // Parent Registration
   const handleParentRegister = async (e) => {
     e.preventDefault();
@@ -100,6 +102,7 @@ const SignUp = () => {
       setLoading(false);
     }
   };
+  */
 
   // Parent Login
   const handleParentLogin = async (e) => {
@@ -261,9 +264,11 @@ const SignUp = () => {
               marginBottom: "10px",
             }}
           >
-            {tab === "parent_register" ? "Sign up" : "Sign in"}
+            Sign in
           </h2>
 
+          {/* 
+          Commented out toggle text between login and register
           {tab !== "admin_login" && (
             <div
               style={{
@@ -293,6 +298,7 @@ const SignUp = () => {
               </span>
             </div>
           )}
+          */}
 
           {/* Navigation Tabs */}
           <div
@@ -304,6 +310,7 @@ const SignUp = () => {
               }`,
             }}
           >
+            {/* Commented out Register tab
             <motion.button
               onClick={() => setTab("parent_register")}
               whileTap={{ scale: 0.97 }}
@@ -321,6 +328,7 @@ const SignUp = () => {
             >
               Register
             </motion.button>
+            */}
             <motion.button
               onClick={() => setTab("parent_login")}
               whileTap={{ scale: 0.97 }}
@@ -405,6 +413,7 @@ const SignUp = () => {
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
+            {/* Commented out registration form 
             {tab === "parent_register" && (
               <motion.form
                 onSubmit={handleParentRegister}
@@ -575,6 +584,7 @@ const SignUp = () => {
                 </motion.button>
               </motion.form>
             )}
+            */}
 
             {tab === "parent_login" && (
               <motion.form
@@ -1133,48 +1143,13 @@ const SignUp = () => {
 
             {/* Features list */}
             <div style={{ marginBottom: "32px" }}>
-              {[
-                "Personalized learning paths",
-                "Expert-created curriculum",
-                "Interactive assessments",
-                "Real-time progress tracking",
-              ].map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: "12px",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M5 12L10 17L20 7"
-                        stroke="#FFFFFF"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div>{feature}</div>
-                </motion.div>
-              ))}
+              {
+                {
+                  dark: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop",
+                  light:
+                    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2071&auto=format&fit=crop",
+                }.dark
+              }
             </div>
 
             {/* Testimonial */}

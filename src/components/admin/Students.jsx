@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { db } from "../../firebase";
+import { db, auth } from "../../firebase";
 import {
   collection,
   getDocs,
@@ -8,8 +8,10 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import * as XLSX from "xlsx";
 import { FaFileExport } from "react-icons/fa";
 
@@ -35,6 +37,7 @@ const initialForm = {
   parentName: "",
   parentContact: "",
   address: "",
+  password: "", // Add password field
 };
 
 const AdminStudents = () => {
@@ -68,14 +71,44 @@ const AdminStudents = () => {
     e.preventDefault();
     try {
       if (editId) {
+        // Don't update password on edit
+        const { password, ...formData } = form;
         await updateDoc(doc(db, "students", editId), {
-          ...form,
+          ...formData,
         });
       } else {
-        await addDoc(collection(db, "students"), {
-          ...form,
-          createdAt: serverTimestamp(),
-        });
+        let userUid = null;
+        if (form.password && form.email) {
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            form.email,
+            form.password
+          );
+          userUid = userCredential.user.uid;
+          // Create parent user doc with UID as doc ID
+          await setDoc(doc(db, "users", userUid), {
+            uid: userUid,
+            name: form.firstName + " " + form.lastName,
+            email: form.email,
+            role: "parent",
+            createdAt: serverTimestamp(),
+          });
+          // Create student doc with UID as doc ID
+          const { password, ...formData } = form;
+          await setDoc(doc(db, "students", userUid), {
+            ...formData,
+            authUid: userUid,
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          // If no password, fallback to addDoc (not recommended for parent login)
+          const { password, ...formData } = form;
+          await addDoc(collection(db, "students"), {
+            ...formData,
+            authUid: null,
+            createdAt: serverTimestamp(),
+          });
+        }
       }
       setShowForm(false);
       setForm(initialForm);
@@ -97,6 +130,7 @@ const AdminStudents = () => {
       parentName: student.parentName || "",
       parentContact: student.parentContact || "",
       address: student.address || "",
+      password: "", // Don't prefill password on edit
     });
     setEditId(student.id);
     setShowForm(true);
@@ -485,6 +519,30 @@ const AdminStudents = () => {
                 }}
               />
             </div>
+            {/* Show password field only when adding */}
+            {!editId && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label>Password (for parent login)</label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, password: e.target.value }))
+                  }
+                  style={{
+                    padding: 8,
+                    borderRadius: 6,
+                    border: "1px solid #ddd",
+                  }}
+                  placeholder="Set password for parent login"
+                  autoComplete="new-password"
+                />
+                <span style={{ fontSize: 12, color: "#888" }}>
+                  This password, along with the email, can be used to log in as
+                  a parent.
+                </span>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 12 }}>
               <div
                 style={{
