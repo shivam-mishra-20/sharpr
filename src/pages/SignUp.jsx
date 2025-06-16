@@ -212,6 +212,19 @@ const SignUp = () => {
     },
   };
 
+  // Mobile breakpoint detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Add responsive handler
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div
       style={{
@@ -221,19 +234,20 @@ const SignUp = () => {
         justifyContent: "center",
         backgroundColor: currentTheme.background,
         transition: "all 0.3s ease",
-        padding: "20px",
-        marginTop: "20px", // Adjusted to remove extra space at the top
+        padding: isMobile ? "20px" : "30px",
+        marginTop: isMobile ? "20px" : "30px",
       }}
     >
-      {/* Main Card - made smaller */}
+      {/* Main Card - responsive */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           width: "90%",
-          maxWidth: "950px", // Reduced from 1100px
+          maxWidth: "950px",
           borderRadius: "16px",
           overflow: "hidden",
           boxShadow:
@@ -242,12 +256,13 @@ const SignUp = () => {
               : "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
         }}
       >
-        {/* Left Column - Image Section */}
+        {/* Left Column - Image Section (hidden or smaller on mobile) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           style={{
-            width: "45%",
+            width: isMobile ? "100%" : "45%",
+            height: isMobile ? "180px" : "auto",
             position: "relative",
             overflow: "hidden",
             display: "flex",
@@ -278,198 +293,200 @@ const SignUp = () => {
             }}
           />
 
-          {/* 3D Icon/Illustration - replaced with free 3D SVG */}
-          <motion.div
-            variants={floatAnimation}
-            animate="animate"
-            style={{
-              position: "relative",
-              width: "75%", // Slightly smaller
-              marginBottom: "30px",
-              zIndex: 5,
-              filter: "drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.2))",
-            }}
-          >
-            {/* Using a free 3D SVG illustration */}
-            <svg
-              viewBox="0 0 500 500"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* 3D Icon/Illustration - conditionally rendered for mobile */}
+          {!isMobile && (
+            <motion.div
+              variants={floatAnimation}
+              animate="animate"
               style={{
-                width: "100%",
-                height: "auto",
-                maxHeight: "200px",
+                position: "relative",
+                width: "75%",
+                marginBottom: "30px",
+                zIndex: 5,
+                filter: "drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.2))",
               }}
             >
-              {/* Laptop base */}
-              <motion.path
-                d="M124.5,300 L375.5,300 L400,350 L100,350 Z"
-                fill="#2d3748"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              />
-
-              {/* Laptop screen */}
-              <motion.rect
-                x="150"
-                y="170"
-                width="200"
-                height="130"
-                rx="5"
-                fill="#1a202c"
-                stroke="#4a5568"
-                strokeWidth="2"
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ delay: 0.5, duration: 0.4 }}
-                style={{ transformOrigin: "150px 300px" }}
-              />
-
-              {/* Laptop screen content */}
-              <motion.rect
-                x="160"
-                y="180"
-                width="180"
-                height="110"
-                rx="2"
-                fill="#4299e1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              />
-
-              {/* Code lines */}
-              <motion.g
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.9 }}
-              >
-                <rect
-                  x="170"
-                  y="190"
-                  width="100"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-                <rect
-                  x="170"
-                  y="205"
-                  width="140"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-                <rect
-                  x="170"
-                  y="220"
-                  width="80"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-                <rect
-                  x="170"
-                  y="235"
-                  width="120"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-                <rect
-                  x="170"
-                  y="250"
-                  width="90"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-                <rect
-                  x="170"
-                  y="265"
-                  width="60"
-                  height="6"
-                  rx="2"
-                  fill="#ebf8ff"
-                />
-              </motion.g>
-
-              {/* Floating graduation cap */}
-              <motion.g
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1.1, duration: 0.5 }}
-              >
-                <motion.path
-                  d="M280,120 L340,140 L250,170 L190,145 Z"
-                  fill={theme === "dark" ? "#60a5fa" : "#3b82f6"}
-                  animate={{
-                    y: [0, -5, 0],
-                    rotateZ: [0, 2, 0],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "easeInOut",
-                  }}
-                />
-                <motion.path
-                  d="M250,170 L250,200 L220,187 L220,160 Z"
-                  fill={theme === "dark" ? "#3b82f6" : "#2563eb"}
-                  animate={{
-                    y: [0, -5, 0],
-                    rotateZ: [0, 2, 0],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "easeInOut",
-                    delay: 0.1,
-                  }}
-                />
-                <motion.path
-                  d="M250,135 L250,115 L260,120 L260,133 Z"
-                  fill={theme === "dark" ? "#93c5fd" : "#60a5fa"}
-                  animate={{
-                    y: [0, -5, 0],
-                    rotateZ: [0, 2, 0],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 3,
-                    ease: "easeInOut",
-                    delay: 0.2,
-                  }}
-                />
-              </motion.g>
-
-              {/* Flying paper plane */}
-              <motion.path
-                d="M80,180 L130,160 L110,200 Z"
-                fill="#e2e8f0"
-                initial={{ x: -100, y: 100, opacity: 0 }}
-                animate={{
-                  x: [null, 350],
-                  y: [null, 50],
-                  opacity: [0, 1, 1, 0],
-                  rotate: [0, -10, -5, -15],
+              {/* Using a free 3D SVG illustration */}
+              <svg
+                viewBox="0 0 500 500"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  maxHeight: "200px",
                 }}
-                transition={{
-                  duration: 10,
-                  times: [0, 0.1, 0.9, 1],
-                  repeat: Infinity,
-                  repeatDelay: 5,
-                }}
-              />
-            </svg>
-          </motion.div>
+              >
+                {/* Laptop base */}
+                <motion.path
+                  d="M124.5,300 L375.5,300 L400,350 L100,350 Z"
+                  fill="#2d3748"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                />
+
+                {/* Laptop screen */}
+                <motion.rect
+                  x="150"
+                  y="170"
+                  width="200"
+                  height="130"
+                  rx="5"
+                  fill="#1a202c"
+                  stroke="#4a5568"
+                  strokeWidth="2"
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  style={{ transformOrigin: "150px 300px" }}
+                />
+
+                {/* Laptop screen content */}
+                <motion.rect
+                  x="160"
+                  y="180"
+                  width="180"
+                  height="110"
+                  rx="2"
+                  fill="#4299e1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                />
+
+                {/* Code lines */}
+                <motion.g
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <rect
+                    x="170"
+                    y="190"
+                    width="100"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                  <rect
+                    x="170"
+                    y="205"
+                    width="140"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                  <rect
+                    x="170"
+                    y="220"
+                    width="80"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                  <rect
+                    x="170"
+                    y="235"
+                    width="120"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                  <rect
+                    x="170"
+                    y="250"
+                    width="90"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                  <rect
+                    x="170"
+                    y="265"
+                    width="60"
+                    height="6"
+                    rx="2"
+                    fill="#ebf8ff"
+                  />
+                </motion.g>
+
+                {/* Floating graduation cap */}
+                <motion.g
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 1.1, duration: 0.5 }}
+                >
+                  <motion.path
+                    d="M280,120 L340,140 L250,170 L190,145 Z"
+                    fill={theme === "dark" ? "#60a5fa" : "#3b82f6"}
+                    animate={{
+                      y: [0, -5, 0],
+                      rotateZ: [0, 2, 0],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <motion.path
+                    d="M250,170 L250,200 L220,187 L220,160 Z"
+                    fill={theme === "dark" ? "#3b82f6" : "#2563eb"}
+                    animate={{
+                      y: [0, -5, 0],
+                      rotateZ: [0, 2, 0],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3,
+                      ease: "easeInOut",
+                      delay: 0.1,
+                    }}
+                  />
+                  <motion.path
+                    d="M250,135 L250,115 L260,120 L260,133 Z"
+                    fill={theme === "dark" ? "#93c5fd" : "#60a5fa"}
+                    animate={{
+                      y: [0, -5, 0],
+                      rotateZ: [0, 2, 0],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3,
+                      ease: "easeInOut",
+                      delay: 0.2,
+                    }}
+                  />
+                </motion.g>
+
+                {/* Flying paper plane */}
+                <motion.path
+                  d="M80,180 L130,160 L110,200 Z"
+                  fill="#e2e8f0"
+                  initial={{ x: -100, y: 100, opacity: 0 }}
+                  animate={{
+                    x: [null, 350],
+                    y: [null, 50],
+                    opacity: [0, 1, 1, 0],
+                    rotate: [0, -10, -5, -15],
+                  }}
+                  transition={{
+                    duration: 10,
+                    times: [0, 0.1, 0.9, 1],
+                    repeat: Infinity,
+                    repeatDelay: 5,
+                  }}
+                />
+              </svg>
+            </motion.div>
+          )}
 
           {/* Content */}
           <div
             style={{
               position: "relative",
               zIndex: 2,
-              padding: "0 30px 30px 30px",
+              padding: isMobile ? "15px" : "0 30px 30px 30px",
               textAlign: "center",
               color: "#ffffff",
             }}
@@ -479,9 +496,9 @@ const SignUp = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
               style={{
-                fontSize: "26px", // Slightly smaller
+                fontSize: isMobile ? "20px" : "26px",
                 fontWeight: "700",
-                marginBottom: "16px",
+                marginBottom: isMobile ? "8px" : "16px",
                 background: "linear-gradient(to right, #fff, #e2e8f0)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -490,56 +507,60 @@ const SignUp = () => {
               Elevate Your Learning Journey
             </motion.h2>
 
-            <motion.p
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              style={{
-                fontSize: "15px", // Slightly smaller
-                lineHeight: 1.6,
-                marginBottom: "20px",
-                opacity: 0.9,
-              }}
-            >
-              Join our platform to access personalized education plans and
-              expert guidance.
-            </motion.p>
+            {!isMobile && (
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                style={{
+                  fontSize: "15px",
+                  lineHeight: 1.6,
+                  marginBottom: "20px",
+                  opacity: 0.9,
+                }}
+              >
+                Join our platform to access personalized education plans and
+                expert guidance.
+              </motion.p>
+            )}
 
-            {/* Features with enhanced animation */}
-            <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "8px",
-                marginBottom: "20px",
-              }}
-            >
-              {["Personalized", "Interactive", "Results-driven"].map(
-                (item, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{
-                      scale: 1.05,
-                      backgroundColor: "rgba(255, 255, 255, 0.25)",
-                      y: -2,
-                    }}
-                    style={{
-                      padding: "6px 12px",
-                      background: "rgba(255, 255, 255, 0.15)",
-                      borderRadius: "20px",
-                      fontSize: "13px",
-                      backdropFilter: "blur(10px)",
-                      cursor: "default",
-                    }}
-                  >
-                    {item}
-                  </motion.div>
-                )
-              )}
-            </motion.div>
+            {/* Features with enhanced animation - hide on very small screens */}
+            {!isMobile && (
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "8px",
+                  marginBottom: "20px",
+                }}
+              >
+                {["Personalized", "Interactive", "Results-driven"].map(
+                  (item, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: "rgba(255, 255, 255, 0.25)",
+                        y: -2,
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        background: "rgba(255, 255, 255, 0.15)",
+                        borderRadius: "20px",
+                        fontSize: "13px",
+                        backdropFilter: "blur(10px)",
+                        cursor: "default",
+                      }}
+                    >
+                      {item}
+                    </motion.div>
+                  )
+                )}
+              </motion.div>
+            )}
 
             {/* Logo with animation */}
             <motion.div
@@ -548,15 +569,23 @@ const SignUp = () => {
               transition={{ delay: 0.5 }}
               whileHover={{ scale: 1.05 }}
               style={{
-                marginTop: "20px",
+                marginTop: isMobile ? "5px" : "20px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <h1 style={{ fontSize: "22px", fontWeight: "bold" }}>
+              <h1
+                style={{
+                  fontSize: isMobile ? "18px" : "22px",
+                  fontWeight: "bold",
+                }}
+              >
                 <motion.span
-                  style={{ fontSize: "24px", marginRight: "4px" }}
+                  style={{
+                    fontSize: isMobile ? "20px" : "24px",
+                    marginRight: "4px",
+                  }}
                   animate={{ rotate: [0, 10, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
@@ -573,8 +602,8 @@ const SignUp = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           style={{
-            width: "55%",
-            padding: "35px", // Slightly reduced padding
+            width: isMobile ? "100%" : "55%",
+            padding: isMobile ? "20px 15px" : "35px",
             backgroundColor: currentTheme.cardBg,
             display: "flex",
             flexDirection: "column",
@@ -592,7 +621,7 @@ const SignUp = () => {
               <motion.h2
                 whileHover={{ scale: 1.02 }}
                 style={{
-                  fontSize: "24px",
+                  fontSize: isMobile ? "22px" : "24px",
                   fontWeight: "700",
                   marginBottom: "8px",
                 }}
@@ -601,20 +630,20 @@ const SignUp = () => {
               </motion.h2>
               <p
                 style={{
-                  fontSize: "15px",
+                  fontSize: isMobile ? "14px" : "15px",
                   color: currentTheme.textLight,
-                  marginBottom: "24px",
+                  marginBottom: isMobile ? "16px" : "24px",
                 }}
               >
                 Please sign in to your account to continue
               </p>
             </motion.div>
 
-            {/* Navigation Tabs with enhanced hover effects */}
+            {/* Navigation Tabs with enhanced hover effects - adjusted for mobile */}
             <div
               style={{
                 display: "flex",
-                marginBottom: "25px",
+                marginBottom: isMobile ? "20px" : "25px",
                 borderBottom: `1px solid ${currentTheme.border}`,
               }}
             >
@@ -623,10 +652,11 @@ const SignUp = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 style={{
-                  padding: "10px 16px",
+                  padding: isMobile ? "8px 12px" : "10px 16px",
                   background: "transparent",
                   border: "none",
                   fontWeight: 600,
+                  fontSize: isMobile ? "14px" : "16px",
                   cursor: "pointer",
                   marginRight: "20px",
                   color:
@@ -648,10 +678,11 @@ const SignUp = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 style={{
-                  padding: "10px 16px",
+                  padding: isMobile ? "8px 12px" : "10px 16px",
                   background: "transparent",
                   border: "none",
                   fontWeight: 600,
+                  fontSize: isMobile ? "14px" : "16px",
                   cursor: "pointer",
                   color:
                     tab === "admin_login"
@@ -677,7 +708,7 @@ const SignUp = () => {
                   style={{
                     color: currentTheme.success,
                     marginBottom: 20,
-                    padding: "12px 16px",
+                    padding: isMobile ? "10px 12px" : "12px 16px",
                     backgroundColor:
                       theme === "dark"
                         ? "rgba(16, 185, 129, 0.1)"
@@ -708,7 +739,7 @@ const SignUp = () => {
                   style={{
                     color: currentTheme.error,
                     marginBottom: 20,
-                    padding: "12px 16px",
+                    padding: isMobile ? "10px 12px" : "12px 16px",
                     backgroundColor:
                       theme === "dark"
                         ? "rgba(239, 68, 68, 0.1)"
@@ -719,6 +750,7 @@ const SignUp = () => {
                         ? "rgba(239, 68, 68, 0.2)"
                         : "rgba(239, 68, 68, 0.1)"
                     }`,
+                    fontSize: isMobile ? "13px" : "14px",
                   }}
                 >
                   {error}
@@ -737,11 +769,11 @@ const SignUp = () => {
                   exit="exit"
                 >
                   {/* Email field with enhanced interactive animation */}
-                  <div style={{ marginBottom: "20px" }}>
+                  <div style={{ marginBottom: isMobile ? "16px" : "20px" }}>
                     <label
                       style={{
                         display: "block",
-                        fontSize: "14px",
+                        fontSize: isMobile ? "13px" : "14px",
                         color: currentTheme.textLight,
                         marginBottom: "8px",
                         fontWeight: "500",
@@ -763,8 +795,8 @@ const SignUp = () => {
                         }}
                         style={{
                           width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 15,
+                          padding: isMobile ? "10px 14px" : "12px 16px",
+                          fontSize: isMobile ? "14px" : "15px",
                           backgroundColor: currentTheme.inputBg,
                           color: currentTheme.text,
                           border: `1px solid ${currentTheme.border}`,
@@ -778,11 +810,11 @@ const SignUp = () => {
                   </div>
 
                   {/* Password field with enhanced interactive animation */}
-                  <div style={{ marginBottom: "16px" }}>
+                  <div style={{ marginBottom: isMobile ? "14px" : "16px" }}>
                     <label
                       style={{
                         display: "block",
-                        fontSize: "14px",
+                        fontSize: isMobile ? "13px" : "14px",
                         color: currentTheme.textLight,
                         marginBottom: "8px",
                         fontWeight: "500",
@@ -804,8 +836,8 @@ const SignUp = () => {
                         }}
                         style={{
                           width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 15,
+                          padding: isMobile ? "10px 14px" : "12px 16px",
+                          fontSize: isMobile ? "14px" : "15px",
                           backgroundColor: currentTheme.inputBg,
                           color: currentTheme.text,
                           border: `1px solid ${currentTheme.border}`,
@@ -818,14 +850,16 @@ const SignUp = () => {
                     </motion.div>
                   </div>
 
-                  {/* Remember me and forgot password with enhanced animation */}
+                  {/* Remember me and forgot password with enhanced animation - adjusted for mobile */}
                   <div
                     style={{
                       display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
                       justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "24px",
-                      fontSize: "14px",
+                      alignItems: isMobile ? "flex-start" : "center",
+                      marginBottom: isMobile ? "20px" : "24px",
+                      gap: isMobile ? "10px" : "0",
+                      fontSize: isMobile ? "13px" : "14px",
                     }}
                   >
                     <motion.div
@@ -846,7 +880,7 @@ const SignUp = () => {
                         htmlFor="remember"
                         style={{
                           color: currentTheme.textLight,
-                          fontSize: "14px",
+                          fontSize: isMobile ? "13px" : "14px",
                         }}
                       >
                         Remember me
@@ -860,7 +894,7 @@ const SignUp = () => {
                           color: currentTheme.primary,
                           textDecoration: "none",
                           fontWeight: "500",
-                          fontSize: "14px",
+                          fontSize: isMobile ? "13px" : "14px",
                         }}
                       >
                         Forgot Password?
@@ -878,16 +912,16 @@ const SignUp = () => {
                     whileTap={{ scale: 0.98 }}
                     style={{
                       width: "100%",
-                      padding: "14px",
+                      padding: isMobile ? "12px" : "14px",
                       borderRadius: "8px",
                       backgroundColor: currentTheme.primary,
                       color: "#ffffff",
                       fontWeight: 600,
-                      fontSize: "15px",
+                      fontSize: isMobile ? "14px" : "15px",
                       border: "none",
                       cursor: loading ? "default" : "pointer",
                       opacity: loading ? 0.7 : 1,
-                      marginBottom: "24px",
+                      marginBottom: isMobile ? "20px" : "24px",
                       boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                     }}
                   >
@@ -901,12 +935,12 @@ const SignUp = () => {
                       >
                         <motion.div
                           style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 9,
+                            width: isMobile ? 16 : 18,
+                            height: isMobile ? 16 : 18,
+                            borderRadius: isMobile ? 8 : 9,
                             border: "3px solid rgba(255,255,255,0.3)",
                             borderTopColor: "#fff",
-                            marginRight: 10,
+                            marginRight: isMobile ? 8 : 10,
                           }}
                           animate={{ rotate: 360 }}
                           transition={{
@@ -928,7 +962,7 @@ const SignUp = () => {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      margin: "20px 0",
+                      margin: isMobile ? "16px 0" : "20px 0",
                       position: "relative",
                     }}
                   >
@@ -943,7 +977,7 @@ const SignUp = () => {
                       style={{
                         padding: "0 15px",
                         color: currentTheme.textLight,
-                        fontSize: "14px",
+                        fontSize: isMobile ? "12px" : "14px",
                       }}
                     >
                       or continue with
@@ -957,15 +991,22 @@ const SignUp = () => {
                     />
                   </div>
 
-                  {/* Social login buttons with enhanced animation */}
-                  <div style={{ display: "flex", gap: "12px" }}>
+                  {/* Social login buttons with enhanced animation - responsive grid for mobile */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      flexDirection:
+                        isMobile && window.innerWidth < 380 ? "column" : "row",
+                    }}
+                  >
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.04, y: -3 }}
                       whileTap={{ scale: 0.97 }}
                       style={{
                         flex: 1,
-                        padding: "12px",
+                        padding: isMobile ? "10px" : "12px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -976,12 +1017,13 @@ const SignUp = () => {
                         cursor: "pointer",
                         boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                         transition: "all 0.2s ease",
+                        fontSize: isMobile ? "13px" : "14px",
                       }}
                     >
                       <svg
                         viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
+                        width={isMobile ? "18" : "20"}
+                        height={isMobile ? "18" : "20"}
                         style={{ marginRight: "8px" }}
                       >
                         <path
@@ -1009,7 +1051,7 @@ const SignUp = () => {
                       whileTap={{ scale: 0.97 }}
                       style={{
                         flex: 1,
-                        padding: "12px",
+                        padding: isMobile ? "10px" : "12px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1020,12 +1062,13 @@ const SignUp = () => {
                         cursor: "pointer",
                         boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                         transition: "all 0.2s ease",
+                        fontSize: isMobile ? "13px" : "14px",
                       }}
                     >
                       <svg
                         viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
+                        width={isMobile ? "18" : "20"}
+                        height={isMobile ? "18" : "20"}
                         style={{ marginRight: "8px" }}
                       >
                         <path
@@ -1049,11 +1092,11 @@ const SignUp = () => {
                   exit="exit"
                 >
                   {/* Admin Email field with enhanced interactive animation */}
-                  <div style={{ marginBottom: "20px" }}>
+                  <div style={{ marginBottom: isMobile ? "16px" : "20px" }}>
                     <label
                       style={{
                         display: "block",
-                        fontSize: "14px",
+                        fontSize: isMobile ? "13px" : "14px",
                         color: currentTheme.textLight,
                         marginBottom: "8px",
                         fontWeight: "500",
@@ -1075,8 +1118,8 @@ const SignUp = () => {
                         }}
                         style={{
                           width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 15,
+                          padding: isMobile ? "10px 14px" : "12px 16px",
+                          fontSize: isMobile ? "14px" : "15px",
                           backgroundColor: currentTheme.inputBg,
                           color: currentTheme.text,
                           border: `1px solid ${currentTheme.border}`,
@@ -1090,11 +1133,11 @@ const SignUp = () => {
                   </div>
 
                   {/* Admin Password field with enhanced interactive animation */}
-                  <div style={{ marginBottom: "24px" }}>
+                  <div style={{ marginBottom: isMobile ? "20px" : "24px" }}>
                     <label
                       style={{
                         display: "block",
-                        fontSize: "14px",
+                        fontSize: isMobile ? "13px" : "14px",
                         color: currentTheme.textLight,
                         marginBottom: "8px",
                         fontWeight: "500",
@@ -1116,8 +1159,8 @@ const SignUp = () => {
                         }}
                         style={{
                           width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 15,
+                          padding: isMobile ? "10px 14px" : "12px 16px",
+                          fontSize: isMobile ? "14px" : "15px",
                           backgroundColor: currentTheme.inputBg,
                           color: currentTheme.text,
                           border: `1px solid ${currentTheme.border}`,
@@ -1140,12 +1183,12 @@ const SignUp = () => {
                     whileTap={{ scale: 0.98 }}
                     style={{
                       width: "100%",
-                      padding: "14px",
+                      padding: isMobile ? "12px" : "14px",
                       borderRadius: "8px",
                       backgroundColor: currentTheme.primary,
                       color: "#ffffff",
                       fontWeight: 600,
-                      fontSize: "15px",
+                      fontSize: isMobile ? "14px" : "15px",
                       border: "none",
                       cursor: loading ? "default" : "pointer",
                       opacity: loading ? 0.7 : 1,
@@ -1162,9 +1205,9 @@ const SignUp = () => {
                       >
                         <motion.div
                           style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 9,
+                            width: isMobile ? 16 : 18,
+                            height: isMobile ? 16 : 18,
+                            borderRadius: isMobile ? 8 : 9,
                             border: "3px solid rgba(255,255,255,0.3)",
                             borderTopColor: "#fff",
                             marginRight: 8,
@@ -1190,8 +1233,8 @@ const SignUp = () => {
             <motion.div
               style={{
                 textAlign: "center",
-                marginTop: 30,
-                fontSize: 13,
+                marginTop: isMobile ? 20 : 30,
+                fontSize: isMobile ? 12 : 13,
                 color: currentTheme.textLight,
               }}
               initial={{ opacity: 0 }}

@@ -603,9 +603,31 @@ const AdminOverview = () => {
     ? students.filter((s) => s.class === attendanceForm.class)
     : [];
 
+  // Add responsive state
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const isMobile = windowWidth <= 768;
+  const isSmallMobile = windowWidth <= 480;
+
+  useEffect(() => {
+    // Update document title
+    document.title = "Admin Dashboard - School Management System";
+  }, []);
+
+  // Add window resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div>
-      {/* Student Form Modal */}
+      {/* Student Form Modal - Using responsive components */}
       {showStudentForm && (
         <div
           style={{
@@ -614,41 +636,41 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitStudentForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
               <h2
                 style={{
-                  fontSize: 22,
+                  fontSize: isSmallMobile ? "18px" : "22px",
                   fontWeight: 700,
                   margin: 0,
                 }}
@@ -661,23 +683,22 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>First Name *</label>
@@ -688,9 +709,10 @@ const AdminOverview = () => {
                     setStudentForm((f) => ({ ...f, firstName: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -699,7 +721,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Last Name *</label>
@@ -710,20 +732,21 @@ const AdminOverview = () => {
                     setStudentForm((f) => ({ ...f, lastName: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Class *</label>
@@ -734,9 +757,10 @@ const AdminOverview = () => {
                     setStudentForm((f) => ({ ...f, class: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Class</option>
@@ -752,7 +776,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Date of Birth *</label>
@@ -764,15 +788,18 @@ const AdminOverview = () => {
                     setStudentForm((f) => ({ ...f, dob: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                   placeholder="dd-mm-yyyy"
                 />
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Email *</label>
               <input
                 required
@@ -782,19 +809,20 @@ const AdminOverview = () => {
                   setStudentForm((f) => ({ ...f, email: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Parent Name *</label>
@@ -808,9 +836,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -819,7 +848,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Parent Contact *</label>
@@ -833,14 +862,17 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Address</label>
               <textarea
                 value={studentForm.address}
@@ -848,25 +880,27 @@ const AdminOverview = () => {
                   setStudentForm((f) => ({ ...f, address: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
-                  minHeight: 48,
+                  minHeight: "48px",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
               <button
                 type="submit"
                 style={{
                   background: "#4f46e5",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Add Student
@@ -878,11 +912,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -891,7 +926,7 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
-      {/* Homework Form Modal */}
+      {/* Homework Form Modal - Using responsive components */}
       {showHomeworkForm && (
         <div
           style={{
@@ -900,27 +935,28 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitHomeworkForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
@@ -928,10 +964,16 @@ const AdminOverview = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+              <h2
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "22px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
                 Assign Homework
               </h2>
               <button
@@ -940,17 +982,18 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Assignment Title *</label>
               <input
                 required
@@ -959,19 +1002,20 @@ const AdminOverview = () => {
                   setHomeworkForm((f) => ({ ...f, title: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Subject *</label>
@@ -982,9 +1026,10 @@ const AdminOverview = () => {
                     setHomeworkForm((f) => ({ ...f, subject: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Subject</option>
@@ -1000,7 +1045,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Class *</label>
@@ -1011,9 +1056,10 @@ const AdminOverview = () => {
                     setHomeworkForm((f) => ({ ...f, class: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Class</option>
@@ -1025,7 +1071,9 @@ const AdminOverview = () => {
                 </select>
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Description *</label>
               <textarea
                 required
@@ -1037,20 +1085,21 @@ const AdminOverview = () => {
                   }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
-                  minHeight: 64,
+                  minHeight: "64px",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Assigned Date *</label>
@@ -1065,9 +1114,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -1076,7 +1126,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Due Date *</label>
@@ -1088,9 +1138,10 @@ const AdminOverview = () => {
                     setHomeworkForm((f) => ({ ...f, dueDate: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -1098,8 +1149,8 @@ const AdminOverview = () => {
             <div
               style={{
                 display: "flex",
-                gap: 12,
-                marginTop: 8,
+                gap: "12px",
+                marginTop: "8px",
                 justifyContent: "flex-end",
               }}
             >
@@ -1110,11 +1161,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -1125,11 +1177,12 @@ const AdminOverview = () => {
                   background: "#111",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Assign Homework
@@ -1138,7 +1191,7 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
-      {/* Attendance Form Modal */}
+      {/* Attendance Form Modal - Using responsive components */}
       {showAttendanceForm && (
         <div
           style={{
@@ -1147,27 +1200,28 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitAttendanceForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
@@ -1175,10 +1229,16 @@ const AdminOverview = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+              <h2
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "22px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
                 Mark Attendance
               </h2>
               <button
@@ -1187,23 +1247,22 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Date *</label>
@@ -1215,9 +1274,10 @@ const AdminOverview = () => {
                     setAttendanceForm((f) => ({ ...f, date: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                   placeholder="dd-mm-yyyy"
                 />
@@ -1227,7 +1287,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Class *</label>
@@ -1238,9 +1298,10 @@ const AdminOverview = () => {
                     setAttendanceForm((f) => ({ ...f, class: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Class</option>
@@ -1254,17 +1315,17 @@ const AdminOverview = () => {
             </div>
             {/* Student select and status */}
             {attendanceForm.class && (
-              <div style={{ display: "flex", gap: 16 }}>
+              <div style={{ display: "flex", gap: "16px" }}>
                 <div
                   style={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    gap: 6,
+                    gap: "6px",
                   }}
                 >
                   <label style={{ fontWeight: 500 }}>Student *</label>
-                  <select name="studentId" required>
+                  <select name="studentId" required style={{ width: "100%" }}>
                     <option value="">Select Student</option>
                     {studentsForAttendance.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -1278,11 +1339,11 @@ const AdminOverview = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    gap: 6,
+                    gap: "6px",
                   }}
                 >
                   <label style={{ fontWeight: 500 }}>Status *</label>
-                  <select name="status" required>
+                  <select name="status" required style={{ width: "100%" }}>
                     <option value="present">Present</option>
                     <option value="absent">Absent</option>
                   </select>
@@ -1295,8 +1356,8 @@ const AdminOverview = () => {
             <div
               style={{
                 display: "flex",
-                gap: 12,
-                marginTop: 24,
+                gap: "12px",
+                marginTop: "24px",
                 justifyContent: "flex-end",
               }}
             >
@@ -1307,11 +1368,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -1322,11 +1384,12 @@ const AdminOverview = () => {
                   background: "#111",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Save Attendance
@@ -1335,7 +1398,7 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
-      {/* Test Result Form Modal */}
+      {/* Test Result Form Modal - Using responsive components */}
       {showTestResultForm && (
         <div
           style={{
@@ -1344,27 +1407,28 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitTestResultForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
@@ -1372,10 +1436,16 @@ const AdminOverview = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+              <h2
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "22px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
                 Add Test Result
               </h2>
               <button
@@ -1384,23 +1454,22 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Student *</label>
@@ -1414,9 +1483,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Student</option>
@@ -1432,7 +1502,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Subject *</label>
@@ -1446,9 +1516,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Subject</option>
@@ -1460,13 +1531,13 @@ const AdminOverview = () => {
                 </select>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Test Type *</label>
@@ -1480,9 +1551,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Test Type</option>
@@ -1498,7 +1570,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Test Date *</label>
@@ -1513,21 +1585,22 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                   placeholder="dd-mm-yyyy"
                 />
               </div>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Marks Obtained *</label>
@@ -1542,9 +1615,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -1553,7 +1627,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Total Marks *</label>
@@ -1568,9 +1642,10 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -1578,8 +1653,8 @@ const AdminOverview = () => {
             <div
               style={{
                 display: "flex",
-                gap: 12,
-                marginTop: 24,
+                gap: "12px",
+                marginTop: "24px",
                 justifyContent: "flex-end",
               }}
             >
@@ -1590,11 +1665,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -1605,11 +1681,12 @@ const AdminOverview = () => {
                   background: "#111",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Add Result
@@ -1618,7 +1695,7 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
-      {/* Notice Form Modal */}
+      {/* Notice Form Modal - Using responsive components */}
       {showNoticeForm && (
         <div
           style={{
@@ -1627,27 +1704,28 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitNoticeForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
@@ -1655,10 +1733,16 @@ const AdminOverview = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+              <h2
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "22px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
                 Create Notice
               </h2>
               <button
@@ -1667,17 +1751,18 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Notice Title *</label>
               <input
                 required
@@ -1686,19 +1771,20 @@ const AdminOverview = () => {
                   setNoticeForm((f) => ({ ...f, title: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Priority *</label>
@@ -1709,9 +1795,10 @@ const AdminOverview = () => {
                     setNoticeForm((f) => ({ ...f, priority: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Priority</option>
@@ -1727,7 +1814,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Target Audience *</label>
@@ -1738,9 +1825,10 @@ const AdminOverview = () => {
                     setNoticeForm((f) => ({ ...f, audience: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Audience</option>
@@ -1752,7 +1840,9 @@ const AdminOverview = () => {
                 </select>
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Notice Content *</label>
               <textarea
                 required
@@ -1761,20 +1851,21 @@ const AdminOverview = () => {
                   setNoticeForm((f) => ({ ...f, content: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
-                  minHeight: 64,
+                  minHeight: "64px",
+                  width: "100%",
                 }}
               />
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Expiry Date</label>
@@ -1785,9 +1876,10 @@ const AdminOverview = () => {
                     setNoticeForm((f) => ({ ...f, expiryDate: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                   placeholder="dd-mm-yyyy"
                 />
@@ -1797,7 +1889,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Status *</label>
@@ -1808,9 +1900,10 @@ const AdminOverview = () => {
                     setNoticeForm((f) => ({ ...f, status: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   {statusOptions.map((opt) => (
@@ -1824,8 +1917,8 @@ const AdminOverview = () => {
             <div
               style={{
                 display: "flex",
-                gap: 12,
-                marginTop: 24,
+                gap: "12px",
+                marginTop: "24px",
                 justifyContent: "flex-end",
               }}
             >
@@ -1836,11 +1929,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -1851,11 +1945,12 @@ const AdminOverview = () => {
                   background: "#111",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Create Notice
@@ -1864,7 +1959,7 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
-      {/* Fee Update Modal */}
+      {/* Fee Update Modal - Using responsive components */}
       {showFeeForm && (
         <div
           style={{
@@ -1873,27 +1968,28 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "16px",
           }}
         >
           <form
             onSubmit={submitFeeForm}
             style={{
               background: "#fff",
-              padding: 32,
-              borderRadius: 16,
-              minWidth: 420,
+              padding: isSmallMobile ? "20px" : "24px",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
-              maxWidth: 520,
-              width: "100%",
-              position: "relative",
+              gap: "16px",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <div
@@ -1901,10 +1997,16 @@ const AdminOverview = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: "8px",
               }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
+              <h2
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "22px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
                 Update Fee Record
               </h2>
               <button
@@ -1913,23 +2015,22 @@ const AdminOverview = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  fontSize: 22,
+                  fontSize: "22px",
                   cursor: "pointer",
                   color: "#888",
-                  marginLeft: 8,
                 }}
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Student *</label>
@@ -1941,9 +2042,10 @@ const AdminOverview = () => {
                     setFeeForm((f) => ({ ...f, studentId: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Student</option>
@@ -1959,7 +2061,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Fee Type *</label>
@@ -1971,9 +2073,10 @@ const AdminOverview = () => {
                     setFeeForm((f) => ({ ...f, feeType: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 >
                   <option value="">Select Fee Type</option>
@@ -1985,13 +2088,13 @@ const AdminOverview = () => {
                 </select>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Amount *</label>
@@ -2004,9 +2107,10 @@ const AdminOverview = () => {
                     setFeeForm((f) => ({ ...f, amount: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
@@ -2015,7 +2119,7 @@ const AdminOverview = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
+                  gap: "6px",
                 }}
               >
                 <label style={{ fontWeight: 500 }}>Due Date *</label>
@@ -2028,14 +2132,17 @@ const AdminOverview = () => {
                     setFeeForm((f) => ({ ...f, dueDate: e.target.value }))
                   }
                   style={{
-                    padding: 10,
-                    borderRadius: 6,
+                    padding: "10px",
+                    borderRadius: "6px",
                     border: "1px solid #ddd",
+                    width: "100%",
                   }}
                 />
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Status *</label>
               <select
                 required
@@ -2045,9 +2152,10 @@ const AdminOverview = () => {
                   setFeeForm((f) => ({ ...f, status: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
+                  width: "100%",
                 }}
               >
                 <option value="">Select Status</option>
@@ -2058,7 +2166,9 @@ const AdminOverview = () => {
                 ))}
               </select>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
               <label style={{ fontWeight: 500 }}>Payment Date</label>
               <input
                 name="paymentDate"
@@ -2068,14 +2178,15 @@ const AdminOverview = () => {
                   setFeeForm((f) => ({ ...f, paymentDate: e.target.value }))
                 }
                 style={{
-                  padding: 10,
-                  borderRadius: 6,
+                  padding: "10px",
+                  borderRadius: "6px",
                   border: "1px solid #ddd",
+                  width: "100%",
                 }}
                 placeholder="dd-mm-yyyy"
               />
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
               <button
                 type="button"
                 onClick={() => setShowFeeForm(false)}
@@ -2083,11 +2194,12 @@ const AdminOverview = () => {
                   background: "#fff",
                   color: "#4f46e5",
                   border: "1px solid #4f46e5",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Cancel
@@ -2098,11 +2210,12 @@ const AdminOverview = () => {
                   background: "#111",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: 16,
+                  fontSize: "16px",
                   cursor: "pointer",
+                  width: "100%",
                 }}
               >
                 Update Fee Record
@@ -2115,11 +2228,11 @@ const AdminOverview = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        style={{ marginBottom: "32px" }}
+        style={{ marginBottom: isMobile ? "24px" : "32px" }}
       >
         <h1
           style={{
-            fontSize: "28px",
+            fontSize: isMobile ? "24px" : "28px",
             fontWeight: 700,
             marginBottom: "10px",
             color: colors.text,
@@ -2130,7 +2243,7 @@ const AdminOverview = () => {
         </h1>
         <p
           style={{
-            fontSize: "16px",
+            fontSize: isMobile ? "15px" : "16px",
             color: colors.textSecondary,
             maxWidth: "600px",
             lineHeight: "1.5",
@@ -2140,13 +2253,18 @@ const AdminOverview = () => {
           activities, and update information in real-time.
         </p>
       </motion.div>
-      {/* Dashboard Stats */}
+
+      {/* Dashboard Stats - Responsive grid */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: "24px",
-          marginBottom: "40px",
+          gridTemplateColumns: isSmallMobile
+            ? "1fr"
+            : isMobile
+            ? "repeat(2, 1fr)"
+            : "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: isMobile ? "16px" : "24px",
+          marginBottom: isMobile ? "32px" : "40px",
         }}
       >
         {/* Total Students */}
@@ -2162,7 +2280,7 @@ const AdminOverview = () => {
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-            padding: "24px",
+            padding: isMobile ? "20px" : "24px",
             boxShadow: colors.shadow,
             transition: "all 0.3s ease",
             display: "flex",
@@ -2176,8 +2294,8 @@ const AdminOverview = () => {
           <div style={{ position: "relative", zIndex: 1 }}>
             <div
               style={{
-                fontSize: "14px",
-                marginBottom: "10px",
+                fontSize: isMobile ? "13px" : "14px",
+                marginBottom: "8px",
                 fontWeight: 500,
                 color: colors.textSecondary,
                 letterSpacing: "0.3px",
@@ -2187,7 +2305,7 @@ const AdminOverview = () => {
             </div>
             <div
               style={{
-                fontSize: "36px",
+                fontSize: isMobile ? "28px" : "36px",
                 fontWeight: 700,
                 color: colors.text,
               }}
@@ -2225,9 +2343,9 @@ const AdminOverview = () => {
           </div>
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "16px",
+              width: isMobile ? "48px" : "56px",
+              height: isMobile ? "48px" : "56px",
+              borderRadius: "14px",
               background:
                 "linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(129, 140, 248, 0.1))",
               display: "flex",
@@ -2238,7 +2356,7 @@ const AdminOverview = () => {
               boxShadow: "0 4px 12px rgba(79, 70, 229, 0.08)",
             }}
           >
-            <FaUser size={28} />
+            <FaUser size={isMobile ? 22 : 28} />
           </div>
           <div
             style={{
@@ -2268,7 +2386,7 @@ const AdminOverview = () => {
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-            padding: "24px",
+            padding: isMobile ? "20px" : "24px",
             boxShadow: colors.shadow,
             transition: "all 0.3s ease",
             display: "flex",
@@ -2374,7 +2492,7 @@ const AdminOverview = () => {
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-            padding: "24px",
+            padding: isMobile ? "20px" : "24px",
             boxShadow: colors.shadow,
             transition: "all 0.3s ease",
             display: "flex",
@@ -2480,7 +2598,7 @@ const AdminOverview = () => {
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-            padding: "24px",
+            padding: isMobile ? "20px" : "24px",
             boxShadow: colors.shadow,
             transition: "all 0.3s ease",
             display: "flex",
@@ -2573,15 +2691,15 @@ const AdminOverview = () => {
           />
         </motion.div>
       </div>
-      {/* Quick Data Management Section */}
+      {/* Quick Data Management Section - Adjusted for mobile */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
         style={{
-          marginBottom: "40px",
+          marginBottom: isMobile ? "32px" : "40px",
           background: colors.card,
-          padding: "24px",
+          padding: isMobile ? "20px" : "24px",
           borderRadius: "16px",
           boxShadow: colors.shadow,
           border: `1px solid ${colors.border}`,
@@ -2591,18 +2709,22 @@ const AdminOverview = () => {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
+
+            marginBottom: isMobile ? "16px" : "24px",
+            flexDirection: isSmallMobile ? "column" : "row",
+            alignItems: isSmallMobile ? "flex-start" : "center",
+            gap: isSmallMobile ? "8px" : "0",
           }}
         >
           <h2
             style={{
-              fontSize: "20px",
+              fontSize: isMobile ? "18px" : "20px",
               fontWeight: 600,
               color: colors.text,
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              margin: isSmallMobile ? "0 0 4px 0" : 0,
             }}
           >
             <FaTasks style={{ fontSize: "16px", color: colors.highlight }} />
@@ -2610,22 +2732,28 @@ const AdminOverview = () => {
           </h2>
           <span
             style={{
-              fontSize: "14px",
+              fontSize: isMobile ? "13px" : "14px",
               color: colors.textSecondary,
             }}
           >
             Add, edit, or sync data instantly
           </span>
         </div>
-        {/* Action Buttons */}
+
+        {/* Action Buttons - Responsive grid */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "16px",
+            gridTemplateColumns: isSmallMobile
+              ? "1fr"
+              : isMobile
+              ? "repeat(2, 1fr)"
+              : "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: isSmallMobile ? "12px" : "16px",
             marginBottom: "20px",
           }}
         >
+          {/* Action buttons - Use same component for consistent styling */}
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
@@ -2634,19 +2762,18 @@ const AdminOverview = () => {
             style={{
               display: "flex",
               alignItems: "center",
-
               justifyContent: "center",
               backgroundColor: colors.buttonPrimary,
               color: colors.buttonPrimaryText,
               border: "none",
               borderRadius: "12px",
-              padding: "14px 20px",
+              padding: isMobile ? "12px 16px" : "14px 20px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(79, 70, 229, 0.15)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
@@ -2666,13 +2793,13 @@ const AdminOverview = () => {
               color: "#fff",
               border: "none",
               borderRadius: "12px",
-              padding: "14px 20px",
+              padding: isMobile ? "12px 16px" : "14px 20px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(79, 70, 229, 0.15)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
@@ -2692,13 +2819,13 @@ const AdminOverview = () => {
               color: colors.buttonSecondaryText,
               border: `1px solid ${colors.buttonBorder}`,
               borderRadius: "12px",
-              padding: "14px 20px",
+              padding: isMobile ? "12px 16px" : "14px 20px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
@@ -2718,19 +2845,20 @@ const AdminOverview = () => {
               color: "#fff",
               border: "none",
               borderRadius: "12px",
-              padding: "14px 20px",
+              padding: isMobile ? "12px 16px" : "14px 20px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(245, 158, 11, 0.15)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
             <FaFileAlt size={16} />
             Add Test Result
           </motion.button>
+
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
@@ -2744,19 +2872,20 @@ const AdminOverview = () => {
               color: colors.buttonSecondaryText,
               border: `1px solid ${colors.buttonBorder}`,
               borderRadius: "12px",
-              padding: "14px 20px",
+              padding: isMobile ? "12px 16px" : "14px 20px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
             <FaCreditCard size={16} />
             Update Fees
           </motion.button>
+
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
@@ -2770,15 +2899,15 @@ const AdminOverview = () => {
               color: colors.buttonSecondaryText,
               border: `1px solid ${colors.buttonBorder}`,
               borderRadius: "12px",
-              padding: "14px 24px",
+              padding: isMobile ? "12px 16px" : "14px 24px",
               fontWeight: 600,
               cursor: "pointer",
               gap: "10px",
               width: "100%",
-              maxWidth: "220px",
+              maxWidth: isSmallMobile ? "100%" : "220px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              fontSize: "15px",
+              fontSize: isMobile ? "14px" : "15px",
               letterSpacing: "0.3px",
             }}
           >
@@ -2787,6 +2916,7 @@ const AdminOverview = () => {
           </motion.button>
         </div>
       </motion.div>
+
       {/* Recent Data Changes Section */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -2797,18 +2927,22 @@ const AdminOverview = () => {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
+
+            marginBottom: isMobile ? "16px" : "20px",
+            flexDirection: isSmallMobile ? "column" : "row",
+            alignItems: isSmallMobile ? "flex-start" : "center",
+            gap: isSmallMobile ? "8px" : "0",
           }}
         >
           <h2
             style={{
-              fontSize: "20px",
+              fontSize: isMobile ? "18px" : "20px",
               fontWeight: 600,
               color: colors.text,
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              margin: isSmallMobile ? "0 0 4px 0" : 0,
             }}
           >
             <FaSync style={{ fontSize: "16px", color: colors.highlight }} />
@@ -2816,20 +2950,23 @@ const AdminOverview = () => {
           </h2>
           <span
             style={{
-              fontSize: "14px",
+              fontSize: isMobile ? "13px" : "14px",
               color: colors.textSecondary,
             }}
           >
             Live updates to parent dashboards
           </span>
         </div>
-        {/* Action Buttons */}
+
+        {/* Action Buttons - Responsive */}
         <div
           style={{
             display: "flex",
-            justifyContent: "flex-end",
-            gap: "16px",
-            marginBottom: "20px",
+            justifyContent: isSmallMobile ? "space-between" : "flex-end",
+            alignItems: "center",
+            gap: isSmallMobile ? "8px" : "16px",
+            marginBottom: isMobile ? "16px" : "20px",
+            flexWrap: "wrap",
           }}
         >
           <motion.button
@@ -2845,13 +2982,14 @@ const AdminOverview = () => {
               color: colors.buttonSecondaryText,
               border: `1px solid ${colors.buttonBorder}`,
               borderRadius: "10px",
-              padding: "10px 16px",
+              padding: isSmallMobile ? "8px 12px" : "10px 16px",
               fontWeight: 500,
               cursor: "pointer",
               gap: "8px",
-              fontSize: "14px",
+              fontSize: isSmallMobile ? "13px" : "14px",
               transition: "all 0.2s ease",
               boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
+              flex: isSmallMobile ? 1 : "initial",
             }}
           >
             <FaFileExport size={14} />
@@ -2870,165 +3008,198 @@ const AdminOverview = () => {
               color: colors.buttonPrimaryText,
               border: "none",
               borderRadius: "10px",
-              padding: "10px 16px",
+              padding: isSmallMobile ? "8px 12px" : "10px 16px",
               fontWeight: 500,
               cursor: "pointer",
               gap: "8px",
-              fontSize: "14px",
+              fontSize: isSmallMobile ? "13px" : "14px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 10px rgba(79, 70, 229, 0.15)",
+              flex: isSmallMobile ? 1 : "initial",
             }}
           >
             <FaSync size={14} />
             Sync All
           </motion.button>
         </div>
-        {/* Recent Changes Table */}
+
+        {/* Recent Changes Table - Mobile optimized */}
         <div
           style={{
             backgroundColor: colors.card,
             borderRadius: "16px",
-            overflow: "hidden",
+            overflow: "auto",
             boxShadow: colors.shadow,
             border: `1px solid ${colors.border}`,
+            maxWidth: "100%",
           }}
         >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "14px",
-              color: colors.text,
-            }}
-          >
-            <thead
+          <div style={{ minWidth: isSmallMobile ? "500px" : "auto" }}>
+            <table
               style={{
-                backgroundColor:
-                  theme === "dark"
-                    ? "rgba(30, 41, 59, 0.5)"
-                    : "rgba(248, 250, 252, 0.8)",
-                borderBottom: `1px solid ${colors.border}`,
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: isMobile ? "13px" : "14px",
+                color: colors.text,
               }}
             >
-              <tr>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    textAlign: "left",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Type
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    textAlign: "left",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  User
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    textAlign: "left",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Action
-                </th>
-                <th
-                  style={{
-                    padding: "16px 20px",
-                    textAlign: "left",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Time
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentChanges.map((change, idx) => (
-                <motion.tr
-                  key={change.timestamp + change.type + change.user + idx}
-                  variants={tableRowVariants}
-                  whileHover="hover"
-                  style={{
-                    borderBottom: `1px solid ${colors.border}`,
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
-                  <td style={{ padding: "16px 20px" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "10px",
-                          backgroundColor: colors.iconBg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: colors.highlight,
-                        }}
-                      >
-                        {change.type === "attendance" && (
-                          <FaCalendarCheck size={18} />
-                        )}
-                        {change.type === "homework" && <FaBook size={18} />}
-                        {change.type === "fee" && <FaCreditCard size={18} />}
-                        {change.type === "testResult" && (
-                          <FaFileAlt size={18} />
-                        )}
-                        {change.type === "notice" && <FaComments size={18} />}
-                        {/* ...add more icons as needed... */}
-                      </motion.div>
-                      <div
-                        style={{
-                          textTransform: "capitalize",
-                          fontWeight: 500,
-                          letterSpacing: "0.3px",
-                        }}
-                      >
-                        {change.type}
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: "16px 20px", fontWeight: 500 }}>
-                    {change.user}
-                  </td>
-                  <td style={{ padding: "16px 20px" }}>{change.action}</td>
-                  <td
+              <thead
+                style={{
+                  backgroundColor:
+                    theme === "dark"
+                      ? "rgba(30, 41, 59, 0.5)"
+                      : "rgba(248, 250, 252, 0.8)",
+                  borderBottom: `1px solid ${colors.border}`,
+                }}
+              >
+                <tr>
+                  <th
                     style={{
-                      padding: "16px 20px",
-                      color: colors.textSecondary,
-                      fontWeight: 500,
-                      fontSize: "13px",
+                      padding: isMobile ? "12px 16px" : "16px 20px",
+                      textAlign: "left",
+                      fontSize: isMobile ? "12px" : "13px",
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
                     }}
                   >
-                    {change.timestamp}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                    Type
+                  </th>
+                  <th
+                    style={{
+                      padding: isMobile ? "12px 16px" : "16px 20px",
+                      textAlign: "left",
+                      fontSize: isMobile ? "12px" : "13px",
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    User
+                  </th>
+                  <th
+                    style={{
+                      padding: isMobile ? "12px 16px" : "16px 20px",
+                      textAlign: "left",
+                      fontSize: isMobile ? "12px" : "13px",
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Action
+                  </th>
+                  <th
+                    style={{
+                      padding: isMobile ? "12px 16px" : "16px 20px",
+                      textAlign: "left",
+                      fontSize: isMobile ? "12px" : "13px",
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Time
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentChanges.map((change, idx) => (
+                  <motion.tr
+                    key={change.timestamp + change.type + change.user + idx}
+                    variants={tableRowVariants}
+                    whileHover="hover"
+                    style={{
+                      borderBottom: `1px solid ${colors.border}`,
+                      transition: "background-color 0.2s ease",
+                    }}
+                  >
+                    <td
+                      style={{ padding: isMobile ? "12px 16px" : "16px 20px" }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: isMobile ? "8px" : "12px",
+                        }}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          style={{
+                            width: isMobile ? "32px" : "40px",
+                            height: isMobile ? "32px" : "40px",
+                            borderRadius: "8px",
+                            backgroundColor: colors.iconBg,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: colors.highlight,
+                          }}
+                        >
+                          {change.type === "attendance" && (
+                            <FaCalendarCheck size={isMobile ? 14 : 18} />
+                          )}
+                          {change.type === "homework" && (
+                            <FaBook size={isMobile ? 14 : 18} />
+                          )}
+                          {change.type === "fee" && (
+                            <FaCreditCard size={isMobile ? 14 : 18} />
+                          )}
+                          {change.type === "testResult" && (
+                            <FaFileAlt size={isMobile ? 14 : 18} />
+                          )}
+                          {change.type === "notice" && (
+                            <FaComments size={isMobile ? 14 : 18} />
+                          )}
+                        </motion.div>
+                        {!isSmallMobile && (
+                          <div
+                            style={{
+                              textTransform: "capitalize",
+                              fontWeight: 500,
+                              letterSpacing: "0.3px",
+                            }}
+                          >
+                            {change.type}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        fontWeight: 500,
+                        maxWidth: isSmallMobile ? "80px" : "auto",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {change.user}
+                    </td>
+                    <td
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        maxWidth: isSmallMobile ? "120px" : "auto",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {change.action}
+                    </td>
+                    <td
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        color: colors.textSecondary,
+                        fontWeight: 500,
+                        fontSize: isMobile ? "12px" : "13px",
+                      }}
+                    >
+                      {change.timestamp}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </motion.div>
     </div>

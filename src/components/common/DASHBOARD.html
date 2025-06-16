@@ -1,0 +1,2617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sharpr Parent Dashboard - Track Your Child's Progress</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* Header */
+      .header {
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 3px solid #000;
+      }
+
+      .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #000 0%, #333 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: bold;
+        font-size: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .logo-text h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #000;
+      }
+
+      .logo-text p {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+      }
+
+      .user-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .notifications {
+        position: relative;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 18px;
+      }
+
+      .notifications:hover {
+        background: #000;
+        color: #fff;
+        transform: scale(1.1);
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ff4757;
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+      }
+
+      .user-profile:hover {
+        border-color: #000;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .user-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #000;
+      }
+
+      .user-info p {
+        font-size: 0.8rem;
+        color: #666;
+      }
+
+      /* Main Dashboard */
+      .dashboard {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .dashboard-header {
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 0.5rem;
+      }
+
+      .dashboard-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        font-weight: 500;
+      }
+
+      /* Navigation */
+      .nav-container {
+        background: #fff;
+        border-radius: 15px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 8px;
+      }
+
+      .nav-tab {
+        padding: 12px 24px;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-tab:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+      }
+
+      .nav-tab.active {
+        background: #000;
+        color: #fff;
+        border-color: #000;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Tab Content */
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Cards */
+      .card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border: 1px solid #f0f0f0;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+
+      .card-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .card-subtitle {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      /* Grid Layouts */
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      }
+      .grid-3 {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .grid-4 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      /* Stats Cards */
+      .stat-card {
+        text-align: center;
+        padding: 2rem 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-label {
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-trend {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Progress Bars */
+      .progress-container {
+        margin: 1rem 0;
+      }
+
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #0abde3);
+        border-radius: 5px;
+        transition: width 1s ease-in-out;
+        position: relative;
+      }
+
+      .progress-fill::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        animation: shimmer 2s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      /* Badges */
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .badge-success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .badge-info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .badge-primary {
+        background: #000;
+        color: #fff;
+      }
+
+      /* Tables */
+      .table-container {
+        overflow-x: auto;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+      }
+
+      .table th,
+      .table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #000;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .table tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary {
+        background: #000;
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: #333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #000;
+        border: 2px solid #000;
+      }
+
+      .btn-outline:hover {
+        background: #000;
+        color: #fff;
+        transform: translateY(-2px);
+      }
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      /* Calendar */
+      .calendar-container {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .calendar-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .calendar-day-header {
+        background: #f8f9fa;
+        color: #666;
+        font-weight: 700;
+        font-size: 0.8rem;
+      }
+
+      .calendar-day.present {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .calendar-day.absent {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .calendar-day.holiday {
+        background: #e2e3e5;
+        color: #6c757d;
+      }
+
+      .calendar-day:hover:not(.calendar-day-header) {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Homework Items */
+      .homework-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .homework-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #000;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .homework-item:hover {
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transform: translateX(5px);
+      }
+
+      .homework-info h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #000;
+      }
+
+      .homework-meta {
+        font-size: 0.85rem;
+        color: #666;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .homework-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      /* Subject Performance */
+      .subject-performance {
+        margin: 1rem 0;
+      }
+
+      .subject-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .subject-item:hover {
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .subject-name {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .subject-score {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #000;
+      }
+
+      /* Fee Summary */
+      .fee-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .fee-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .fee-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .fee-amount {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .fee-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Notice Items */
+      .notice-item {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: #fff;
+        border-radius: 10px;
+        border-left: 4px solid #000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+      }
+
+      .notice-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .notice-item.priority-high {
+        border-left-color: #ff4757;
+      }
+      .notice-item.priority-medium {
+        border-left-color: #ffa502;
+      }
+      .notice-item.priority-low {
+        border-left-color: #2ed573;
+      }
+
+      .notice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+      }
+
+      .notice-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #000;
+        margin-bottom: 0.5rem;
+      }
+
+      .notice-date {
+        font-size: 0.8rem;
+        color: #666;
+      }
+
+      .notice-content {
+        line-height: 1.6;
+        color: #333;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          padding: 1rem;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .dashboard {
+          padding: 1rem;
+        }
+
+        .dashboard-title {
+          font-size: 2rem;
+        }
+
+        .nav-tabs {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .nav-tab {
+          justify-content: center;
+        }
+
+        .grid-2,
+        .grid-3,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+
+        .homework-item,
+        .subject-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .homework-actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .card {
+          padding: 1rem;
+        }
+
+        .stat-card {
+          padding: 1.5rem 1rem;
+        }
+      }
+
+      /* Loading Animation */
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        color: #666;
+      }
+
+      .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #f0f0f0;
+        border-top: 3px solid #000;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 1rem;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Notification Dropdown */
+      .notification-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 350px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .notification-dropdown.show {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .notification-header {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        font-weight: 600;
+      }
+
+      .notification-list {
+        padding: 0.5rem;
+      }
+
+      .notification-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f8f9fa;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .notification-item:hover {
+        background: #f8f9fa;
+      }
+
+      .notification-item:last-child {
+        border-bottom: none;
+      }
+
+      .notification-item.unread {
+        background: #f0f8ff;
+        border-left: 3px solid #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo-icon">S</div>
+          <div class="logo-text">
+            <h1>Sharpr</h1>
+            <p>Parent Dashboard</p>
+          </div>
+        </div>
+        <div class="user-section">
+          <div class="notifications" onclick="toggleNotifications()">
+            🔔
+            <span class="notification-badge">5</span>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">Recent Notifications</div>
+              <div class="notification-list">
+                <div class="notification-item unread">
+                  <div style="font-weight: 600">New homework assigned</div>
+                  <div style="font-size: 0.8rem; color: #666">
+                    Math: Algebra Practice Set
+                  </div>
+                  <div style="font-size: 0.7rem; color: #999">
+                    2 minutes ago
+                  </div>
+                </div>
+                <div class="notification-item unread">
+                  <div style="font-weight: 600">Test result published</div>
+                  <div style="font-size: 0.8rem; color: #666">
+                    Science: 85/100
+                  </div>
+                  <div style="font-size: 0.7rem; color: #999">1 hour ago</div>
+                </div>
+                <div class="notification-item">
+                  <div style="font-weight: 600">Fee payment reminder</div>
+                  <div style="font-size: 0.8rem; color: #666">
+                    Due on June 5, 2025
+                  </div>
+                  <div style="font-size: 0.7rem; color: #999">1 day ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">PR</div>
+            <div class="user-info">
+              <h3>Priya Rao</h3>
+              <p>Parent of Arjun (Class 8)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">Welcome back, Priya! 👋</h1>
+        <p class="dashboard-subtitle">
+          Here's everything about Arjun's academic journey at Sharpr
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-container">
+        <div class="nav-tabs">
+          <button class="nav-tab active" onclick="showTab('overview')">
+            📊 Overview
+          </button>
+          <button class="nav-tab" onclick="showTab('attendance')">
+            📅 Attendance
+          </button>
+          <button class="nav-tab" onclick="showTab('homework')">
+            📚 Homework
+          </button>
+          <button class="nav-tab" onclick="showTab('marks')">
+            🎓 Test & Exam Marks
+          </button>
+          <button class="nav-tab" onclick="showTab('fees')">
+            💳 Fee Status
+          </button>
+          <button class="nav-tab" onclick="showTab('notices')">
+            📢 Notices & Updates
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview Tab -->
+      <div id="overview" class="tab-content active">
+        <div class="grid grid-4">
+          <div class="stat-card">
+            <div class="stat-number">94%</div>
+            <div class="stat-label">Monthly Attendance</div>
+            <div class="stat-trend">📈 +3% from last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Pending Homework</div>
+            <div class="stat-trend">📝 Due this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">87%</div>
+            <div class="stat-label">Average Test Score</div>
+            <div class="stat-trend">📈 +8% improvement</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">✅</div>
+            <div class="stat-label">Fee Status</div>
+            <div class="stat-trend">💰 All payments current</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🎯 Recent Achievements</div>
+                <div class="card-subtitle">Latest academic milestones</div>
+              </div>
+            </div>
+            <div class="homework-list">
+              <div class="homework-item">
+                <div class="homework-info">
+                  <h4>🏆 Math Test Excellence</h4>
+                  <div class="homework-meta">
+                    <span>Score: 95/100</span>
+                    <span>Class Rank: 2nd</span>
+                    <span>May 8, 2025</span>
+                  </div>
+                </div>
+                <span class="badge badge-success">A+ Grade</span>
+              </div>
+              <div class="homework-item">
+                <div class="homework-info">
+                  <h4>📚 Perfect Homework Streak</h4>
+                  <div class="homework-meta">
+                    <span>15 consecutive submissions</span>
+                    <span>All subjects</span>
+                    <span>This month</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Streak</span>
+              </div>
+              <div class="homework-item">
+                <div class="homework-info">
+                  <h4>🎯 Attendance Excellence</h4>
+                  <div class="homework-meta">
+                    <span>94% attendance</span>
+                    <span>Above class average</span>
+                    <span>May 2025</span>
+                  </div>
+                </div>
+                <span class="badge badge-primary">Excellent</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 Upcoming Events</div>
+                <div class="card-subtitle">Important dates and deadlines</div>
+              </div>
+            </div>
+            <div class="notice-item priority-high">
+              <div class="notice-header">
+                <div>
+                  <div class="notice-title">🚨 Parent-Teacher Meeting</div>
+                  <div class="notice-date">May 20, 2025 • 10:00 AM</div>
+                </div>
+                <span class="badge badge-danger">High Priority</span>
+              </div>
+              <div class="notice-content">
+                Quarterly progress discussion with all subject teachers. Please
+                confirm attendance.
+              </div>
+            </div>
+            <div class="notice-item priority-medium">
+              <div class="notice-header">
+                <div>
+                  <div class="notice-title">📝 Science Unit Test</div>
+                  <div class="notice-date">May 15, 2025</div>
+                </div>
+                <span class="badge badge-warning">Medium Priority</span>
+              </div>
+              <div class="notice-content">
+                Physics chapter test covering Newton's Laws and Motion.
+              </div>
+            </div>
+            <div class="notice-item priority-low">
+              <div class="notice-header">
+                <div>
+                  <div class="notice-title">🏖️ Summer Program Registration</div>
+                  <div class="notice-date">May 25, 2025</div>
+                </div>
+                <span class="badge badge-info">Low Priority</span>
+              </div>
+              <div class="notice-content">
+                Early bird registration for summer learning programs opens.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Tab -->
+      <div id="attendance" class="tab-content">
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📊 Monthly Summary</div>
+                <div class="card-subtitle">May 2025 Attendance</div>
+              </div>
+            </div>
+            <div style="text-align: center">
+              <div class="stat-number" style="color: #2ed573; font-size: 3rem">
+                94%
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 94%"></div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(3, 1fr);
+                  gap: 1rem;
+                  margin-top: 1rem;
+                "
+              >
+                <div>
+                  <div
+                    style="font-size: 1.5rem; font-weight: bold; color: #2ed573"
+                  >
+                    23
+                  </div>
+                  <div style="font-size: 0.8rem; color: #666">Present</div>
+                </div>
+                <div>
+                  <div
+                    style="font-size: 1.5rem; font-weight: bold; color: #ff4757"
+                  >
+                    1
+                  </div>
+                  <div style="font-size: 0.8rem; color: #666">Absent</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.5rem; font-weight: bold">24</div>
+                  <div style="font-size: 0.8rem; color: #666">Total Days</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 This Week</div>
+                <div class="card-subtitle">May 6-10, 2025</div>
+              </div>
+            </div>
+            <div class="calendar-container">
+              <div class="calendar-grid">
+                <div class="calendar-day calendar-day-header">Mon</div>
+                <div class="calendar-day calendar-day-header">Tue</div>
+                <div class="calendar-day calendar-day-header">Wed</div>
+                <div class="calendar-day calendar-day-header">Thu</div>
+                <div class="calendar-day calendar-day-header">Fri</div>
+                <div class="calendar-day present" title="Present">6</div>
+                <div class="calendar-day present" title="Present">7</div>
+                <div class="calendar-day present" title="Present">8</div>
+                <div class="calendar-day absent" title="Absent - Medical Leave">
+                  9
+                </div>
+                <div class="calendar-day present" title="Present">10</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📈 Yearly Trend</div>
+                <div class="card-subtitle">2025 Progress</div>
+              </div>
+            </div>
+            <div class="subject-performance">
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>January</span>
+                  <span>88%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 88%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>February</span>
+                  <span>92%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 92%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>March</span>
+                  <span>90%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 90%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>April</span>
+                  <span>96%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 96%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>May</span>
+                  <span>94%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 94%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📋 Detailed Attendance Record</div>
+              <div class="card-subtitle">
+                Complete day-wise attendance history
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm">📥 Download Report</button>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Day</th>
+                  <th>Status</th>
+                  <th>Time In</th>
+                  <th>Time Out</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>May 10, 2025</td>
+                  <td>Friday</td>
+                  <td><span class="badge badge-success">Present</span></td>
+                  <td>4:00 PM</td>
+                  <td>8:00 PM</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>May 9, 2025</td>
+                  <td>Thursday</td>
+                  <td><span class="badge badge-danger">Absent</span></td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>Medical leave (Doctor's appointment)</td>
+                </tr>
+                <tr>
+                  <td>May 8, 2025</td>
+                  <td>Wednesday</td>
+                  <td><span class="badge badge-success">Present</span></td>
+                  <td>4:00 PM</td>
+                  <td>8:00 PM</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>May 7, 2025</td>
+                  <td>Tuesday</td>
+                  <td><span class="badge badge-success">Present</span></td>
+                  <td>4:00 PM</td>
+                  <td>8:00 PM</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>May 6, 2025</td>
+                  <td>Monday</td>
+                  <td><span class="badge badge-success">Present</span></td>
+                  <td>4:00 PM</td>
+                  <td>8:00 PM</td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Homework Tab -->
+      <div id="homework" class="tab-content">
+        <div class="grid grid-3">
+          <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Pending Assignments</div>
+            <div class="stat-trend">📝 Due this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Completed This Month</div>
+            <div class="stat-trend">✅ 100% submission rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">A</div>
+            <div class="stat-label">Average Grade</div>
+            <div class="stat-trend">🏆 Excellent performance</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📚 Current Homework Assignments</div>
+              <div class="card-subtitle">
+                All homework with download links and status
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-outline btn-sm">🔄 Refresh</button>
+              <button class="btn btn-primary btn-sm">📥 Download All</button>
+            </div>
+          </div>
+
+          <div class="homework-list">
+            <div class="homework-item" style="border-left-color: #ffa502">
+              <div class="homework-info">
+                <h4>📐 Mathematics - Algebra Practice Set</h4>
+                <div class="homework-meta">
+                  <span>📅 Assigned: May 8, 2025</span>
+                  <span>⏰ Due: May 12, 2025</span>
+                  <span>📖 Chapter 5: Linear Equations</span>
+                  <span>📄 15 problems</span>
+                </div>
+              </div>
+              <div class="homework-actions">
+                <span class="badge badge-warning">Pending</span>
+                <button
+                  class="btn btn-outline btn-sm"
+                  onclick="viewPDF('math-algebra.pdf')"
+                >
+                  👁️ View PDF
+                </button>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="downloadPDF('math-algebra.pdf')"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+
+            <div class="homework-item" style="border-left-color: #ffa502">
+              <div class="homework-info">
+                <h4>🔬 Science - Physics Worksheet</h4>
+                <div class="homework-meta">
+                  <span>📅 Assigned: May 6, 2025</span>
+                  <span>⏰ Due: May 13, 2025</span>
+                  <span>📖 Chapter 3: Force and Motion</span>
+                  <span>📄 20 questions</span>
+                </div>
+              </div>
+              <div class="homework-actions">
+                <span class="badge badge-warning">Pending</span>
+                <button
+                  class="btn btn-outline btn-sm"
+                  onclick="viewPDF('science-physics.pdf')"
+                >
+                  👁️ View PDF
+                </button>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="downloadPDF('science-physics.pdf')"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+
+            <div class="homework-item" style="border-left-color: #2ed573">
+              <div class="homework-info">
+                <h4>📝 English - Essay Writing</h4>
+                <div class="homework-meta">
+                  <span>📅 Assigned: May 4, 2025</span>
+                  <span>✅ Submitted: May 8, 2025</span>
+                  <span>📖 Topic: Environmental Conservation</span>
+                  <span>📄 500 words</span>
+                </div>
+              </div>
+              <div class="homework-actions">
+                <span class="badge badge-success">Graded: A+</span>
+                <button
+                  class="btn btn-outline btn-sm"
+                  onclick="viewPDF('english-essay.pdf')"
+                >
+                  👁️ View PDF
+                </button>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="downloadPDF('english-essay.pdf')"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+
+            <div class="homework-item" style="border-left-color: #2ed573">
+              <div class="homework-info">
+                <h4>🌍 Social Studies - History Timeline</h4>
+                <div class="homework-meta">
+                  <span>📅 Assigned: May 2, 2025</span>
+                  <span>✅ Submitted: May 6, 2025</span>
+                  <span>📖 Indian Independence Movement</span>
+                  <span>📄 Timeline chart</span>
+                </div>
+              </div>
+              <div class="homework-actions">
+                <span class="badge badge-success">Graded: B+</span>
+                <button
+                  class="btn btn-outline btn-sm"
+                  onclick="viewPDF('social-history.pdf')"
+                >
+                  👁️ View PDF
+                </button>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="downloadPDF('social-history.pdf')"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+
+            <div class="homework-item" style="border-left-color: #2ed573">
+              <div class="homework-info">
+                <h4>🇮🇳 Hindi - Grammar Exercises</h4>
+                <div class="homework-meta">
+                  <span>📅 Assigned: April 30, 2025</span>
+                  <span>✅ Submitted: May 4, 2025</span>
+                  <span>📖 Chapter 4: Vyakaran</span>
+                  <span>📄 Grammar exercises</span>
+                </div>
+              </div>
+              <div class="homework-actions">
+                <span class="badge badge-success">Graded: A</span>
+                <button
+                  class="btn btn-outline btn-sm"
+                  onclick="viewPDF('hindi-grammar.pdf')"
+                >
+                  👁️ View PDF
+                </button>
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="downloadPDF('hindi-grammar.pdf')"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📊 Homework Performance Analytics</div>
+              <div class="card-subtitle">
+                Subject-wise homework completion and grades
+              </div>
+            </div>
+          </div>
+          <div class="subject-performance">
+            <div class="subject-item">
+              <div>
+                <div class="subject-name">📐 Mathematics</div>
+                <div style="font-size: 0.8rem; color: #666">
+                  5 assignments completed
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div class="subject-score">A</div>
+                <div style="font-size: 0.8rem; color: #666">92% avg</div>
+              </div>
+            </div>
+            <div class="subject-item">
+              <div>
+                <div class="subject-name">🔬 Science</div>
+                <div style="font-size: 0.8rem; color: #666">
+                  4 assignments completed
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div class="subject-score">B+</div>
+                <div style="font-size: 0.8rem; color: #666">85% avg</div>
+              </div>
+            </div>
+            <div class="subject-item">
+              <div>
+                <div class="subject-name">📝 English</div>
+                <div style="font-size: 0.8rem; color: #666">
+                  6 assignments completed
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div class="subject-score">A+</div>
+                <div style="font-size: 0.8rem; color: #666">95% avg</div>
+              </div>
+            </div>
+            <div class="subject-item">
+              <div>
+                <div class="subject-name">🌍 Social Studies</div>
+                <div style="font-size: 0.8rem; color: #666">
+                  3 assignments completed
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div class="subject-score">A</div>
+                <div style="font-size: 0.8rem; color: #666">88% avg</div>
+              </div>
+            </div>
+            <div class="subject-item">
+              <div>
+                <div class="subject-name">🇮🇳 Hindi</div>
+                <div style="font-size: 0.8rem; color: #666">
+                  4 assignments completed
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div class="subject-score">A</div>
+                <div style="font-size: 0.8rem; color: #666">90% avg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marks Tab -->
+      <div id="marks" class="tab-content">
+        <div class="grid grid-3">
+          <div class="stat-card">
+            <div class="stat-number">87%</div>
+            <div class="stat-label">Overall Average</div>
+            <div class="stat-trend">📈 +8% improvement</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">A</div>
+            <div class="stat-label">Current Grade</div>
+            <div class="stat-trend">🏆 Excellent performance</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">3rd</div>
+            <div class="stat-label">Class Rank</div>
+            <div class="stat-trend">📈 Improved by 2 positions</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📊 Recent Test Results</div>
+                <div class="card-subtitle">Latest unit test performance</div>
+              </div>
+              <button class="btn btn-outline btn-sm">
+                📥 Download Reports
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Test</th>
+                    <th>Date</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>📐 Mathematics</td>
+                    <td>Unit Test 2</td>
+                    <td>May 8, 2025</td>
+                    <td>95/100</td>
+                    <td><span class="badge badge-success">A+</span></td>
+                  </tr>
+                  <tr>
+                    <td>🔬 Science</td>
+                    <td>Unit Test 2</td>
+                    <td>May 5, 2025</td>
+                    <td>85/100</td>
+                    <td><span class="badge badge-info">B+</span></td>
+                  </tr>
+                  <tr>
+                    <td>📝 English</td>
+                    <td>Unit Test 2</td>
+                    <td>May 3, 2025</td>
+                    <td>92/100</td>
+                    <td><span class="badge badge-success">A+</span></td>
+                  </tr>
+                  <tr>
+                    <td>🌍 Social Studies</td>
+                    <td>Unit Test 2</td>
+                    <td>April 30, 2025</td>
+                    <td>88/100</td>
+                    <td><span class="badge badge-success">A</span></td>
+                  </tr>
+                  <tr>
+                    <td>🇮🇳 Hindi</td>
+                    <td>Unit Test 2</td>
+                    <td>April 28, 2025</td>
+                    <td>90/100</td>
+                    <td><span class="badge badge-success">A</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📈 Subject Performance Trends</div>
+                <div class="card-subtitle">Progress across all subjects</div>
+              </div>
+            </div>
+            <div class="subject-performance">
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>📐 Mathematics</span>
+                  <span>95%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 95%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>📝 English</span>
+                  <span>92%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 92%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>🇮🇳 Hindi</span>
+                  <span>90%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 90%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>🌍 Social Studies</span>
+                  <span>88%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 88%"></div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-label">
+                  <span>🔬 Science</span>
+                  <span>85%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 85%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎓 Term Examination Results</div>
+              <div class="card-subtitle">
+                First Term Examination - April 2025
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-outline btn-sm">📊 View Analysis</button>
+              <button class="btn btn-primary btn-sm">
+                📥 Download Report Card
+              </button>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 1.5rem;
+              margin-bottom: 2rem;
+            "
+          >
+            <div
+              style="
+                text-align: center;
+                padding: 1.5rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+              "
+            >
+              <div style="font-size: 2.5rem; font-weight: bold">86.8%</div>
+              <div style="opacity: 0.9">Overall Percentage</div>
+            </div>
+            <div
+              style="
+                text-align: center;
+                padding: 1.5rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+              "
+            >
+              <div style="font-size: 2.5rem; font-weight: bold">A</div>
+              <div style="opacity: 0.9">Overall Grade</div>
+            </div>
+            <div
+              style="
+                text-align: center;
+                padding: 1.5rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+              "
+            >
+              <div style="font-size: 2.5rem; font-weight: bold">3rd</div>
+              <div style="opacity: 0.9">Class Rank</div>
+            </div>
+            <div
+              style="
+                text-align: center;
+                padding: 1.5rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+              "
+            >
+              <div style="font-size: 2.5rem; font-weight: bold">434</div>
+              <div style="opacity: 0.9">Total Marks</div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Max Marks</th>
+                  <th>Marks Obtained</th>
+                  <th>Percentage</th>
+                  <th>Grade</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>📐 Mathematics</td>
+                  <td>100</td>
+                  <td>92</td>
+                  <td>92%</td>
+                  <td><span class="badge badge-success">A+</span></td>
+                  <td>Excellent problem-solving skills</td>
+                </tr>
+                <tr>
+                  <td>🔬 Science</td>
+                  <td>100</td>
+                  <td>82</td>
+                  <td>82%</td>
+                  <td><span class="badge badge-success">A</span></td>
+                  <td>Good understanding of concepts</td>
+                </tr>
+                <tr>
+                  <td>📝 English</td>
+                  <td>100</td>
+                  <td>90</td>
+                  <td>90%</td>
+                  <td><span class="badge badge-success">A+</span></td>
+                  <td>Excellent writing and comprehension</td>
+                </tr>
+                <tr>
+                  <td>🌍 Social Studies</td>
+                  <td>100</td>
+                  <td>85</td>
+                  <td>85%</td>
+                  <td><span class="badge badge-success">A</span></td>
+                  <td>Good knowledge of history</td>
+                </tr>
+                <tr>
+                  <td>🇮🇳 Hindi</td>
+                  <td>100</td>
+                  <td>85</td>
+                  <td>85%</td>
+                  <td><span class="badge badge-success">A</span></td>
+                  <td>Good grammar and literature</td>
+                </tr>
+                <tr style="background: #f8f9fa; font-weight: bold">
+                  <td>Total</td>
+                  <td>500</td>
+                  <td>434</td>
+                  <td>86.8%</td>
+                  <td><span class="badge badge-success">A</span></td>
+                  <td>Overall excellent performance</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fees Tab -->
+      <div id="fees" class="tab-content">
+        <div class="fee-summary">
+          <div class="fee-item">
+            <div class="fee-amount">₹9,000</div>
+            <div class="fee-label">Current Term Fee</div>
+            <span class="badge badge-success" style="margin-top: 0.5rem"
+              >Paid</span
+            >
+          </div>
+          <div class="fee-item">
+            <div class="fee-amount">₹36,000</div>
+            <div class="fee-label">Annual Fee</div>
+            <span class="badge badge-info" style="margin-top: 0.5rem"
+              >4 Installments</span
+            >
+          </div>
+          <div class="fee-item">
+            <div class="fee-amount">June 5</div>
+            <div class="fee-label">Next Due Date</div>
+            <span class="badge badge-warning" style="margin-top: 0.5rem"
+              >Upcoming</span
+            >
+          </div>
+          <div class="fee-item">
+            <div class="fee-amount">₹0</div>
+            <div class="fee-label">Outstanding Balance</div>
+            <span class="badge badge-success" style="margin-top: 0.5rem"
+              >Clear</span
+            >
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🧾 Current Term Receipt</div>
+                <div class="card-subtitle">
+                  April - June 2025 | Receipt #SHR2025040201
+                </div>
+              </div>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="downloadReceipt('SHR2025040201')"
+              >
+                📥 Download Receipt
+              </button>
+            </div>
+            <div
+              style="
+                background: #f8f9fa;
+                padding: 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 0.8rem;
+                "
+              >
+                <span>📚 Tuition Fee:</span>
+                <span style="font-weight: 600">₹3,000</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 0.8rem;
+                "
+              >
+                <span>📐 Math Program:</span>
+                <span style="font-weight: 600">₹2,000</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 0.8rem;
+                "
+              >
+                <span>🔬 Science Program:</span>
+                <span style="font-weight: 600">₹2,000</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 0.8rem;
+                "
+              >
+                <span>📝 English Program:</span>
+                <span style="font-weight: 600">₹2,000</span>
+              </div>
+              <hr style="margin: 1rem 0; border: 1px solid #dee2e6" />
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 1.2rem;
+                  font-weight: bold;
+                "
+              >
+                <span>Total Amount:</span>
+                <span>₹9,000</span>
+              </div>
+            </div>
+            <div
+              style="
+                background: #e8f5e8;
+                padding: 1rem;
+                border-radius: 8px;
+                border-left: 4px solid #2ed573;
+              "
+            >
+              <div style="font-size: 0.9rem; color: #155724">
+                <div style="margin-bottom: 0.5rem">
+                  <strong>Payment Date:</strong> April 2, 2025
+                </div>
+                <div style="margin-bottom: 0.5rem">
+                  <strong>Payment Method:</strong> Credit Card (**** 1234)
+                </div>
+                <div style="margin-bottom: 0.5rem">
+                  <strong>Transaction ID:</strong> TXN2025040201
+                </div>
+                <div>
+                  <strong>Status:</strong>
+                  <span class="badge badge-success">Payment Successful</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 Payment Schedule</div>
+                <div class="card-subtitle">
+                  Upcoming fee installments for 2025
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm">🔔 Set Reminders</button>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Term</th>
+                    <th>Due Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background: #e8f5e8">
+                    <td>Apr-Jun 2025</td>
+                    <td>June 5, 2025</td>
+                    <td>₹9,000</td>
+                    <td><span class="badge badge-success">Paid</span></td>
+                  </tr>
+                  <tr>
+                    <td>Jul-Sep 2025</td>
+                    <td>Sep 5, 2025</td>
+                    <td>₹9,000</td>
+                    <td><span class="badge badge-warning">Upcoming</span></td>
+                  </tr>
+                  <tr>
+                    <td>Oct-Dec 2025</td>
+                    <td>Dec 5, 2025</td>
+                    <td>₹9,000</td>
+                    <td><span class="badge badge-warning">Upcoming</span></td>
+                  </tr>
+                  <tr>
+                    <td>Jan-Mar 2026</td>
+                    <td>Mar 5, 2026</td>
+                    <td>₹9,000</td>
+                    <td><span class="badge badge-warning">Upcoming</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📊 Payment History</div>
+              <div class="card-subtitle">
+                Complete payment record with receipts
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm">
+              📥 Download All Receipts
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Term</th>
+                  <th>Amount</th>
+                  <th>Payment Date</th>
+                  <th>Method</th>
+                  <th>Receipt No.</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Apr-Jun 2025</td>
+                  <td>₹9,000</td>
+                  <td>April 2, 2025</td>
+                  <td>Credit Card</td>
+                  <td>SHR2025040201</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                  <td>
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onclick="downloadReceipt('SHR2025040201')"
+                    >
+                      📥
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Jan-Mar 2025</td>
+                  <td>₹9,000</td>
+                  <td>January 10, 2025</td>
+                  <td>Bank Transfer</td>
+                  <td>SHR2025011001</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                  <td>
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onclick="downloadReceipt('SHR2025011001')"
+                    >
+                      📥
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Oct-Dec 2024</td>
+                  <td>₹9,000</td>
+                  <td>October 8, 2024</td>
+                  <td>Credit Card</td>
+                  <td>SHR2024100801</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                  <td>
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onclick="downloadReceipt('SHR2024100801')"
+                    >
+                      📥
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Jul-Sep 2024</td>
+                  <td>₹9,000</td>
+                  <td>July 12, 2024</td>
+                  <td>UPI</td>
+                  <td>SHR2024071201</td>
+                  <td><span class="badge badge-success">Paid</span></td>
+                  <td>
+                    <button
+                      class="btn btn-outline btn-sm"
+                      onclick="downloadReceipt('SHR2024071201')"
+                    >
+                      📥
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notices Tab -->
+      <div id="notices" class="tab-content">
+        <div class="grid grid-3">
+          <div class="stat-card">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Unread Notices</div>
+            <div class="stat-trend">📬 New updates available</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="stat-label">High Priority</div>
+            <div class="stat-trend">⚠️ Requires attention</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">18</div>
+            <div class="stat-label">Total This Month</div>
+            <div class="stat-trend">📊 All communications</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📢 Recent Notices & Updates</div>
+              <div class="card-subtitle">
+                Important announcements and school communications
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem">
+              <button class="btn btn-outline btn-sm">🔄 Refresh</button>
+              <button class="btn btn-primary btn-sm">✅ Mark All Read</button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-high">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">
+                  🚨 Urgent: Parent-Teacher Meeting Confirmation Required
+                </div>
+                <div class="notice-date">
+                  May 12, 2025 • High Priority • Unread
+                </div>
+              </div>
+              <span class="badge badge-danger">Action Required</span>
+            </div>
+            <div class="notice-content">
+              Dear Parents, we have scheduled a quarterly parent-teacher meeting
+              on <strong>May 20, 2025, at 10:00 AM</strong>. This meeting will
+              cover your child's academic progress, areas of improvement, and
+              upcoming curriculum changes. Please confirm your attendance by
+              replying to this notice before May 15, 2025. <br /><br />
+              <strong>📍 Venue:</strong> Sharpr Center, Saket<br />
+              <strong>⏰ Time:</strong> 10:00 AM - 12:00 PM<br />
+              <strong>📋 Agenda:</strong> Academic Progress Review, Q2 Planning,
+              Individual Consultations
+            </div>
+            <div
+              style="
+                margin-top: 1rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-primary btn-sm">
+                ✅ Confirm Attendance
+              </button>
+              <button class="btn btn-outline btn-sm">📥 Download Agenda</button>
+              <button class="btn btn-outline btn-sm">📞 Contact Teacher</button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-high">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">
+                  ⚠️ Mid-Term Examination Schedule Released
+                </div>
+                <div class="notice-date">
+                  May 10, 2025 • High Priority • Unread
+                </div>
+              </div>
+              <span class="badge badge-danger">Important</span>
+            </div>
+            <div class="notice-content">
+              The mid-term examinations for Class 8 are scheduled from
+              <strong>May 15-22, 2025</strong>. Please ensure your child is
+              well-prepared and arrives 15 minutes before the exam time.
+              Detailed timetable, syllabus, and preparation guidelines are
+              attached. <br /><br />
+              <strong>📅 Exam Dates:</strong> May 15-22, 2025<br />
+              <strong>⏰ Timing:</strong> 9:00 AM - 12:00 PM<br />
+              <strong>📍 Venue:</strong> Sharpr Center, Saket<br />
+              <strong>📚 Subjects:</strong> All core subjects included
+            </div>
+            <div
+              style="
+                margin-top: 1rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-primary btn-sm">
+                📥 Download Timetable
+              </button>
+              <button class="btn btn-outline btn-sm">📖 View Syllabus</button>
+              <button class="btn btn-outline btn-sm">
+                📋 Preparation Tips
+              </button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-medium">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">
+                  🏖️ Summer Learning Program Registration Open
+                </div>
+                <div class="notice-date">
+                  May 8, 2025 • Medium Priority • Unread
+                </div>
+              </div>
+              <span class="badge badge-warning">Registration Open</span>
+            </div>
+            <div class="notice-content">
+              We are excited to announce the opening of registration for our
+              <strong>Summer Learning Program 2025</strong>. This comprehensive
+              program includes advanced topics, practical workshops, coding
+              classes, and fun learning activities. Early bird discount of 20%
+              available until May 25, 2025. <br /><br />
+              <strong>📅 Duration:</strong> June 1 - July 15, 2025<br />
+              <strong>📚 Subjects:</strong> Advanced Math, Science Labs, English
+              Communication, Coding<br />
+              <strong>💰 Fee:</strong> ₹12,000 (Early Bird: ₹9,600)<br />
+              <strong>⏰ Timings:</strong> 9:00 AM - 1:00 PM
+            </div>
+            <div
+              style="
+                margin-top: 1rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-primary btn-sm">📝 Register Now</button>
+              <button class="btn btn-outline btn-sm">📄 View Brochure</button>
+              <button class="btn btn-outline btn-sm">💬 Ask Questions</button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-medium">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">
+                  🎉 Student Achievement Recognition Ceremony
+                </div>
+                <div class="notice-date">
+                  May 6, 2025 • Medium Priority • Unread
+                </div>
+              </div>
+              <span class="badge badge-warning">Event Invitation</span>
+            </div>
+            <div class="notice-content">
+              Congratulations to all our students who excelled in the recent
+              unit tests! We are organizing a
+              <strong>Student Achievement Recognition Ceremony</strong> to
+              celebrate their hard work and dedication. Special recognition goes
+              to the top performers in each subject. <br /><br />
+              <strong>📅 Date:</strong> May 20, 2025 (During PTM)<br />
+              <strong>🏆 Categories:</strong> Subject Toppers, Most Improved,
+              Perfect Attendance<br />
+              <strong>📍 Venue:</strong> Sharpr Center Main Hall<br />
+              <strong>👨‍👩‍👧‍👦 Attendance:</strong> Parents and students invited
+            </div>
+            <div
+              style="
+                margin-top: 1rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-outline btn-sm">
+                🎊 View Winners List
+              </button>
+              <button class="btn btn-outline btn-sm">📸 Event Photos</button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-low">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">
+                  📱 New Sharpr Parent Mobile App Launched
+                </div>
+                <div class="notice-date">May 4, 2025 • Low Priority • Read</div>
+              </div>
+              <span class="badge badge-info">App Update</span>
+            </div>
+            <div class="notice-content">
+              We are pleased to announce the launch of the new
+              <strong>Sharpr Parent Mobile App</strong>! Download it from Google
+              Play Store or Apple App Store to access all dashboard features on
+              your mobile device. Get real-time notifications, view homework,
+              check attendance, and much more. <br /><br />
+              <strong>📱 Features:</strong> Real-time notifications, Homework
+              tracking, Fee payments, Direct messaging<br />
+              <strong>📥 Download:</strong> Available on iOS and Android<br />
+              <strong>🔐 Login:</strong> Use your existing dashboard
+              credentials<br />
+              <strong>🆓 Cost:</strong> Free for all registered parents
+            </div>
+            <div
+              style="
+                margin-top: 1rem;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+              "
+            >
+              <button class="btn btn-primary btn-sm">📱 Download App</button>
+              <button class="btn btn-outline btn-sm">📖 Setup Guide</button>
+              <button class="btn btn-outline btn-sm">🎥 Video Tutorial</button>
+            </div>
+          </div>
+
+          <div class="notice-item priority-low">
+            <div class="notice-header">
+              <div>
+                <div class="notice-title">🏖️ Summer Holiday Schedule</div>
+                <div class="notice-date">May 2, 2025 • Low Priority • Read</div>
+              </div>
+              <span class="badge badge-info">Holiday Notice</span>
+            </div>
+            <div class="notice-content">
+              Please note that Sharpr centers will be closed for summer holidays
+              from <strong>May 25-31, 2025</strong>. Regular classes will resume
+              from June 1, 2025. We wish all students and families a wonderful
+              holiday break! Emergency contact numbers will remain active during
+              the holiday period. <br /><br />
+              <strong>🏖️ Holiday Period:</strong> May 25-31, 2025<br />
+              <strong>🔄 Resumption:</strong> June 1, 2025<br />
+              <strong>📞 Emergency Contact:</strong> +91-XXXXXXXXXX<br />
+              <strong>📧 Email Support:</strong> support@sharpr.in
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Tab switching functionality
+      function showTab(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll(".tab-content");
+        tabContents.forEach((content) => {
+          content.classList.remove("active");
+        });
+
+        // Remove active class from all tabs
+        const tabs = document.querySelectorAll(".nav-tab");
+        tabs.forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        // Show selected tab content
+        document.getElementById(tabName).classList.add("active");
+
+        // Add active class to clicked tab
+        event.target.classList.add("active");
+
+        // Store active tab in localStorage
+        localStorage.setItem("activeTab", tabName);
+
+        // Trigger animations for progress bars
+        if (tabName === "attendance" || tabName === "marks") {
+          setTimeout(() => {
+            const progressBars = document.querySelectorAll(".progress-fill");
+            progressBars.forEach((bar) => {
+              const width = bar.style.width;
+              bar.style.width = "0%";
+              setTimeout(() => {
+                bar.style.width = width;
+              }, 100);
+            });
+          }, 100);
+        }
+      }
+
+      // Notification dropdown toggle
+      function toggleNotifications() {
+        const dropdown = document.getElementById("notificationDropdown");
+        dropdown.classList.toggle("show");
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function (event) {
+          if (!event.target.closest(".notifications")) {
+            dropdown.classList.remove("show");
+          }
+        });
+      }
+
+      // PDF viewing and downloading functions
+      function viewPDF(filename) {
+        alert(
+          `Opening PDF viewer for: ${filename}\n\nThis would normally open the PDF in a new window or embedded viewer.`
+        );
+      }
+
+      function downloadPDF(filename) {
+        alert(
+          `Downloading: ${filename}\n\nFile download would start automatically.`
+        );
+      }
+
+      function downloadReceipt(receiptNo) {
+        alert(
+          `Downloading receipt: ${receiptNo}\n\nReceipt PDF download would start automatically.`
+        );
+      }
+
+      // Initialize dashboard
+      document.addEventListener("DOMContentLoaded", function () {
+        // Restore active tab from localStorage
+        const savedTab = localStorage.getItem("activeTab");
+        if (savedTab && document.getElementById(savedTab)) {
+          showTab(savedTab);
+          // Update tab button appearance
+          document.querySelectorAll(".nav-tab").forEach((tab) => {
+            tab.classList.remove("active");
+            if (
+              tab.textContent.toLowerCase().includes(savedTab.toLowerCase())
+            ) {
+              tab.classList.add("active");
+            }
+          });
+        }
+
+        // Animate progress bars on page load
+        setTimeout(() => {
+          const progressBars = document.querySelectorAll(".progress-fill");
+          progressBars.forEach((bar) => {
+            const width = bar.style.width;
+            bar.style.width = "0%";
+            setTimeout(() => {
+              bar.style.width = width;
+            }, Math.random() * 500 + 200);
+          });
+        }, 500);
+
+        // Simulate real-time updates
+        setInterval(function () {
+          // Update notification badge randomly
+          const badge = document.querySelector(".notification-badge");
+          if (Math.random() > 0.98) {
+            // 2% chance every second
+            const currentCount = parseInt(badge.textContent);
+            badge.textContent = currentCount + 1;
+
+            // Add a new notification to dropdown
+            const notificationList =
+              document.querySelector(".notification-list");
+            const newNotification = document.createElement("div");
+            newNotification.className = "notification-item unread";
+            newNotification.innerHTML = `
+                        <div style="font-weight: 600;">New update available</div>
+                        <div style="font-size: 0.8rem; color: #666;">System notification</div>
+                        <div style="font-size: 0.7rem; color: #999;">Just now</div>
+                    `;
+            notificationList.insertBefore(
+              newNotification,
+              notificationList.firstChild
+            );
+          }
+        }, 1000);
+
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+          anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute("href"));
+            if (target) {
+              target.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          });
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener("keydown", function (e) {
+          if (e.altKey) {
+            switch (e.key) {
+              case "1":
+                showTab("overview");
+                break;
+              case "2":
+                showTab("attendance");
+                break;
+              case "3":
+                showTab("homework");
+                break;
+              case "4":
+                showTab("marks");
+                break;
+              case "5":
+                showTab("fees");
+                break;
+              case "6":
+                showTab("notices");
+                break;
+            }
+          }
+        });
+
+        // Add loading states for buttons
+        document.querySelectorAll(".btn").forEach((button) => {
+          button.addEventListener("click", function () {
+            if (
+              this.textContent.includes("Download") ||
+              this.textContent.includes("📥")
+            ) {
+              const originalText = this.innerHTML;
+              this.innerHTML =
+                '<div class="spinner" style="width: 12px; height: 12px; margin-right: 5px;"></div>Downloading...';
+              this.disabled = true;
+
+              setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+              }, 2000);
+            }
+          });
+        });
+
+        // Mark notices as read when clicked
+        document.querySelectorAll(".notice-item").forEach((notice) => {
+          notice.addEventListener("click", function () {
+            if (
+              this.classList.contains("priority-high") ||
+              this.classList.contains("priority-medium")
+            ) {
+              const dateElement = this.querySelector(".notice-date");
+              if (dateElement.textContent.includes("Unread")) {
+                dateElement.textContent = dateElement.textContent.replace(
+                  "Unread",
+                  "Read"
+                );
+                this.style.opacity = "0.8";
+
+                // Decrease notification count
+                const badge = document.querySelector(".notification-badge");
+                const currentCount = parseInt(badge.textContent);
+                if (currentCount > 0) {
+                  badge.textContent = currentCount - 1;
+                }
+              }
+            }
+          });
+        });
+      });
+
+      // Auto-refresh data every 5 minutes
+      setInterval(function () {
+        console.log("Auto-refreshing dashboard data...");
+        // In a real application, this would fetch fresh data from the server
+      }, 300000);
+
+      // Add hover effects for interactive elements
+      document.addEventListener("DOMContentLoaded", function () {
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card) => {
+          card.addEventListener("mouseenter", function () {
+            this.style.transform = "translateY(-5px)";
+          });
+
+          card.addEventListener("mouseleave", function () {
+            this.style.transform = "translateY(0)";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -58,15 +58,15 @@ const results = [
     badgeColor: "#4f46e5",
     year: "2022",
   },
-  {
-    name: "Simran Kaur",
-    achievement: "Coding Competition Winner",
-    score: "1st Place, CodeFest",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    badge: <FaAward />,
-    badgeColor: "#06b6d4",
-    year: "2022",
-  },
+  // {
+  //   name: "Simran Kaur",
+  //   achievement: "Coding Competition Winner",
+  //   score: "1st Place, CodeFest",
+  //   avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+  //   badge: <FaAward />,
+  //   badgeColor: "#06b6d4",
+  //   year: "2022",
+  // },
 ];
 
 function useIsMobile(breakpoint = 700) {

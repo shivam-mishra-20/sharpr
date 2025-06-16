@@ -20,6 +20,10 @@ import {
   FaFilter,
   FaPlus,
   FaCalendarAlt,
+  FaBars,
+  FaChevronRight,
+  FaCalendar,
+  FaChalkboardTeacher,
 } from "react-icons/fa";
 
 const classOptions = [
@@ -53,6 +57,30 @@ const initialForm = {
   dueDate: "",
 };
 
+// Screen size hook for responsive design
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return windowSize;
+}
+
 const AdminHomework = () => {
   const [homeworks, setHomeworks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +91,13 @@ const AdminHomework = () => {
   const [filterClass, setFilterClass] = useState("");
   const [filterSubject, setFilterSubject] = useState("");
   const [error, setError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Get window size for responsive design
+  const { width } = useWindowSize();
+  const isSmallMobile = width <= 480; // Extra small screens
+  const isMobile = width <= 768;
+  const isTablet = width <= 1024 && width > 768;
 
   // Fetch homework data
   const fetchHomeworks = async () => {
@@ -206,6 +241,266 @@ const AdminHomework = () => {
     tap: { scale: 0.98, transition: { duration: 0.2 } },
   };
 
+  // Render cards for mobile view instead of table rows
+  const renderHomeworkCard = (hw, index) => {
+    return (
+      <motion.div
+        key={hw.id}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        style={{
+          padding: 16,
+          borderRadius: 12,
+          border: `1px solid ${colors.cardBorder}`,
+          marginBottom: 12,
+          background: colors.card,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          <h3
+            style={{
+              margin: 0,
+              fontSize: 16,
+              fontWeight: 600,
+              color: colors.text,
+              flex: 1,
+              paddingRight: 8,
+            }}
+          >
+            {hw.title}
+          </h3>
+          <span
+            style={{
+              background: colors.accentLight,
+              color: colors.accent,
+              padding: "4px 8px",
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {hw.subject}
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 12,
+            fontSize: 13,
+            color: colors.textSecondary,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FaChalkboardTeacher size={12} />
+            {hw.class}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FaCalendar size={12} color={colors.accent} />
+            Assigned:{" "}
+            {hw.assignedDate ||
+              hw.createdAt?.toDate?.()?.toLocaleDateString?.() ||
+              ""}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FaCalendarAlt size={12} color={colors.warning} />
+            Due: {hw.dueDate}
+          </div>
+        </div>
+
+        {!isSmallMobile && (
+          <div
+            style={{
+              fontSize: 13,
+              marginBottom: 12,
+              color: colors.text,
+              background:
+                theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.03)",
+              padding: 8,
+              borderRadius: 6,
+              maxHeight: 60,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {hw.description}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: 8,
+            gap: 8,
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleEdit(hw)}
+            style={{
+              background: colors.warning,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 36,
+            }}
+          >
+            <FaPencilAlt size={12} /> Edit
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleDelete(hw.id)}
+            style={{
+              background: colors.danger,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 36,
+            }}
+          >
+            <FaTrashAlt size={12} /> Delete
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Render action buttons differently on mobile
+  const renderActionButtons = (hw) => {
+    if (isMobile) {
+      return (
+        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => handleEdit(hw)}
+            style={{
+              background: colors.warning,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+            }}
+            aria-label="Edit"
+          >
+            <FaPencilAlt size={12} />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => handleDelete(hw.id)}
+            style={{
+              background: colors.danger,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+            }}
+            aria-label="Delete"
+          >
+            <FaTrashAlt size={12} />
+          </motion.button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => handleEdit(hw)}
+          style={{
+            background: colors.warning,
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 12px",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <FaPencilAlt size={12} /> Edit
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => handleDelete(hw.id)}
+          style={{
+            background: colors.danger,
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 12px",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <FaTrashAlt size={12} /> Delete
+        </motion.button>
+      </div>
+    );
+  };
+
+  // Toggle sidebar function (to be connected to parent component)
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+    // You'll need to communicate this state to a parent component that manages the sidebar
+    // For example, using context or props
+  };
+
   return (
     <motion.div
       initial="hidden"
@@ -214,69 +509,114 @@ const AdminHomework = () => {
       style={{
         maxWidth: 1200,
         margin: "0 auto",
-        padding: 24,
+        padding: isSmallMobile ? "12px 8px" : isMobile ? 16 : 24,
         color: colors.text,
       }}
     >
-      <motion.h1
-        variants={itemVariants}
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-          marginBottom: 8,
-          color: colors.text,
-        }}
-      >
-        Homework Management
-      </motion.h1>
+      {/* Mobile Header with Sidebar Toggle */}
+      {isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 12,
+            gap: 12,
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSidebar}
+            style={{
+              background: colors.card,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 8,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+            aria-label="Toggle Sidebar"
+          >
+            <FaBars size={16} />
+          </motion.button>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Homework</h1>
+        </motion.div>
+      )}
 
-      <motion.p
-        variants={itemVariants}
-        style={{
-          color: colors.textSecondary,
-          marginBottom: 24,
-          fontSize: 16,
-        }}
-      >
-        Assign, edit, search, and manage homework for all classes.
-      </motion.p>
+      {/* Desktop/Tablet Header */}
+      {!isMobile && (
+        <>
+          <motion.h1
+            variants={itemVariants}
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              marginBottom: 8,
+              color: colors.text,
+            }}
+          >
+            Homework Management
+          </motion.h1>
 
-      {/* Search & Filter */}
+          <motion.p
+            variants={itemVariants}
+            style={{
+              color: colors.textSecondary,
+              marginBottom: 24,
+              fontSize: 16,
+            }}
+          >
+            Assign, edit, search, and manage homework for all classes.
+          </motion.p>
+        </>
+      )}
+
+      {/* Search & Filter - Responsive Layout */}
       <motion.div
         variants={itemVariants}
         style={{
           display: "flex",
-          gap: 16,
-          marginBottom: 24,
+          gap: isSmallMobile ? 8 : isMobile ? 12 : 16,
+          marginBottom: isSmallMobile ? 12 : 24,
           flexWrap: "wrap",
           alignItems: "center",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
+        {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: 1,
-            minWidth: 220,
-            maxWidth: 340,
+            flex: isMobile ? "1 0 100%" : 1,
+            minWidth: isMobile ? "100%" : 220,
+            maxWidth: isMobile ? "100%" : 340,
             display: "flex",
             alignItems: "center",
             gap: 8,
             background: colors.card,
             borderRadius: 10,
-            padding: "4px 16px",
+            padding: isSmallMobile ? "2px 12px" : "4px 16px",
             border: `1px solid ${colors.border}`,
           }}
         >
-          <FaSearch style={{ color: colors.textSecondary }} />
+          <FaSearch style={{ color: colors.textSecondary, flexShrink: 0 }} />
           <input
             type="text"
-            placeholder="Search by title or description"
+            placeholder={
+              isSmallMobile ? "Search..." : "Search by title or description"
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              padding: "10px 0",
+              padding: isSmallMobile ? "8px 0" : "10px 0",
               border: "none",
               width: "100%",
-              fontSize: 15,
+              fontSize: 14,
               backgroundColor: "transparent",
               color: colors.text,
               outline: "none",
@@ -294,6 +634,7 @@ const AdminHomework = () => {
                 color: colors.textSecondary,
                 cursor: "pointer",
                 padding: 4,
+                flexShrink: 0,
               }}
             >
               <FaTimes size={14} />
@@ -301,48 +642,65 @@ const AdminHomework = () => {
           )}
         </div>
 
-        <select
-          value={filterClass}
-          onChange={(e) => setFilterClass(e.target.value)}
+        {/* Filter Controls - Row on desktop, wrap on mobile */}
+        <div
           style={{
-            padding: 12,
-            borderRadius: 10,
-            border: `1px solid ${colors.border}`,
-            background: colors.card,
-            color: colors.text,
-            minWidth: 140,
-            fontSize: 14,
+            display: "flex",
+            gap: isSmallMobile ? 6 : 12,
+            flexWrap: "wrap",
+            width: isMobile ? "100%" : "auto",
           }}
         >
-          <option value="">All Classes</option>
-          {classOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+          <select
+            value={filterClass}
+            onChange={(e) => setFilterClass(e.target.value)}
+            style={{
+              padding: isSmallMobile ? "8px 6px" : 12,
+              borderRadius: 10,
+              border: `1px solid ${colors.border}`,
+              background: colors.card,
+              color: colors.text,
+              minWidth: isMobile ? 0 : 140,
+              fontSize: 14,
+              flex: isMobile ? 1 : "auto",
+              WebkitAppearance: isSmallMobile ? "none" : "auto", // Simplify dropdown on small mobile
+              appearance: isSmallMobile ? "none" : "auto",
+            }}
+          >
+            <option value="">All Classes</option>
+            {classOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={filterSubject}
-          onChange={(e) => setFilterSubject(e.target.value)}
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            border: `1px solid ${colors.border}`,
-            background: colors.card,
-            color: colors.text,
-            minWidth: 140,
-            fontSize: 14,
-          }}
-        >
-          <option value="">All Subjects</option>
-          {subjectOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+          <select
+            value={filterSubject}
+            onChange={(e) => setFilterSubject(e.target.value)}
+            style={{
+              padding: isSmallMobile ? "8px 6px" : 12,
+              borderRadius: 10,
+              border: `1px solid ${colors.border}`,
+              background: colors.card,
+              color: colors.text,
+              minWidth: isMobile ? 0 : 140,
+              fontSize: 14,
+              flex: isMobile ? 1 : "auto",
+              WebkitAppearance: isSmallMobile ? "none" : "auto", // Simplify dropdown on small mobile
+              appearance: isSmallMobile ? "none" : "auto",
+            }}
+          >
+            <option value="">All Subjects</option>
+            {subjectOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
 
+        {/* Add Button - Full width on mobile */}
         <motion.button
           variants={buttonVariants}
           whileHover="hover"
@@ -353,22 +711,24 @@ const AdminHomework = () => {
             color: "#fff",
             border: "none",
             borderRadius: 10,
-            padding: "12px 20px",
+            padding: isSmallMobile ? "10px 16px" : "12px 20px",
             fontWeight: 600,
-            fontSize: 15,
+            fontSize: isSmallMobile ? 14 : 15,
             cursor: "pointer",
-            minWidth: 140,
+            minWidth: isMobile ? "100%" : 140,
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
             gap: 10,
             boxShadow: colors.buttonShadow,
           }}
         >
-          <FaPlus size={14} /> Assign Homework
+          <FaPlus size={isSmallMobile ? 12 : 14} />{" "}
+          {isSmallMobile ? "Add Homework" : "Assign Homework"}
         </motion.button>
       </motion.div>
 
-      {/* Error */}
+      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -397,257 +757,304 @@ const AdminHomework = () => {
         </motion.div>
       )}
 
-      {/* Homework Table */}
-      <motion.div
-        variants={itemVariants}
-        style={{
-          background: colors.card,
-          borderRadius: 16,
-          boxShadow: colors.shadow,
-          overflow: "hidden",
-          border: `1px solid ${colors.cardBorder}`,
-          transition: "all 0.3s ease",
-        }}
-      >
-        <div style={{ overflowX: "auto", width: "100%" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ background: colors.tableHeader }}>
-              <tr>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Title
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Subject
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Class
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Assigned Date
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Due Date
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Description
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "center",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: 32 }}>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1,
-                        ease: "linear",
-                      }}
-                      style={{ display: "inline-block", marginRight: 10 }}
-                    >
-                      <FaBook size={16} color={colors.accent} />
-                    </motion.div>
-                    Loading homework assignments...
-                  </td>
-                </tr>
-              ) : filteredHomeworks.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    style={{
-                      textAlign: "center",
-                      padding: 32,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    No homework found matching your search criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredHomeworks.map((hw, index) => (
-                  <motion.tr
-                    key={hw.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    style={{
-                      borderBottom: `1px solid ${colors.tableBorder}`,
-                      background:
-                        index % 2 === 0 ? colors.tableRow : colors.tableRowAlt,
-                    }}
-                    whileHover={{
-                      backgroundColor:
-                        theme === "dark"
-                          ? "rgba(59, 130, 246, 0.1)"
-                          : "rgba(79, 70, 229, 0.05)",
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: 14,
-                        fontWeight: 600,
-                        color: colors.text,
-                      }}
-                    >
-                      {hw.title}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      <span
-                        style={{
-                          background: colors.accentLight,
-                          color: colors.accent,
-                          padding: "4px 8px",
-                          borderRadius: 6,
-                          fontSize: 13,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {hw.subject}
-                      </span>
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {hw.class}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {hw.assignedDate ||
-                        hw.createdAt?.toDate?.()?.toLocaleDateString?.() ||
-                        ""}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {hw.dueDate}
-                    </td>
-                    <td
-                      style={{
-                        padding: 14,
-                        maxWidth: 220,
-                        whiteSpace: "pre-line",
-                        color: colors.text,
-                        lineHeight: 1.5,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {hw.description}
-                    </td>
-                    <td style={{ padding: 14, textAlign: "center" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleEdit(hw)}
-                          style={{
-                            background: colors.warning,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 13,
-                            fontWeight: 600,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <FaPencilAlt size={12} /> Edit
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(hw.id)}
-                          style={{
-                            background: colors.danger,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 13,
-                            fontWeight: 600,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <FaTrashAlt size={12} /> Delete
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+      {/* Mobile Card View */}
+      {isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            marginBottom: 20,
+          }}
+        >
+          {loading ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1,
+                  ease: "linear",
+                }}
+                style={{ display: "inline-block", marginBottom: 8 }}
+              >
+                <FaBook size={24} color={colors.accent} />
+              </motion.div>
+              <p style={{ margin: 0 }}>Loading homework assignments...</p>
+            </div>
+          ) : filteredHomeworks.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+                color: colors.textSecondary,
+              }}
+            >
+              No homework found matching your search criteria.
+            </div>
+          ) : (
+            filteredHomeworks.map((hw, index) => renderHomeworkCard(hw, index))
+          )}
+        </motion.div>
+      )}
 
-      {/* Homework Form Modal */}
+      {/* Desktop/Tablet View - Table */}
+      {!isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            background: colors.card,
+            borderRadius: 16,
+            boxShadow: colors.shadow,
+            overflow: "hidden",
+            border: `1px solid ${colors.cardBorder}`,
+            transition: "all 0.3s ease",
+          }}
+        >
+          <div
+            style={{
+              overflowX: "auto",
+              width: "100%",
+              WebkitOverflowScrolling: "touch", // For smooth scrolling on iOS
+              msOverflowStyle: "-ms-autohiding-scrollbar", // Better experience on Edge
+            }}
+          >
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead style={{ background: colors.tableHeader }}>
+                <tr>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Title
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Subject
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Class
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Assigned Date
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Due Date
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Description
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "center",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{ textAlign: "center", padding: 32 }}
+                    >
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "linear",
+                        }}
+                        style={{ display: "inline-block", marginRight: 10 }}
+                      >
+                        <FaBook size={16} color={colors.accent} />
+                      </motion.div>
+                      Loading homework assignments...
+                    </td>
+                  </tr>
+                ) : filteredHomeworks.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{
+                        textAlign: "center",
+                        padding: 32,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      No homework found matching your search criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredHomeworks.map((hw, index) => (
+                    <motion.tr
+                      key={hw.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      style={{
+                        borderBottom: `1px solid ${colors.tableBorder}`,
+                        background:
+                          index % 2 === 0
+                            ? colors.tableRow
+                            : colors.tableRowAlt,
+                      }}
+                      whileHover={{
+                        backgroundColor:
+                          theme === "dark"
+                            ? "rgba(59, 130, 246, 0.1)"
+                            : "rgba(79, 70, 229, 0.05)",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: 14,
+                          fontWeight: 600,
+                          color: colors.text,
+                        }}
+                      >
+                        {hw.title}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          color: colors.text,
+                        }}
+                      >
+                        <span
+                          style={{
+                            background: colors.accentLight,
+                            color: colors.accent,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {hw.subject}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          color: colors.text,
+                        }}
+                      >
+                        {hw.class}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          color: colors.text,
+                        }}
+                      >
+                        {hw.assignedDate ||
+                          hw.createdAt?.toDate?.()?.toLocaleDateString?.() ||
+                          ""}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          color: colors.text,
+                        }}
+                      >
+                        {hw.dueDate}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          maxWidth: 220,
+                          whiteSpace: "pre-line",
+                          color: colors.text,
+                          lineHeight: 1.5,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {hw.description}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          textAlign: "center",
+                        }}
+                      >
+                        {renderActionButtons(hw)}
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Homework Form Modal - Responsive */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -666,6 +1073,7 @@ const AdminHomework = () => {
               alignItems: "center",
               justifyContent: "center",
               backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
             }}
           >
             <motion.div
@@ -676,7 +1084,7 @@ const AdminHomework = () => {
               style={{
                 width: "100%",
                 maxWidth: 600,
-                maxHeight: "90vh",
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
                 overflow: "auto",
                 padding: 0,
                 borderRadius: 16,
@@ -687,10 +1095,10 @@ const AdminHomework = () => {
               <form
                 onSubmit={handleFormSubmit}
                 style={{
-                  padding: 32,
+                  padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 24,
+                  gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
                 }}
               >
                 <div
@@ -702,7 +1110,7 @@ const AdminHomework = () => {
                 >
                   <h2
                     style={{
-                      fontSize: 22,
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
                       fontWeight: 700,
                       margin: 0,
                       color: colors.text,
@@ -753,7 +1161,7 @@ const AdminHomework = () => {
                       fontWeight: 500,
                       color: colors.text,
                       marginBottom: 2,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                     }}
                   >
                     Assignment Title *
@@ -765,7 +1173,7 @@ const AdminHomework = () => {
                       setForm((f) => ({ ...f, title: e.target.value }))
                     }
                     style={{
-                      padding: 12,
+                      padding: isSmallMobile ? 10 : 12,
                       borderRadius: 8,
                       border: `1px solid ${colors.border}`,
                       background: colors.inputBg,
@@ -776,14 +1184,21 @@ const AdminHomework = () => {
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -791,7 +1206,7 @@ const AdminHomework = () => {
                         fontWeight: 500,
                         color: colors.text,
                         marginBottom: 2,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       Subject *
@@ -803,12 +1218,12 @@ const AdminHomework = () => {
                         setForm((f) => ({ ...f, subject: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     >
@@ -823,10 +1238,10 @@ const AdminHomework = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -834,7 +1249,7 @@ const AdminHomework = () => {
                         fontWeight: 500,
                         color: colors.text,
                         marginBottom: 2,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       Class *
@@ -846,12 +1261,12 @@ const AdminHomework = () => {
                         setForm((f) => ({ ...f, class: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     >
@@ -866,14 +1281,18 @@ const AdminHomework = () => {
                 </div>
 
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
                 >
                   <label
                     style={{
                       fontWeight: 500,
                       color: colors.text,
                       marginBottom: 2,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                     }}
                   >
                     Description *
@@ -885,27 +1304,34 @@ const AdminHomework = () => {
                       setForm((f) => ({ ...f, description: e.target.value }))
                     }
                     style={{
-                      padding: 12,
+                      padding: isSmallMobile ? 10 : 12,
                       borderRadius: 8,
                       border: `1px solid ${colors.border}`,
                       background: colors.inputBg,
                       color: colors.text,
-                      fontSize: 15,
-                      minHeight: 100,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      minHeight: isSmallMobile ? 60 : isMobile ? 80 : 100,
                       resize: "vertical",
                     }}
                     placeholder="Enter homework description and requirements"
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -913,14 +1339,14 @@ const AdminHomework = () => {
                         fontWeight: 500,
                         color: colors.text,
                         marginBottom: 2,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
                       }}
                     >
                       <FaCalendarAlt
-                        size={14}
+                        size={12}
                         style={{ color: colors.accent }}
                       />{" "}
                       Assigned Date *
@@ -933,12 +1359,12 @@ const AdminHomework = () => {
                         setForm((f) => ({ ...f, assignedDate: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
@@ -946,10 +1372,10 @@ const AdminHomework = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -957,14 +1383,14 @@ const AdminHomework = () => {
                         fontWeight: 500,
                         color: colors.text,
                         marginBottom: 2,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
                       }}
                     >
                       <FaCalendarAlt
-                        size={14}
+                        size={12}
                         style={{ color: colors.warning }}
                       />{" "}
                       Due Date *
@@ -977,12 +1403,12 @@ const AdminHomework = () => {
                         setForm((f) => ({ ...f, dueDate: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
@@ -992,9 +1418,10 @@ const AdminHomework = () => {
                 <div
                   style={{
                     display: "flex",
-                    gap: 16,
-                    marginTop: 16,
+                    gap: isSmallMobile ? 8 : 16,
+                    marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
                     justifyContent: "flex-end",
+                    flexDirection: isMobile ? "column" : "row",
                   }}
                 >
                   <motion.button
@@ -1012,11 +1439,12 @@ const AdminHomework = () => {
                       color: colors.accent,
                       border: `1px solid ${colors.accent}`,
                       borderRadius: 10,
-                      padding: "12px 24px",
+                      padding: isSmallMobile ? "10px 20px" : "12px 24px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
-                      minWidth: 100,
+                      minWidth: isMobile ? "100%" : 100,
+                      order: isMobile ? 2 : 1,
                     }}
                   >
                     Cancel
@@ -1031,16 +1459,17 @@ const AdminHomework = () => {
                       color: "#fff",
                       border: "none",
                       borderRadius: 10,
-                      padding: "12px 32px",
+                      padding: isSmallMobile ? "10px 24px" : "12px 32px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
                       boxShadow: colors.buttonShadow,
-                      minWidth: 150,
+                      minWidth: isMobile ? "100%" : 150,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
+                      order: isMobile ? 1 : 2,
                     }}
                   >
                     {editId ? "Update" : "Assign"}

@@ -22,7 +22,33 @@ import {
   FaCalendarAlt,
   FaUserGraduate,
   FaCreditCard,
+  FaBars,
+  FaListAlt,
 } from "react-icons/fa";
+
+// Screen size hook for responsive design
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return windowSize;
+}
 
 const AdminFeeManagement = () => {
   const [fees, setFees] = useState([]);
@@ -45,6 +71,14 @@ const AdminFeeManagement = () => {
     status: "",
     feeType: "",
   });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get window size for responsive design
+  const { width } = useWindowSize();
+  const isSmallMobile = width <= 480; // Extra small screens
+  const isMobile = width <= 768;
+  const isTablet = width <= 1024 && width > 768;
 
   const feeTypeOptions = ["Tuition", "Transport", "Books", "Uniform", "Other"];
   const feeStatusOptions = ["pending", "paid", "partial"];
@@ -130,34 +164,39 @@ const AdminFeeManagement = () => {
   };
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (modalMode === "add") {
-      const docRef = await addDoc(collection(db, "fees"), {
-        ...form,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      setFees((prev) => [
-        ...prev,
-        {
+    try {
+      if (modalMode === "add") {
+        const docRef = await addDoc(collection(db, "fees"), {
           ...form,
-          id: docRef.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
-    } else if (modalMode === "edit" && editFeeId) {
-      await updateDoc(doc(db, "fees", editFeeId), {
-        ...form,
-        updatedAt: serverTimestamp(),
-      });
-      setFees((prev) =>
-        prev.map((f) =>
-          f.id === editFeeId ? { ...f, ...form, updatedAt: new Date() } : f
-        )
-      );
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        setFees((prev) => [
+          ...prev,
+          {
+            ...form,
+            id: docRef.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]);
+      } else if (modalMode === "edit" && editFeeId) {
+        await updateDoc(doc(db, "fees", editFeeId), {
+          ...form,
+          updatedAt: serverTimestamp(),
+        });
+        setFees((prev) =>
+          prev.map((f) =>
+            f.id === editFeeId ? { ...f, ...form, updatedAt: new Date() } : f
+          )
+        );
+      }
+      setShowModal(false);
+      setEditFeeId(null);
+    } catch (error) {
+      console.error("Error saving fee: ", error);
+      alert("Failed to save fee record");
     }
-    setShowModal(false);
-    setEditFeeId(null);
   };
 
   // Search & Filter
@@ -234,6 +273,215 @@ const AdminFeeManagement = () => {
     tap: { scale: 0.98, transition: { duration: 0.2 } },
   };
 
+  // Toggle sidebar function (to be connected to parent component)
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+    // You'll need to communicate this state to a parent component that manages the sidebar
+  };
+
+  // Render fee card for mobile view
+  const renderFeeCard = (fee, index) => {
+    return (
+      <motion.div
+        key={fee.id}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        style={{
+          padding: 16,
+          borderRadius: 12,
+          border: `1px solid ${colors.cardBorder}`,
+          marginBottom: 12,
+          background: colors.card,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <FaUserGraduate
+                size={14}
+                style={{ color: colors.accent, flexShrink: 0 }}
+              />
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: colors.text,
+                }}
+              >
+                {getStudentName(fee.studentId)}
+              </h3>
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  background: colors.accentLight,
+                  color: colors.accent,
+                  padding: "3px 6px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                {getStudentClass(fee.studentId)}
+              </span>
+              <span
+                style={{
+                  background: fee.status
+                    ? `${colors.status[fee.status]}15`
+                    : colors.accentLight,
+                  color: fee.status ? colors.status[fee.status] : colors.accent,
+                  padding: "3px 6px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  textTransform: "capitalize",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: fee.status
+                      ? colors.status[fee.status]
+                      : colors.accent,
+                  }}
+                ></div>
+                {fee.status}
+              </span>
+            </div>
+          </div>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: 18,
+              color: colors.text,
+            }}
+          >
+            ₹{fee.amount}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 10,
+            marginBottom: 12,
+            fontSize: 13,
+            color: colors.textSecondary,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              minWidth: "45%",
+            }}
+          >
+            <FaListAlt size={12} />
+            {fee.feeType}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              minWidth: "45%",
+            }}
+          >
+            <FaCalendarAlt size={12} color={colors.warning} />
+            Due: {fee.dueDate}
+          </div>
+          {fee.paymentDate && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                minWidth: "45%",
+              }}
+            >
+              <FaCreditCard size={12} color={colors.success} />
+              Paid: {fee.paymentDate}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            marginTop: 12,
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => openEditModal(fee)}
+            style={{
+              background: colors.warning,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FaEdit size={12} /> Edit
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleDelete(fee.id)}
+            style={{
+              background: colors.danger,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FaTrash size={12} /> Delete
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <motion.div
       initial="hidden"
@@ -242,86 +490,133 @@ const AdminFeeManagement = () => {
       style={{
         maxWidth: 1200,
         margin: "0 auto",
-        padding: 24,
+        padding: isSmallMobile ? "12px 8px" : isMobile ? 16 : 24,
         color: colors.text,
       }}
     >
-      <motion.div
-        variants={itemVariants}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          marginBottom: 8,
-        }}
-      >
+      {/* Mobile Header with Sidebar Toggle */}
+      {isMobile && (
         <motion.div
-          initial={{ rotate: -10, scale: 0.9 }}
-          animate={{ rotate: 0, scale: 1 }}
-          transition={{ type: "spring", stiffness: 200 }}
-        >
-          <FaMoneyBill size={28} style={{ color: colors.accent }} />
-        </motion.div>
-        <h1
+          variants={itemVariants}
           style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: colors.text,
-            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 12,
+            gap: 12,
           }}
         >
-          Fee Management
-        </h1>
-      </motion.div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSidebar}
+            style={{
+              background: colors.card,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 8,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+            aria-label="Toggle Sidebar"
+          >
+            <FaBars size={16} />
+          </motion.button>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+            Fee Management
+          </h1>
+        </motion.div>
+      )}
 
-      <motion.p
-        variants={itemVariants}
-        style={{
-          marginBottom: 24,
-          color: colors.textSecondary,
-          fontSize: 16,
-          maxWidth: 800,
-        }}
-      >
-        Manage student fees here. Add, edit, delete, search, and filter fee
-        records.
-      </motion.p>
+      {/* Desktop Header */}
+      {!isMobile && (
+        <>
+          <motion.div
+            variants={itemVariants}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              marginBottom: 8,
+            }}
+          >
+            <motion.div
+              initial={{ rotate: -10, scale: 0.9 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
+              <FaMoneyBill size={28} style={{ color: colors.accent }} />
+            </motion.div>
+            <h1
+              style={{
+                fontSize: 28,
+                fontWeight: 700,
+                color: colors.text,
+                margin: 0,
+              }}
+            >
+              Fee Management
+            </h1>
+          </motion.div>
 
-      {/* Search & Filter */}
+          <motion.p
+            variants={itemVariants}
+            style={{
+              marginBottom: 24,
+              color: colors.textSecondary,
+              fontSize: 16,
+              maxWidth: 800,
+            }}
+          >
+            Manage student fees here. Add, edit, delete, search, and filter fee
+            records.
+          </motion.p>
+        </>
+      )}
+
+      {/* Search & Add Button - Responsive Row */}
       <motion.div
         variants={itemVariants}
         style={{
           display: "flex",
-          gap: 16,
-          marginBottom: 24,
+          gap: isSmallMobile ? 8 : isMobile ? 12 : 16,
+          marginBottom: isSmallMobile ? 12 : 20,
           flexWrap: "wrap",
           alignItems: "center",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
+        {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: 1,
-            minWidth: 220,
-            maxWidth: 340,
+            flex: isMobile ? "1 0 100%" : 1,
+            minWidth: isMobile ? "100%" : 220,
+            maxWidth: isMobile ? "100%" : 340,
             display: "flex",
             alignItems: "center",
             gap: 8,
             background: colors.card,
             borderRadius: 10,
-            padding: "4px 16px",
+            padding: isSmallMobile ? "2px 12px" : "4px 16px",
             border: `1px solid ${colors.border}`,
           }}
         >
-          <FaSearch style={{ color: colors.textSecondary }} />
+          <FaSearch style={{ color: colors.textSecondary, flexShrink: 0 }} />
           <input
-            placeholder="Search by student or fee type"
+            placeholder={
+              isSmallMobile ? "Search..." : "Search by student or fee type"
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              padding: "10px 0",
+              padding: isSmallMobile ? "8px 0" : "10px 0",
               border: "none",
               width: "100%",
-              fontSize: 15,
+              fontSize: 14,
               backgroundColor: "transparent",
               color: colors.text,
               outline: "none",
@@ -339,6 +634,7 @@ const AdminFeeManagement = () => {
                 color: colors.textSecondary,
                 cursor: "pointer",
                 padding: 4,
+                flexShrink: 0,
               }}
             >
               <FaTimes size={14} />
@@ -346,444 +642,650 @@ const AdminFeeManagement = () => {
           )}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            background: colors.tableHeader,
-            padding: "8px 16px",
-            borderRadius: 10,
-          }}
-        >
-          <FaFilter size={14} style={{ color: colors.textSecondary }} />
+        {/* Mobile - Filter Toggle Button */}
+        {isMobile && (
+          <div style={{ display: "flex", width: "100%", gap: 8 }}>
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: `1px solid ${colors.border}`,
+                background: showFilters ? colors.accentLight : colors.card,
+                color: showFilters ? colors.accent : colors.text,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flex: 1,
+              }}
+            >
+              <FaFilter size={14} />{" "}
+              {showFilters ? "Hide Filters" : "Show Filters"}
+            </motion.button>
 
-          <select
-            value={filter.class}
-            onChange={(e) =>
-              setFilter((f) => ({ ...f, class: e.target.value }))
-            }
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={openAddModal}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "none",
+                background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                color: "#fff",
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: colors.buttonShadow,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flex: 1,
+              }}
+            >
+              <FaPlus size={14} /> Add Fee
+            </motion.button>
+          </div>
+        )}
+
+        {/* Collapsible Filters for Mobile */}
+        {isMobile && showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
             style={{
-              padding: 10,
-              borderRadius: 8,
-              border: `1px solid ${colors.border}`,
-              background: colors.card,
-              color: colors.text,
-              fontSize: 14,
-              minWidth: 140,
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              marginTop: 4,
             }}
           >
-            <option value="">All Classes</option>
-            {classOptions.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            <select
+              value={filter.class}
+              onChange={(e) =>
+                setFilter((f) => ({ ...f, class: e.target.value }))
+              }
+              style={{
+                padding: isSmallMobile ? "8px 12px" : "10px 12px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                background: colors.card,
+                color: colors.text,
+                fontSize: 14,
+                width: "100%",
+              }}
+            >
+              <option value="">All Classes</option>
+              {classOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={filter.status}
-            onChange={(e) =>
-              setFilter((f) => ({ ...f, status: e.target.value }))
-            }
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: `1px solid ${colors.border}`,
-              background: colors.card,
-              color: colors.text,
-              fontSize: 14,
-              minWidth: 140,
-            }}
-          >
-            <option value="">All Status</option>
-            {feeStatusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </option>
-            ))}
-          </select>
+            <select
+              value={filter.status}
+              onChange={(e) =>
+                setFilter((f) => ({ ...f, status: e.target.value }))
+              }
+              style={{
+                padding: isSmallMobile ? "8px 12px" : "10px 12px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                background: colors.card,
+                color: colors.text,
+                fontSize: 14,
+                width: "100%",
+              }}
+            >
+              <option value="">All Status</option>
+              {feeStatusOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={filter.feeType}
-            onChange={(e) =>
-              setFilter((f) => ({ ...f, feeType: e.target.value }))
-            }
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: `1px solid ${colors.border}`,
-              background: colors.card,
-              color: colors.text,
-              fontSize: 14,
-              minWidth: 140,
-            }}
-          >
-            <option value="">All Fee Types</option>
-            {feeTypeOptions.map((ft) => (
-              <option key={ft} value={ft}>
-                {ft}
-              </option>
-            ))}
-          </select>
-        </div>
+            <select
+              value={filter.feeType}
+              onChange={(e) =>
+                setFilter((f) => ({ ...f, feeType: e.target.value }))
+              }
+              style={{
+                padding: isSmallMobile ? "8px 12px" : "10px 12px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                background: colors.card,
+                color: colors.text,
+                fontSize: 14,
+                width: "100%",
+              }}
+            >
+              <option value="">All Fee Types</option>
+              {feeTypeOptions.map((ft) => (
+                <option key={ft} value={ft}>
+                  {ft}
+                </option>
+              ))}
+            </select>
+          </motion.div>
+        )}
 
-        <motion.button
-          variants={buttonVariants}
-          whileHover="hover"
-          whileTap="tap"
-          onClick={openAddModal}
-          style={{
-            marginLeft: "auto",
-            padding: "12px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
-            color: "#fff",
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: colors.buttonShadow,
-            fontSize: 15,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <FaPlus size={14} /> Add Fee Record
-        </motion.button>
+        {/* Desktop Filters & Add Button */}
+        {!isMobile && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+                background: colors.tableHeader,
+                padding: "8px 16px",
+                borderRadius: 10,
+                flexWrap: isTablet ? "wrap" : "nowrap",
+              }}
+            >
+              <FaFilter size={14} style={{ color: colors.textSecondary }} />
+
+              <select
+                value={filter.class}
+                onChange={(e) =>
+                  setFilter((f) => ({ ...f, class: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  background: colors.card,
+                  color: colors.text,
+                  fontSize: 14,
+                  minWidth: 140,
+                }}
+              >
+                <option value="">All Classes</option>
+                {classOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filter.status}
+                onChange={(e) =>
+                  setFilter((f) => ({ ...f, status: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  background: colors.card,
+                  color: colors.text,
+                  fontSize: 14,
+                  minWidth: 140,
+                }}
+              >
+                <option value="">All Status</option>
+                {feeStatusOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filter.feeType}
+                onChange={(e) =>
+                  setFilter((f) => ({ ...f, feeType: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  background: colors.card,
+                  color: colors.text,
+                  fontSize: 14,
+                  minWidth: 140,
+                }}
+              >
+                <option value="">All Fee Types</option>
+                {feeTypeOptions.map((ft) => (
+                  <option key={ft} value={ft}>
+                    {ft}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={openAddModal}
+              style={{
+                marginLeft: "auto",
+                padding: "12px 20px",
+                borderRadius: 10,
+                border: "none",
+                background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                color: "#fff",
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: colors.buttonShadow,
+                fontSize: 15,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <FaPlus size={14} /> Add Fee Record
+            </motion.button>
+          </>
+        )}
       </motion.div>
 
-      {/* Table */}
-      <motion.div
-        variants={itemVariants}
-        style={{
-          background: colors.card,
-          borderRadius: 16,
-          boxShadow: colors.shadow,
-          overflow: "hidden",
-          border: `1px solid ${colors.cardBorder}`,
-          transition: "all 0.3s ease",
-        }}
-      >
-        <div style={{ overflowX: "auto", width: "100%" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ background: colors.tableHeader }}>
-              <tr>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Student
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Class
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Fee Type
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Amount
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Due Date
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "left",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Payment Date
-                </th>
-                <th
-                  style={{
-                    padding: 16,
-                    textAlign: "center",
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+      {/* Mobile Card View */}
+      {isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            marginBottom: 20,
+          }}
+        >
+          {loading ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1,
+                  ease: "linear",
+                }}
+                style={{ display: "inline-block", marginBottom: 8 }}
+              >
+                <FaMoneyBill size={24} color={colors.accent} />
+              </motion.div>
+              <p style={{ margin: 0 }}>Loading fee records...</p>
+            </div>
+          ) : filteredFees.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+                color: colors.textSecondary,
+              }}
+            >
+              No fee records found matching your criteria.
+            </div>
+          ) : (
+            filteredFees.map((fee, index) => renderFeeCard(fee, index))
+          )}
+        </motion.div>
+      )}
+
+      {/* Desktop/Tablet Table View */}
+      {!isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            background: colors.card,
+            borderRadius: 16,
+            boxShadow: colors.shadow,
+            overflow: "hidden",
+            border: `1px solid ${colors.cardBorder}`,
+            transition: "all 0.3s ease",
+          }}
+        >
+          <div
+            style={{
+              overflowX: "auto",
+              width: "100%",
+              WebkitOverflowScrolling: "touch", // For smooth scrolling on iOS
+              msOverflowStyle: "-ms-autohiding-scrollbar", // Better experience on Edge
+            }}
+          >
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead style={{ background: colors.tableHeader }}>
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", padding: 32 }}>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1,
-                        ease: "linear",
-                      }}
-                      style={{ display: "inline-block", marginRight: 10 }}
-                    >
-                      <FaMoneyBill size={16} color={colors.accent} />
-                    </motion.div>
-                    Loading fee records...
-                  </td>
-                </tr>
-              ) : filteredFees.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
+                  <th
                     style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Student
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Class
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Fee Type
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Amount
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Due Date
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Payment Date
+                  </th>
+                  <th
+                    style={{
+                      padding: 16,
                       textAlign: "center",
-                      padding: 32,
-                      color: colors.textSecondary,
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
                     }}
                   >
-                    No fee records found. Create your first record using the
-                    "Add Fee Record" button.
-                  </td>
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                filteredFees.map((fee, index) => (
-                  <motion.tr
-                    key={fee.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    style={{
-                      borderBottom: `1px solid ${colors.tableBorder}`,
-                      background:
-                        index % 2 === 0 ? colors.tableRow : colors.tableRowAlt,
-                    }}
-                    whileHover={{
-                      backgroundColor:
-                        theme === "dark"
-                          ? "rgba(59, 130, 246, 0.1)"
-                          : "rgba(79, 70, 229, 0.05)",
-                    }}
-                  >
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
                     <td
+                      colSpan={8}
+                      style={{ textAlign: "center", padding: 32 }}
+                    >
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "linear",
+                        }}
+                        style={{ display: "inline-block", marginRight: 10 }}
+                      >
+                        <FaMoneyBill size={16} color={colors.accent} />
+                      </motion.div>
+                      Loading fee records...
+                    </td>
+                  </tr>
+                ) : filteredFees.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
                       style={{
-                        padding: 14,
-                        fontWeight: 500,
-                        color: colors.text,
+                        textAlign: "center",
+                        padding: 32,
+                        color: colors.textSecondary,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <FaUserGraduate
-                          size={14}
-                          style={{ color: colors.accent }}
-                        />
-                        {getStudentName(fee.studentId)}
-                      </div>
+                      No fee records found. Create your first record using the
+                      "Add Fee Record" button.
                     </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      <span
+                  </tr>
+                ) : (
+                  filteredFees.map((fee, index) => (
+                    <motion.tr
+                      key={fee.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      style={{
+                        borderBottom: `1px solid ${colors.tableBorder}`,
+                        background:
+                          index % 2 === 0
+                            ? colors.tableRow
+                            : colors.tableRowAlt,
+                      }}
+                      whileHover={{
+                        backgroundColor:
+                          theme === "dark"
+                            ? "rgba(59, 130, 246, 0.1)"
+                            : "rgba(79, 70, 229, 0.05)",
+                      }}
+                    >
+                      <td
                         style={{
-                          background: colors.accentLight,
-                          color: colors.accent,
-                          padding: "4px 8px",
-                          borderRadius: 6,
-                          fontSize: 13,
+                          padding: 14,
                           fontWeight: 500,
-                        }}
-                      >
-                        {getStudentClass(fee.studentId)}
-                      </span>
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {fee.feeType}
-                    </td>
-                    <td
-                      style={{
-                        padding: 14,
-                        fontWeight: 600,
-                        color: colors.text,
-                      }}
-                    >
-                      ₹{fee.amount}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          fontSize: 14,
-                        }}
-                      >
-                        <FaCalendarAlt
-                          size={14}
-                          style={{ color: colors.textSecondary }}
-                        />
-                        {fee.dueDate}
-                      </div>
-                    </td>
-                    <td style={{ padding: 14 }}>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          background: fee.status
-                            ? `${colors.status[fee.status]}15`
-                            : colors.accentLight,
-                          color: fee.status
-                            ? colors.status[fee.status]
-                            : colors.accent,
-                          padding: "4px 10px",
-                          borderRadius: 6,
-                          fontWeight: 600,
-                          fontSize: 13,
-                          textTransform: "capitalize",
+                          color: colors.text,
                         }}
                       >
                         <div
                           style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <FaUserGraduate
+                            size={14}
+                            style={{ color: colors.accent }}
+                          />
+                          {getStudentName(fee.studentId)}
+                        </div>
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        <span
+                          style={{
+                            background: colors.accentLight,
+                            color: colors.accent,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {getStudentClass(fee.studentId)}
+                        </span>
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {fee.feeType}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          fontWeight: 600,
+                          color: colors.text,
+                        }}
+                      >
+                        ₹{fee.amount}
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            fontSize: 14,
+                          }}
+                        >
+                          <FaCalendarAlt
+                            size={14}
+                            style={{ color: colors.textSecondary }}
+                          />
+                          {fee.dueDate}
+                        </div>
+                      </td>
+                      <td style={{ padding: 14 }}>
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
                             background: fee.status
+                              ? `${colors.status[fee.status]}15`
+                              : colors.accentLight,
+                            color: fee.status
                               ? colors.status[fee.status]
                               : colors.accent,
+                            padding: "4px 10px",
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            fontSize: 13,
+                            textTransform: "capitalize",
                           }}
-                        ></div>
-                        {fee.status}
-                      </div>
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {fee.paymentDate ? (
+                        >
+                          <div
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: fee.status
+                                ? colors.status[fee.status]
+                                : colors.accent,
+                            }}
+                          ></div>
+                          {fee.status}
+                        </div>
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {fee.paymentDate ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              fontSize: 14,
+                            }}
+                          >
+                            <FaCreditCard
+                              size={14}
+                              style={{ color: colors.success }}
+                            />
+                            {fee.paymentDate}
+                          </div>
+                        ) : (
+                          <span style={{ color: colors.textSecondary }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ padding: 14, textAlign: "center" }}>
                         <div
                           style={{
                             display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            fontSize: 14,
+                            justifyContent: "center",
+                            gap: 8,
                           }}
                         >
-                          <FaCreditCard
-                            size={14}
-                            style={{ color: colors.success }}
-                          />
-                          {fee.paymentDate}
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => openEditModal(fee)}
+                            style={{
+                              background: colors.warning,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              fontSize: 14,
+                              fontWeight: 500,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <FaEdit size={12} /> Edit
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleDelete(fee.id)}
+                            style={{
+                              background: colors.danger,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              fontSize: 14,
+                              fontWeight: 500,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <FaTrash size={12} /> Delete
+                          </motion.button>
                         </div>
-                      ) : (
-                        <span style={{ color: colors.textSecondary }}>-</span>
-                      )}
-                    </td>
-                    <td style={{ padding: 14, textAlign: "center" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => openEditModal(fee)}
-                          style={{
-                            background: colors.warning,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 14,
-                            fontWeight: 500,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <FaEdit size={12} /> Edit
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(fee.id)}
-                          style={{
-                            background: colors.danger,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 14,
-                            fontWeight: 500,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <FaTrash size={12} /> Delete
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
 
-      {/* Modal */}
+      {/* Modal - Responsive */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -802,6 +1304,7 @@ const AdminFeeManagement = () => {
               alignItems: "center",
               justifyContent: "center",
               backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
             }}
           >
             <motion.div
@@ -812,7 +1315,7 @@ const AdminFeeManagement = () => {
               style={{
                 width: "100%",
                 maxWidth: 580,
-                maxHeight: "90vh",
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
                 overflow: "auto",
                 padding: 0,
                 borderRadius: 16,
@@ -823,10 +1326,10 @@ const AdminFeeManagement = () => {
               <form
                 onSubmit={handleFormSubmit}
                 style={{
-                  padding: 32,
+                  padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 24,
+                  gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
                 }}
               >
                 <div
@@ -838,7 +1341,7 @@ const AdminFeeManagement = () => {
                 >
                   <h2
                     style={{
-                      fontSize: 22,
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
                       fontWeight: 700,
                       margin: 0,
                       color: colors.text,
@@ -877,14 +1380,21 @@ const AdminFeeManagement = () => {
                   </motion.button>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -894,7 +1404,7 @@ const AdminFeeManagement = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       <FaUserGraduate
@@ -910,12 +1420,12 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, studentId: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     >
@@ -930,10 +1440,10 @@ const AdminFeeManagement = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -943,7 +1453,7 @@ const AdminFeeManagement = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       <FaMoneyBill size={14} style={{ color: colors.accent }} />
@@ -956,12 +1466,12 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, feeType: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     >
@@ -975,21 +1485,28 @@ const AdminFeeManagement = () => {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
                       style={{
                         fontWeight: 500,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       Amount (₹) *
@@ -1002,12 +1519,12 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, amount: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                       placeholder="Enter fee amount"
@@ -1016,10 +1533,10 @@ const AdminFeeManagement = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -1029,7 +1546,7 @@ const AdminFeeManagement = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       <FaCalendarAlt
@@ -1046,33 +1563,40 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, dueDate: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
                       style={{
                         fontWeight: 500,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       Status *
@@ -1084,12 +1608,12 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, status: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     >
@@ -1104,10 +1628,10 @@ const AdminFeeManagement = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
                     <label
@@ -1117,7 +1641,7 @@ const AdminFeeManagement = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     >
                       <FaCreditCard
@@ -1137,12 +1661,12 @@ const AdminFeeManagement = () => {
                         setForm((f) => ({ ...f, paymentDate: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
@@ -1152,9 +1676,10 @@ const AdminFeeManagement = () => {
                 <div
                   style={{
                     display: "flex",
-                    gap: 16,
-                    marginTop: 8,
+                    gap: isSmallMobile ? 8 : 16,
+                    marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
                     justifyContent: "flex-end",
+                    flexDirection: isMobile ? "column" : "row",
                   }}
                 >
                   <motion.button
@@ -1168,11 +1693,12 @@ const AdminFeeManagement = () => {
                       color: colors.accent,
                       border: `1px solid ${colors.accent}`,
                       borderRadius: 10,
-                      padding: "12px 24px",
+                      padding: isSmallMobile ? "10px 20px" : "12px 24px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
-                      minWidth: 100,
+                      minWidth: isMobile ? "100%" : 100,
+                      order: isMobile ? 2 : 1,
                     }}
                   >
                     Cancel
@@ -1187,12 +1713,13 @@ const AdminFeeManagement = () => {
                       color: "#fff",
                       border: "none",
                       borderRadius: 10,
-                      padding: "12px 32px",
+                      padding: isSmallMobile ? "10px 24px" : "12px 32px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
                       boxShadow: colors.buttonShadow,
-                      minWidth: 150,
+                      minWidth: isMobile ? "100%" : 150,
+                      order: isMobile ? 1 : 2,
                     }}
                   >
                     {modalMode === "add" ? "Add Fee" : "Save Changes"}

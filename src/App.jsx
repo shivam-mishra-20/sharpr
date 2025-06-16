@@ -29,6 +29,7 @@ import AdminHelp from "./components/admin/Help";
 import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
+import Chatbot from "./components/Chatbot";
 
 // Theme-based colors
 const getThemeColors = (theme) => ({
@@ -149,6 +150,9 @@ function App() {
             © {new Date().getFullYear()} SharpR. All rights reserved.
           </p>
         </footer>
+
+        {/* Add the Chatbot component */}
+        <Chatbot />
       </div>
     </Router>
   );

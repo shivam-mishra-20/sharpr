@@ -57,8 +57,8 @@ const branches = [
     studentsEnrolled: "450+",
     courses: "8+ Programs",
     featured: true,
-    googleMap:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3890.858956112785!2d77.5924113152607!3d12.97159899085708!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c3b2b2b9%3A0x7e4d8e6e8e8e8e8e!2sBengaluru!5e0!3m2!1sen!2sin!4v1680000000000!5m2!1sen!2sin",
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=77.5846%2C12.9616%2C77.6046%2C12.9816&amp;layer=mapnik&amp;marker=12.9716%2C77.5946",
   },
   {
     id: 2,
@@ -80,8 +80,8 @@ const branches = [
     studentsEnrolled: "380+",
     courses: "7+ Programs",
     featured: false,
-    googleMap:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.8391983662!2d77.06889999999999!3d28.527280000000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce2b2f8c8c8c8%3A0x7e4d8e6e8e8e8e8e!2sDelhi!5e0!3m2!1sen!2sin!4v1680000000001!5m2!1sen!2sin",
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=77.199%2C28.6039%2C77.219%2C28.6239&amp;layer=mapnik&amp;marker=28.6139%2C77.209",
   },
   {
     id: 3,
@@ -103,7 +103,8 @@ const branches = [
     studentsEnrolled: "320+",
     courses: "6+ Programs",
     featured: true,
-    // No googleMap property, will show placeholder
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=72.8677%2C19.066%2C72.8877%2C19.086&amp;layer=mapnik&amp;marker=19.076%2C72.8777",
   },
   {
     id: 4,
@@ -120,8 +121,8 @@ const branches = [
     studentsEnrolled: "250+",
     courses: "5+ Programs",
     featured: false,
-    googleMap:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.406504634812!2d78.374998315342!3d17.444000000000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93b2b2b2b2b2%3A0x7e4d8e6e8e8e8e8e!2sHyderabad!5e0!3m2!1sen!2sin!4v1680000000002!5m2!1sen!2sin",
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=78.367%2C17.434%2C78.387%2C17.454&amp;layer=mapnik&amp;marker=17.444%2C78.377",
   },
   {
     id: 5,
@@ -138,7 +139,8 @@ const branches = [
     studentsEnrolled: "180+",
     courses: "4+ Programs",
     featured: false,
-    // No googleMap property, will show placeholder
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=80.2607%2C13.0727%2C80.2807%2C13.0927&amp;layer=mapnik&amp;marker=13.0827%2C80.2707",
   },
   {
     id: 6,
@@ -155,8 +157,8 @@ const branches = [
     studentsEnrolled: "120+",
     courses: "3+ Programs",
     featured: false,
-    googleMap:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3782.406504634812!2d73.854998315342!3d18.520400000000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93b2b2b2b2b2%3A0x7e4d8e6e8e8e8e8e!2sPune!5e0!3m2!1sen!2sin!4v1680000000003!5m2!1sen!2sin",
+    mapEmbedUrl:
+      "https://www.openstreetmap.org/export/embed.html?bbox=73.8467%2C18.5104%2C73.8667%2C18.5304&amp;layer=mapnik&amp;marker=18.5204%2C73.8567",
   },
 ];
 
@@ -173,9 +175,317 @@ function useIsMobile(breakpoint = 700) {
   return isMobile;
 }
 
+const LocationCard = ({
+  branch,
+  hoveredCard,
+  setHoveredCard,
+  colors,
+  theme,
+}) => {
+  return (
+    <motion.div
+      key={branch.id}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.4 }}
+      onMouseEnter={() => setHoveredCard(branch.id)}
+      onMouseLeave={() => setHoveredCard(null)}
+      whileHover={{
+        y: -5,
+        transition: { duration: 0.2 },
+        boxShadow:
+          theme === "dark"
+            ? "0 15px 30px rgba(0, 0, 0, 0.2)"
+            : "0 15px 30px rgba(0, 0, 0, 0.1)",
+      }}
+      style={{
+        background: colors.card,
+        borderRadius: "16px",
+        overflow: "hidden",
+        boxShadow: colors.cardShadow,
+        border: `1px solid ${colors.cardBorder}`,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        transition: "all 0.3s ease",
+        color: colors.text,
+      }}
+      role="region"
+      aria-label={`${branch.city} branch information`}
+    >
+      {/* Map Section */}
+      <div
+        style={{
+          position: "relative",
+          height: "140px",
+          overflow: "hidden",
+        }}
+      >
+        {branch.mapEmbedUrl ? (
+          <iframe
+            title={`${branch.city} map`}
+            src={branch.mapEmbedUrl}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: 0,
+            }}
+            loading="lazy"
+            allowFullScreen=""
+            aria-label={`${branch.city} branch location`}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              background: theme === "dark" ? "#2d3748" : "#e0e7ef",
+              color: theme === "dark" ? "#9ca3af" : "#64748b",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+            }}
+          >
+            Map Unavailable
+          </div>
+        )}
+
+        {/* City overlay */}
+        <motion.div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+          animate={{
+            backgroundColor:
+              hoveredCard === branch.id
+                ? "rgba(0, 0, 0, 0.1)"
+                : "rgba(0, 0, 0, 0.25)",
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              margin: 0,
+              color: "white",
+              textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+            }}
+            animate={{
+              scale: hoveredCard === branch.id ? 1.05 : 1,
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            {branch.city}
+          </motion.h3>
+        </motion.div>
+
+        {/* Directions button */}
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "5px 10px",
+            background: "white",
+            color: colors.primary,
+            borderRadius: "20px",
+            textDecoration: "none",
+            fontWeight: 600,
+            fontSize: "0.75rem",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+            zIndex: 10,
+            transition: "all 0.2s ease",
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+          }}
+          aria-label={`Get directions to ${branch.city} branch`}
+        >
+          <FaDirections size={10} />
+          Directions
+        </a>
+
+        {/* Featured badge */}
+        {branch.featured && (
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              background: "linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%)",
+              color: "white",
+              padding: "4px 8px",
+              borderRadius: "12px",
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              zIndex: 10,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            Featured
+          </div>
+        )}
+      </div>
+
+      {/* Content Section */}
+      <div
+        style={{
+          padding: "16px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+        }}
+      >
+        {/* Branch tagline */}
+        <p
+          style={{
+            color: colors.textLight,
+            fontSize: "0.85rem",
+            margin: 0,
+            fontWeight: 500,
+            marginBottom: "4px",
+          }}
+        >
+          {branch.tagline}
+        </p>
+
+        {/* Contact info - streamlined */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Address - most important info */}
+          <div style={{ display: "flex", gap: "8px" }}>
+            <FaMapMarkerAlt
+              size={14}
+              color={colors.primary}
+              style={{ marginTop: "3px", flexShrink: 0 }}
+            />
+            <span style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
+              {branch.address}
+            </span>
+          </div>
+
+          {/* Contact methods */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              marginTop: "2px",
+            }}
+          >
+            <a
+              href={`tel:${branch.phone}`}
+              style={{
+                color: colors.primary,
+                textDecoration: "none",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+              aria-label={`Call ${branch.city} branch`}
+            >
+              <FaPhone size={12} />
+              Call
+            </a>
+            <a
+              href={`mailto:${branch.email}`}
+              style={{
+                color: colors.primary,
+                textDecoration: "none",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+              aria-label={`Email ${branch.city} branch`}
+            >
+              <FaEnvelope size={12} />
+              Email
+            </a>
+          </div>
+
+          {/* Hours - simplified */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "0.8rem",
+              color: colors.textLight,
+              marginTop: "2px",
+            }}
+          >
+            <FaClock size={12} color={colors.primary} />
+            {branch.hours}
+          </div>
+        </div>
+
+        {/* Stats Bar */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "auto",
+            paddingTop: "12px",
+            borderTop: `1px solid ${colors.muted}`,
+            fontSize: "0.8rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <FaChalkboardTeacher size={12} color={colors.primary} />
+            <span>{branch.staff.split(" ")[0]}</span>
+          </div>
+          <div>
+            <span style={{ fontWeight: 600 }}>{branch.studentsEnrolled}</span>{" "}
+            Students
+          </div>
+          <div>
+            <span style={{ fontWeight: 600 }}>
+              {branch.courses.split(" ")[0]}
+            </span>{" "}
+            Courses
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const Locations = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
-  const [selectedAmenity, setSelectedAmenity] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const isMobile = useIsMobile();
   const { theme } = useTheme();
@@ -194,13 +504,14 @@ const Locations = () => {
     <section
       style={{
         background: colors.background,
-        padding: "18px 0",
+        padding: "24px 16px",
         position: "relative",
         overflow: "hidden",
+        marginTop: 50,
       }}
       aria-labelledby="locations-heading"
     >
-      {/* Decorative Elements */}
+      {/* Decorative background blur */}
       <motion.div
         style={{
           position: "absolute",
@@ -215,13 +526,12 @@ const Locations = () => {
         }}
         animate={{
           scale: [1, 1.2, 1],
-          opacity: [0.2, 0.4, 0.2],
-          y: [0, 30, 0],
+          opacity: [0.2, 0.3, 0.2],
         }}
         transition={{
-          duration: 15,
+          duration: 20,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: "linear",
         }}
         aria-hidden="true"
       />
@@ -231,152 +541,106 @@ const Locations = () => {
           width: "100%",
           maxWidth: 500,
           margin: "0 auto",
-          padding: "0 4px",
           position: "relative",
           zIndex: 2,
-          textAlign: "center",
         }}
       >
+        {/* Section Title */}
         <motion.h2
           id="locations-heading"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.5 }}
           style={{
-            fontSize: "clamp(1.2rem, 3vw, 2rem)",
+            fontSize: "1.8rem",
             fontWeight: 800,
             textAlign: "center",
-            marginBottom: 10,
+            marginBottom: "12px",
             color: colors.highlight,
-            position: "relative",
-            display: "inline-block",
           }}
         >
-          <span
-            style={{
-              position: "relative",
-              display: "inline-block",
-            }}
-          >
-            Our Learning Centers
-            <motion.span
-              style={{
-                position: "absolute",
-                height: "6px",
-                background: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-                bottom: "-8px",
-                left: "25%",
-                right: "25%",
-                borderRadius: "4px",
-              }}
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            />
-          </span>
+          Our Learning Centers
         </motion.h2>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           style={{
             textAlign: "center",
             color: colors.textLight,
-            fontSize: "clamp(0.9rem, 1.5vw, 1rem)",
+            fontSize: "0.95rem",
             maxWidth: 500,
-            margin: "0 auto 14px",
-            lineHeight: 1.4,
+            margin: "0 auto 20px",
+            lineHeight: 1.5,
           }}
         >
-          Visit our state-of-the-art learning centers across India. Each
-          location offers modern facilities and experienced faculty to help
-          students excel.
+          Visit our state-of-the-art learning centers across India
         </motion.p>
 
         {/* Filter tabs */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: "10px",
+            gap: "12px",
             marginBottom: "24px",
-            flexWrap: "wrap",
           }}
           role="tablist"
           aria-label="Location filters"
         >
           <motion.button
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab("all")}
             style={{
-              padding: "7px 16px",
-              borderRadius: 20,
+              padding: "8px 16px",
+              borderRadius: "12px",
               border: "none",
               background: activeTab === "all" ? colors.primary : colors.muted,
               color: activeTab === "all" ? "white" : colors.text,
               fontWeight: activeTab === "all" ? 600 : 500,
               cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow:
-                activeTab === "all"
-                  ? theme === "dark"
-                    ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                    : "0 2px 8px rgba(79, 70, 229, 0.18)"
-                  : "none",
-              fontSize: "0.95rem",
+              fontSize: "0.9rem",
             }}
             role="tab"
             aria-selected={activeTab === "all"}
-            aria-controls="all-locations-panel"
           >
             All Locations
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab("featured")}
             style={{
-              padding: "7px 16px",
-              borderRadius: 20,
+              padding: "8px 16px",
+              borderRadius: "12px",
               border: "none",
               background:
                 activeTab === "featured" ? colors.primary : colors.muted,
               color: activeTab === "featured" ? "white" : colors.text,
               fontWeight: activeTab === "featured" ? 600 : 500,
               cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow:
-                activeTab === "featured"
-                  ? theme === "dark"
-                    ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                    : "0 2px 8px rgba(79, 70, 229, 0.18)"
-                  : "none",
+              fontSize: "0.9rem",
               display: "flex",
               alignItems: "center",
-              gap: "4px",
-              fontSize: "0.95rem",
+              gap: "6px",
             }}
             role="tab"
             aria-selected={activeTab === "featured"}
-            aria-controls="featured-locations-panel"
           >
-            <span>Featured Centers</span>
+            Featured Centers
             <span
               style={{
-                background: theme === "dark" ? "#3b82f6" : "#4338ca",
+                background: "rgba(255,255,255,0.2)",
                 color: "white",
                 fontSize: "0.65rem",
                 padding: "2px 6px",
-                borderRadius: 20,
+                borderRadius: "10px",
                 fontWeight: 600,
               }}
             >
@@ -388,503 +652,57 @@ const Locations = () => {
         {/* Branch cards */}
         <div
           role="tabpanel"
-          id={
-            activeTab === "all"
-              ? "all-locations-panel"
-              : "featured-locations-panel"
-          }
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "12px",
+            gap: "16px",
             width: "100%",
           }}
         >
-          {filteredBranches.map((branch, i) => (
-            <motion.div
+          {filteredBranches.map((branch) => (
+            <LocationCard
               key={branch.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              onMouseEnter={() => setHoveredCard(branch.id)}
-              onMouseLeave={() => setHoveredCard(null)}
-              whileHover={{
-                y: -8,
-                transition: { duration: 0.3 },
-                boxShadow:
-                  theme === "dark"
-                    ? "0 20px 40px rgba(0, 0, 0, 0.2)"
-                    : "0 20px 40px rgba(0, 0, 0, 0.1)",
-              }}
-              style={{
-                background: colors.card,
-                borderRadius: 16,
-                overflow: "hidden",
-                boxShadow:
-                  theme === "dark"
-                    ? "0 4px 16px rgba(0, 0, 0, 0.15)"
-                    : "0 4px 16px rgba(0, 0, 0, 0.07)",
-                border: `1px solid ${colors.cardBorder}`,
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                position: "relative",
-                transition: "all 0.3s ease",
-                fontSize: "0.97rem",
-                color: colors.text,
-              }}
-              role="region"
-              aria-label={`${branch.city} branch information`}
-            >
-              {/* Featured badge if applicable */}
-              {branch.featured && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    zIndex: 10,
-                    background:
-                      theme === "dark"
-                        ? "linear-gradient(135deg, #3b82f6 0%, #818cf8 100%)"
-                        : "linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%)",
-                    color: "white",
-                    padding: "4px 10px",
-                    borderRadius: 16,
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    boxShadow:
-                      theme === "dark"
-                        ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                        : "0 2px 8px rgba(79, 70, 229, 0.18)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "3px",
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  Featured Center
-                </motion.div>
-              )}
-
-              <div
-                style={{
-                  position: "relative",
-                  height: 90,
-                  overflow: "hidden",
-                  borderRadius: "16px 16px 0 0",
-                }}
-              >
-                {/* Map or Placeholder */}
-                {branch.googleMap ? (
-                  <iframe
-                    title={`${branch.city} map`}
-                    src={branch.googleMap}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      border: 0,
-                      position: "absolute",
-                    }}
-                    loading="lazy"
-                    allowFullScreen=""
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: theme === "dark" ? "#2d3748" : "#e0e7ef",
-                      color: theme === "dark" ? "#9ca3af" : "#64748b",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 600,
-                      fontSize: "0.95rem",
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      borderRadius: "16px 16px 0 0",
-                      border:
-                        theme === "dark"
-                          ? "1px dashed #4b5563"
-                          : "1px dashed #b6b6b6",
-                      zIndex: 1,
-                    }}
-                  >
-                    Map Unavailable
-                  </div>
-                )}
-
-                <motion.div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(0, 0, 0, 0.3)",
-                    zIndex: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    color: "white",
-                    padding: "0 10px",
-                  }}
-                  animate={{
-                    backgroundColor:
-                      hoveredCard === branch.id
-                        ? "rgba(0, 0, 0, 0.1)"
-                        : "rgba(0, 0, 0, 0.3)",
-                  }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <motion.h3
-                    style={{
-                      fontSize: "clamp(1.1rem, 2vw, 1.25rem)",
-                      fontWeight: 700,
-                      margin: 0,
-                      textAlign: "center",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{
-                      scale: hoveredCard === branch.id ? 1.05 : 1,
-                      y: hoveredCard === branch.id ? -5 : 0,
-                    }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {branch.city}
-                  </motion.h3>
-                  <motion.p
-                    style={{
-                      fontSize: "0.85rem",
-                      margin: "4px 0 0 0",
-                      opacity: 0.9,
-                      fontWeight: 500,
-                      textAlign: "center",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{
-                      opacity: hoveredCard === branch.id ? 1 : 0.9,
-                      y: hoveredCard === branch.id ? -5 : 0,
-                    }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
-                    {branch.tagline}
-                  </motion.p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: -50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 3,
-                  }}
-                >
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 5,
-                      padding: "5px 10px",
-                      background: "white",
-                      color: colors.primary,
-                      borderRadius: 20,
-                      textDecoration: "none",
-                      fontWeight: 600,
-                      fontSize: "0.8rem",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-3px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 6px 16px rgba(0,0,0,0.15)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(0,0,0,0.1)";
-                    }}
-                    aria-label={`Get directions to ${branch.city} branch`}
-                  >
-                    <FaDirections size={12} />
-                    Directions
-                  </a>
-                </motion.div>
-              </div>
-
-              {/* Branch stats */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-around",
-                  background: colors.muted,
-                  padding: "7px 0",
-                  borderBottom: `1px solid ${colors.cardBorder}`,
-                }}
-              >
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Staff
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "3px",
-                    }}
-                  >
-                    <FaChalkboardTeacher color={colors.primary} size={13} />
-                    {branch.staff}
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Students
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                    }}
-                  >
-                    {branch.studentsEnrolled}
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Courses
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                    }}
-                  >
-                    {branch.courses}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "clamp(10px, 2vw, 16px)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 7,
-                  }}
-                >
-                  <motion.div
-                    whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-                    transition={{ duration: 0.5 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: 1,
-                    }}
-                  >
-                    <FaMapMarkerAlt color={colors.primary} size={12} />
-                  </motion.div>
-                  <span
-                    style={{
-                      color: colors.text,
-                      lineHeight: 1.4,
-                      textAlign: "left",
-                      fontSize: "0.93rem",
-                    }}
-                  >
-                    {branch.address}
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    whileHover={{ rotate: 15, scale: 1.1 }}
-                    transition={{ duration: 0.3 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaPhone color={colors.primary} size={12} />
-                  </motion.div>
-                  <a
-                    href={`tel:${branch.phone}`}
-                    style={{
-                      color: colors.primary,
-                      textDecoration: "none",
-                      fontWeight: 500,
-                      transition: "color 0.2s ease",
-                      fontSize: "0.93rem",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.color = colors.secondary;
-                      e.currentTarget.style.textDecoration = "underline";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.color = colors.primary;
-                      e.currentTarget.style.textDecoration = "none";
-                    }}
-                  >
-                    {branch.phone}
-                  </a>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    whileHover={{
-                      y: [0, -5, 0],
-                      transition: { duration: 0.5 },
-                    }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaEnvelope color={colors.primary} size={12} />
-                  </motion.div>
-                  <a
-                    href={`mailto:${branch.email}`}
-                    style={{
-                      color: colors.primary,
-                      textDecoration: "none",
-                      fontWeight: 500,
-                      transition: "color 0.2s ease",
-                      fontSize: "0.93rem",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.color = colors.secondary;
-                      e.currentTarget.style.textDecoration = "underline";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.color = colors.primary;
-                      e.currentTarget.style.textDecoration = "none";
-                    }}
-                  >
-                    {branch.email}
-                  </a>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    animate={{ rotate: hoveredCard === branch.id ? 360 : 0 }}
-                    transition={{ duration: 1.5 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaClock color={colors.primary} size={12} />
-                  </motion.div>
-                  <span style={{ color: colors.text, fontSize: "0.93rem" }}>
-                    {branch.hours}
-                  </span>
-                </div>
-                {/* Amenities and Schedule a Visit button removed */}
-              </div>
-            </motion.div>
+              branch={branch}
+              hoveredCard={hoveredCard}
+              setHoveredCard={setHoveredCard}
+              colors={colors}
+              theme={theme}
+            />
           ))}
         </div>
 
+        {/* CTA Section */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.5 }}
+          transition={{ duration: 0.5 }}
           style={{
             textAlign: "center",
-            marginTop: 30,
+            marginTop: "32px",
             width: "100%",
           }}
         >
           <motion.a
             href="/contact"
             whileHover={{
-              scale: 1.05,
-              boxShadow:
-                theme === "dark"
-                  ? "0 10px 30px rgba(96, 165, 250, 0.3)"
-                  : "0 10px 30px rgba(79, 70, 229, 0.3)",
+              scale: 1.03,
               backgroundPosition: "right center",
             }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.97 }}
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "10px 20px",
+              padding: "12px 24px",
               background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.primary} 100%)`,
               backgroundSize: "200% auto",
               color: "white",
               fontWeight: 600,
-              borderRadius: 10,
+              borderRadius: "12px",
               textDecoration: "none",
-              fontSize: "1rem",
-              boxShadow:
-                theme === "dark"
-                  ? "0 3px 8px rgba(96, 165, 250, 0.18)"
-                  : "0 3px 8px rgba(79, 70, 229, 0.18)",
-              transition: "all 0.4s ease",
+              fontSize: "0.95rem",
+              boxShadow: "0 4px 10px rgba(79, 70, 229, 0.2)",
             }}
           >
             Book a Free Demo Class
@@ -898,79 +716,52 @@ const Locations = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ marginLeft: 10 }}
+              style={{ marginLeft: 8 }}
             >
               <path d="M5 12h14"></path>
               <path d="m12 5 7 7-7 7"></path>
             </svg>
           </motion.a>
-          <p
-            style={{
-              marginTop: 10,
-              fontSize: "0.85rem",
-              color: colors.textLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            Limited spots available. Reserve your seat now.
-          </p>
         </motion.div>
       </div>
     </section>
   );
 
-  // Main render
+  // Desktop view
   if (isMobile) return renderMobile();
 
   return (
     <section
       style={{
         background: colors.background,
-        padding: "40px 0",
+        padding: "60px 20px",
         position: "relative",
         overflow: "hidden",
+        marginTop: 50,
       }}
       aria-labelledby="locations-heading"
     >
-      {/* Decorative Elements */}
+      {/* Decorative background blur */}
       <motion.div
         style={{
           position: "absolute",
           top: "20%",
           right: "5%",
-          width: 180, // smaller
-          height: 180,
+          width: 300,
+          height: 300,
           borderRadius: "50%",
           background: "rgba(79, 70, 229, 0.05)",
-          filter: "blur(30px)",
+          filter: "blur(60px)",
           zIndex: 0,
         }}
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.4, 0.2],
-          y: [0, 30, 0],
+          scale: [1, 1.1, 1],
+          opacity: [0.2, 0.3, 0.2],
         }}
         transition={{
-          duration: 15,
+          duration: 20,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: "linear",
         }}
         aria-hidden="true"
       />
@@ -978,154 +769,110 @@ const Locations = () => {
       <div
         style={{
           width: "100%",
-          maxWidth: 1000, // smaller max width
+          maxWidth: 1200,
           margin: "0 auto",
-          padding: "0 12px", // less padding
           position: "relative",
           zIndex: 2,
-          textAlign: "center",
         }}
       >
+        {/* Section Title */}
         <motion.h2
           id="locations-heading"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.5 }}
           style={{
-            fontSize: "clamp(1.2rem, 3vw, 2rem)", // smaller
+            fontSize: "2.2rem",
             fontWeight: 800,
             textAlign: "center",
-            marginBottom: 10,
+            marginBottom: "12px",
             color: colors.highlight,
-            position: "relative",
-            display: "inline-block",
           }}
         >
-          <span
-            style={{
-              position: "relative",
-              display: "inline-block",
-            }}
-          >
-            Our Learning Centers
-            <motion.span
-              style={{
-                position: "absolute",
-                height: "6px",
-                background: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-                bottom: "-8px",
-                left: "25%",
-                right: "25%",
-                borderRadius: "4px",
-              }}
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            />
-          </span>
+          Our Learning Centers
         </motion.h2>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           style={{
             textAlign: "center",
             color: colors.textLight,
-            fontSize: "clamp(0.9rem, 1.5vw, 1rem)", // smaller
-            maxWidth: 500,
-            margin: "0 auto 14px",
-            lineHeight: 1.4,
+            fontSize: "1.1rem",
+            maxWidth: 600,
+            margin: "0 auto 32px",
+            lineHeight: 1.5,
           }}
         >
-          Visit our state-of-the-art learning centers across India. Each
-          location offers modern facilities and experienced faculty to help
-          students excel.
+          Visit our state-of-the-art learning centers across India
         </motion.p>
 
         {/* Filter tabs */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: "10px",
-            marginBottom: "24px",
-            flexWrap: "wrap",
+            gap: "16px",
+            marginBottom: "36px",
           }}
           role="tablist"
           aria-label="Location filters"
         >
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setActiveTab("all")}
             style={{
-              padding: "7px 16px",
-              borderRadius: 20,
+              padding: "10px 24px",
+              borderRadius: "14px",
               border: "none",
               background: activeTab === "all" ? colors.primary : colors.muted,
               color: activeTab === "all" ? "white" : colors.text,
               fontWeight: activeTab === "all" ? 600 : 500,
               cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow:
-                activeTab === "all"
-                  ? theme === "dark"
-                    ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                    : "0 2px 8px rgba(79, 70, 229, 0.18)"
-                  : "none",
-              fontSize: "0.95rem",
+              fontSize: "1rem",
             }}
             role="tab"
             aria-selected={activeTab === "all"}
-            aria-controls="all-locations-panel"
           >
             All Locations
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setActiveTab("featured")}
             style={{
-              padding: "7px 16px",
-              borderRadius: 20,
+              padding: "10px 24px",
+              borderRadius: "14px",
               border: "none",
               background:
                 activeTab === "featured" ? colors.primary : colors.muted,
               color: activeTab === "featured" ? "white" : colors.text,
               fontWeight: activeTab === "featured" ? 600 : 500,
               cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow:
-                activeTab === "featured"
-                  ? theme === "dark"
-                    ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                    : "0 2px 8px rgba(79, 70, 229, 0.18)"
-                  : "none",
+              fontSize: "1rem",
               display: "flex",
               alignItems: "center",
-              gap: "4px",
-              fontSize: "0.95rem",
+              gap: "8px",
             }}
             role="tab"
             aria-selected={activeTab === "featured"}
-            aria-controls="featured-locations-panel"
           >
-            <span>Featured Centers</span>
+            Featured Centers
             <span
               style={{
-                background: theme === "dark" ? "#3b82f6" : "#4338ca",
+                background: "rgba(255,255,255,0.2)",
                 color: "white",
-                fontSize: "0.65rem",
-                padding: "2px 6px",
-                borderRadius: 20,
+                fontSize: "0.7rem",
+                padding: "2px 8px",
+                borderRadius: "10px",
                 fontWeight: 600,
               }}
             >
@@ -1134,474 +881,37 @@ const Locations = () => {
           </motion.button>
         </motion.div>
 
-        {/* Branch cards */}
+        {/* Branch cards - grid layout */}
         <div
           role="tabpanel"
-          id={
-            activeTab === "all"
-              ? "all-locations-panel"
-              : "featured-locations-panel"
-          }
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", // smaller min width
-            gap: "clamp(12px, 2vw, 20px)",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "24px",
             width: "100%",
           }}
         >
-          {filteredBranches.map((branch, i) => (
-            <motion.div
+          {filteredBranches.map((branch) => (
+            <LocationCard
               key={branch.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              onMouseEnter={() => setHoveredCard(branch.id)}
-              onMouseLeave={() => setHoveredCard(null)}
-              whileHover={{
-                y: -8,
-                transition: { duration: 0.3 },
-                boxShadow:
-                  theme === "dark"
-                    ? "0 20px 40px rgba(0, 0, 0, 0.2)"
-                    : "0 20px 40px rgba(0, 0, 0, 0.1)",
-              }}
-              style={{
-                background: colors.card,
-                borderRadius: 16, // smaller
-                overflow: "hidden",
-                boxShadow:
-                  theme === "dark"
-                    ? "0 4px 16px rgba(0, 0, 0, 0.15)"
-                    : "0 4px 16px rgba(0, 0, 0, 0.07)",
-                border: `1px solid ${colors.cardBorder}`,
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                position: "relative",
-                transition: "all 0.3s ease",
-                fontSize: "0.97rem", // smaller
-              }}
-              role="region"
-              aria-label={`${branch.city} branch information`}
-            >
-              {/* Featured badge if applicable */}
-              {branch.featured && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    zIndex: 10,
-                    background:
-                      theme === "dark"
-                        ? "linear-gradient(135deg, #3b82f6 0%, #818cf8 100%)"
-                        : "linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%)",
-                    color: "white",
-                    padding: "4px 10px",
-                    borderRadius: 16,
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    boxShadow:
-                      theme === "dark"
-                        ? "0 2px 8px rgba(96, 165, 250, 0.18)"
-                        : "0 2px 8px rgba(79, 70, 229, 0.18)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "3px",
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  Featured Center
-                </motion.div>
-              )}
-
-              <div
-                style={{
-                  position: "relative",
-                  height: 120, // smaller map height
-                  overflow: "hidden",
-                  borderRadius: "16px 16px 0 0",
-                }}
-              >
-                {/* Map or Placeholder */}
-                {branch.googleMap ? (
-                  <iframe
-                    title={`${branch.city} map`}
-                    src={branch.googleMap}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      border: 0,
-                      position: "absolute",
-                    }}
-                    loading="lazy"
-                    allowFullScreen=""
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: theme === "dark" ? "#2d3748" : "#e0e7ef",
-                      color: theme === "dark" ? "#9ca3af" : "#64748b",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 600,
-                      fontSize: "0.95rem",
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      borderRadius: "16px 16px 0 0",
-                      border:
-                        theme === "dark"
-                          ? "1px dashed #4b5563"
-                          : "1px dashed #b6b6b6",
-                      zIndex: 1,
-                    }}
-                  >
-                    Map Unavailable
-                  </div>
-                )}
-
-                <motion.div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(0, 0, 0, 0.3)",
-                    zIndex: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    color: "white",
-                    padding: "0 10px",
-                  }}
-                  animate={{
-                    backgroundColor:
-                      hoveredCard === branch.id
-                        ? "rgba(0, 0, 0, 0.1)"
-                        : "rgba(0, 0, 0, 0.3)",
-                  }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <motion.h3
-                    style={{
-                      fontSize: "clamp(1.1rem, 2vw, 1.25rem)", // smaller
-                      fontWeight: 700,
-                      margin: 0,
-                      textAlign: "center",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{
-                      scale: hoveredCard === branch.id ? 1.05 : 1,
-                      y: hoveredCard === branch.id ? -5 : 0,
-                    }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {branch.city}
-                  </motion.h3>
-                  <motion.p
-                    style={{
-                      fontSize: "0.85rem", // smaller
-                      margin: "4px 0 0 0",
-                      opacity: 0.9,
-                      fontWeight: 500,
-                      textAlign: "center",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{
-                      opacity: hoveredCard === branch.id ? 1 : 0.9,
-                      y: hoveredCard === branch.id ? -5 : 0,
-                    }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
-                    {branch.tagline}
-                  </motion.p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: -50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 3,
-                  }}
-                >
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 5,
-                      padding: "5px 10px",
-                      background: "white",
-                      color: colors.primary,
-                      borderRadius: 20,
-                      textDecoration: "none",
-                      fontWeight: 600,
-                      fontSize: "0.8rem",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-3px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 6px 16px rgba(0,0,0,0.15)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(0,0,0,0.1)";
-                    }}
-                    aria-label={`Get directions to ${branch.city} branch`}
-                  >
-                    <FaDirections size={12} />
-                    Directions
-                  </a>
-                </motion.div>
-              </div>
-
-              {/* Branch stats */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-around",
-                  background: colors.muted,
-                  padding: "7px 0",
-                  borderBottom: `1px solid ${colors.cardBorder}`,
-                }}
-              >
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Staff
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "3px",
-                    }}
-                  >
-                    <FaChalkboardTeacher color={colors.primary} size={13} />
-                    {branch.staff}
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Students
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                    }}
-                  >
-                    {branch.studentsEnrolled}
-                  </div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.75rem", color: colors.textLight }}>
-                    Courses
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: colors.text,
-                    }}
-                  >
-                    {branch.courses}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "clamp(10px, 2vw, 16px)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 7,
-                  }}
-                >
-                  <motion.div
-                    whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-                    transition={{ duration: 0.5 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: 1,
-                    }}
-                  >
-                    <FaMapMarkerAlt color={colors.primary} size={12} />
-                  </motion.div>
-                  <span
-                    style={{
-                      color: colors.text,
-                      lineHeight: 1.4,
-                      textAlign: "left",
-                      fontSize: "0.93rem",
-                    }}
-                  >
-                    {branch.address}
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    whileHover={{ rotate: 15, scale: 1.1 }}
-                    transition={{ duration: 0.3 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaPhone color={colors.primary} size={12} />
-                  </motion.div>
-                  <a
-                    href={`tel:${branch.phone}`}
-                    style={{
-                      color: colors.primary,
-                      textDecoration: "none",
-                      fontWeight: 500,
-                      transition: "color 0.2s ease",
-                      fontSize: "0.93rem",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.color = colors.secondary;
-                      e.currentTarget.style.textDecoration = "underline";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.color = colors.primary;
-                      e.currentTarget.style.textDecoration = "none";
-                    }}
-                  >
-                    {branch.phone}
-                  </a>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    whileHover={{
-                      y: [0, -5, 0],
-                      transition: { duration: 0.5 },
-                    }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaEnvelope color={colors.primary} size={12} />
-                  </motion.div>
-                  <a
-                    href={`mailto:${branch.email}`}
-                    style={{
-                      color: colors.primary,
-                      textDecoration: "none",
-                      fontWeight: 500,
-                      transition: "color 0.2s ease",
-                      fontSize: "0.93rem",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.color = colors.secondary;
-                      e.currentTarget.style.textDecoration = "underline";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.color = colors.primary;
-                      e.currentTarget.style.textDecoration = "none";
-                    }}
-                  >
-                    {branch.email}
-                  </a>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <motion.div
-                    animate={{ rotate: hoveredCard === branch.id ? 360 : 0 }}
-                    transition={{ duration: 1.5 }}
-                    style={{
-                      width: 24,
-                      height: 24,
-                      minWidth: 24,
-                      borderRadius: 12,
-                      background: colors.backgroundAlt,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FaClock color={colors.primary} size={12} />
-                  </motion.div>
-                  <span style={{ color: colors.text, fontSize: "0.93rem" }}>
-                    {branch.hours}
-                  </span>
-                </div>
-                {/* Amenities and Schedule a Visit button removed */}
-              </div>
-            </motion.div>
+              branch={branch}
+              hoveredCard={hoveredCard}
+              setHoveredCard={setHoveredCard}
+              colors={colors}
+              theme={theme}
+            />
           ))}
         </div>
 
+        {/* CTA Section */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.5 }}
+          transition={{ duration: 0.5 }}
           style={{
             textAlign: "center",
-            marginTop: 30,
+            marginTop: "48px",
             width: "100%",
           }}
         >
@@ -1609,37 +919,30 @@ const Locations = () => {
             href="/contact"
             whileHover={{
               scale: 1.05,
-              boxShadow:
-                theme === "dark"
-                  ? "0 10px 30px rgba(96, 165, 250, 0.3)"
-                  : "0 10px 30px rgba(79, 70, 229, 0.3)",
+              boxShadow: "0 8px 30px rgba(79, 70, 229, 0.3)",
               backgroundPosition: "right center",
             }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.97 }}
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "10px 20px",
+              padding: "14px 32px",
               background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.primary} 100%)`,
               backgroundSize: "200% auto",
               color: "white",
               fontWeight: 600,
-              borderRadius: 10,
+              borderRadius: "14px",
               textDecoration: "none",
-              fontSize: "1rem",
-              boxShadow:
-                theme === "dark"
-                  ? "0 3px 8px rgba(96, 165, 250, 0.18)"
-                  : "0 3px 8px rgba(79, 70, 229, 0.18)",
-              transition: "all 0.4s ease",
+              fontSize: "1.1rem",
+              boxShadow: "0 4px 15px rgba(79, 70, 229, 0.2)",
             }}
           >
             Book a Free Demo Class
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1652,33 +955,6 @@ const Locations = () => {
               <path d="m12 5 7 7-7 7"></path>
             </svg>
           </motion.a>
-          <p
-            style={{
-              marginTop: 10,
-              fontSize: "0.85rem",
-              color: colors.textLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            Limited spots available. Reserve your seat now.
-          </p>
         </motion.div>
       </div>
     </section>

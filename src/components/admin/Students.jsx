@@ -26,6 +26,12 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaUserGraduate,
+  FaBars,
+  FaEnvelope,
+  FaPhoneAlt,
+  FaHome,
+  FaBirthdayCake,
+  FaUserFriends,
 } from "react-icons/fa";
 
 const classOptions = [
@@ -53,6 +59,30 @@ const initialForm = {
   password: "", // Add password field
 };
 
+// Screen size hook for responsive design
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return windowSize;
+}
+
 const AdminStudents = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +92,14 @@ const AdminStudents = () => {
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [error, setError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get window size for responsive design
+  const { width } = useWindowSize();
+  const isSmallMobile = width <= 480; // Extra small screens
+  const isMobile = width <= 768;
+  const isTablet = width <= 1024 && width > 768;
 
   const { theme } = useTheme();
 
@@ -188,7 +226,7 @@ const AdminStudents = () => {
       setEditId(null);
       fetchStudents();
     } catch (err) {
-      setError("Failed to save student");
+      setError("Failed to save student: " + err.message);
     }
   };
 
@@ -254,6 +292,163 @@ const AdminStudents = () => {
     return matchesClass && matchesSearch;
   });
 
+  // Toggle sidebar function (to be connected to parent component)
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+    // You'll need to communicate this state to a parent component
+  };
+
+  // Render student card for mobile view
+  const renderStudentCard = (student, index) => {
+    return (
+      <motion.div
+        key={student.id}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        style={{
+          padding: 16,
+          borderRadius: 12,
+          border: `1px solid ${colors.cardBorder}`,
+          marginBottom: 12,
+          background: colors.card,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 16,
+                fontWeight: 600,
+                color: colors.text,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <FaUserGraduate
+                size={14}
+                style={{ color: colors.accent, flexShrink: 0 }}
+              />
+              {(student.firstName || "") + " " + (student.lastName || "")}
+            </h3>
+            <span
+              style={{
+                background: colors.accentLight,
+                color: colors.accent,
+                padding: "3px 6px",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 500,
+                marginTop: 4,
+                display: "inline-block",
+              }}
+            >
+              {student.class}
+            </span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            marginBottom: 16,
+            fontSize: 14,
+            color: colors.textSecondary,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <FaEnvelope size={12} style={{ flexShrink: 0 }} />
+            <span style={{ wordBreak: "break-word" }}>{student.email}</span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <FaBirthdayCake size={12} style={{ flexShrink: 0 }} />
+            <span>{student.dob || "Not specified"}</span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <FaUserFriends size={12} style={{ flexShrink: 0 }} />
+            <span>{student.parentName || "Not specified"}</span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <FaPhoneAlt size={12} style={{ flexShrink: 0 }} />
+            <span>{student.parentContact || "No contact"}</span>
+          </div>
+
+          {student.address && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <FaHome size={12} style={{ flexShrink: 0, marginTop: 4 }} />
+              <span style={{ wordBreak: "break-word" }}>{student.address}</span>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleEdit(student)}
+            style={{
+              background: colors.warning,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FaPen size={12} /> Edit
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleDelete(student.id)}
+            style={{
+              background: colors.danger,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FaTrashAlt size={12} /> Delete
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <motion.div
       initial="hidden"
@@ -262,69 +457,115 @@ const AdminStudents = () => {
       style={{
         maxWidth: 1200,
         margin: "0 auto",
-        padding: 24,
+        padding: isSmallMobile ? "12px 8px" : isMobile ? 16 : 24,
         color: colors.text,
       }}
     >
-      <motion.h1
-        variants={itemVariants}
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-          marginBottom: 8,
-          color: colors.text,
-        }}
-      >
-        Student Management
-      </motion.h1>
+      {/* Mobile Header with Sidebar Toggle */}
+      {isMobile && (
+        <motion.div
+          variants={itemVariants}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 12,
+            gap: 12,
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleSidebar}
+            style={{
+              background: colors.card,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 8,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+            aria-label="Toggle Sidebar"
+          >
+            <FaBars size={16} />
+          </motion.button>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Students</h1>
+        </motion.div>
+      )}
 
-      <motion.p
-        variants={itemVariants}
-        style={{
-          fontSize: 16,
-          color: colors.textSecondary,
-          marginBottom: 24,
-          maxWidth: 800,
-        }}
-      >
-        Add, edit and manage student information in one place.
-      </motion.p>
+      {/* Desktop/Tablet Header */}
+      {!isMobile && (
+        <>
+          <motion.h1
+            variants={itemVariants}
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              marginBottom: 8,
+              color: colors.text,
+            }}
+          >
+            Student Management
+          </motion.h1>
 
+          <motion.p
+            variants={itemVariants}
+            style={{
+              fontSize: 16,
+              color: colors.textSecondary,
+              marginBottom: 24,
+              maxWidth: 800,
+            }}
+          >
+            Add, edit and manage student information in one place.
+          </motion.p>
+        </>
+      )}
+
+      {/* Search & Filter Controls - Responsive Layout */}
       <motion.div
         variants={itemVariants}
         style={{
           display: "flex",
-          gap: 16,
-          marginBottom: 24,
+          gap: isSmallMobile ? 8 : isMobile ? 12 : 16,
+          marginBottom: isSmallMobile ? 12 : isMobile ? 16 : 24,
           flexWrap: "wrap",
           alignItems: "center",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
+        {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: 1,
-            minWidth: 220,
-            maxWidth: 340,
+            flex: isMobile ? "1 0 100%" : 1,
+            minWidth: isMobile ? "100%" : 220,
+            maxWidth: isMobile ? "100%" : 340,
             display: "flex",
             alignItems: "center",
             gap: 8,
             background: colors.card,
             borderRadius: 10,
-            padding: "4px 16px",
+            padding: isSmallMobile ? "2px 12px" : "4px 16px",
             border: `1px solid ${colors.border}`,
           }}
         >
-          <FaSearch style={{ color: colors.textSecondary }} />
+          <FaSearch style={{ color: colors.textSecondary, flexShrink: 0 }} />
           <input
             type="text"
-            placeholder="Search by name or email"
+            placeholder={
+              isSmallMobile ? "Search..." : "Search by name or email"
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              padding: "10px 0",
+              padding: isSmallMobile ? "8px 0" : "10px 0",
               border: "none",
               width: "100%",
-              fontSize: 15,
+              fontSize: 14,
               backgroundColor: "transparent",
               color: colors.text,
               outline: "none",
@@ -343,6 +584,7 @@ const AdminStudents = () => {
                 color: colors.textSecondary,
                 cursor: "pointer",
                 padding: 4,
+                flexShrink: 0,
               }}
             >
               <FaTimes size={14} />
@@ -350,78 +592,202 @@ const AdminStudents = () => {
           )}
         </div>
 
-        <select
-          value={filterClass}
-          onChange={(e) => setFilterClass(e.target.value)}
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            border: `1px solid ${colors.border}`,
-            background: colors.card,
-            color: colors.text,
-            minWidth: 140,
-            fontSize: 14,
-            cursor: "pointer",
-          }}
-        >
-          <option value="">All Classes</option>
-          {classOptions.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        {/* Mobile Controls Row */}
+        {isMobile && (
+          <div style={{ display: "flex", width: "100%", gap: 8 }}>
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: `1px solid ${colors.border}`,
+                background: showFilters ? colors.accentLight : colors.card,
+                color: showFilters ? colors.accent : colors.text,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flex: 1,
+              }}
+            >
+              <FaFilter size={14} /> {showFilters ? "Hide Filters" : "Filters"}
+            </motion.button>
 
-        <motion.button
-          variants={buttonVariants}
-          whileHover="hover"
-          whileTap="tap"
-          onClick={() => {
-            setShowForm(true);
-            setForm(initialForm);
-            setEditId(null);
-          }}
-          style={{
-            background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "12px 20px",
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            boxShadow: colors.buttonShadow,
-          }}
-        >
-          <FaUserPlus size={14} /> Add Student
-        </motion.button>
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => {
+                setShowForm(true);
+                setForm(initialForm);
+                setEditId(null);
+              }}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "none",
+                background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                color: "#fff",
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: colors.buttonShadow,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flex: 1,
+              }}
+            >
+              <FaUserPlus size={14} /> Add Student
+            </motion.button>
+          </div>
+        )}
 
-        <motion.button
-          variants={buttonVariants}
-          whileHover="hover"
-          whileTap="tap"
-          onClick={handleExport}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            background: colors.card,
-            color: colors.accent,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 10,
-            padding: "12px 20px",
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: "pointer",
-            gap: 10,
-          }}
-        >
-          <FaFileExport size={14} /> Export
-        </motion.button>
+        {/* Mobile Filters - Collapsible */}
+        {isMobile && showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              marginTop: 4,
+              marginBottom: 4,
+            }}
+          >
+            <select
+              value={filterClass}
+              onChange={(e) => setFilterClass(e.target.value)}
+              style={{
+                padding: isSmallMobile ? "8px 12px" : "10px 12px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                background: colors.card,
+                color: colors.text,
+                fontSize: 14,
+                width: "100%",
+              }}
+            >
+              <option value="">All Classes</option>
+              {classOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={handleExport}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: colors.card,
+                  color: colors.accent,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  fontWeight: 500,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  gap: 8,
+                  flex: 1,
+                }}
+              >
+                <FaFileExport size={14} /> Export Data
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Desktop Controls */}
+        {!isMobile && (
+          <>
+            <select
+              value={filterClass}
+              onChange={(e) => setFilterClass(e.target.value)}
+              style={{
+                padding: 12,
+                borderRadius: 10,
+                border: `1px solid ${colors.border}`,
+                background: colors.card,
+                color: colors.text,
+                minWidth: 140,
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              <option value="">All Classes</option>
+              {classOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => {
+                setShowForm(true);
+                setForm(initialForm);
+                setEditId(null);
+              }}
+              style={{
+                background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                padding: "12px 20px",
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                boxShadow: colors.buttonShadow,
+              }}
+            >
+              <FaUserPlus size={14} /> Add Student
+            </motion.button>
+
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={handleExport}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: colors.card,
+                color: colors.accent,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: "12px 20px",
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: "pointer",
+                gap: 10,
+              }}
+            >
+              <FaFileExport size={14} /> Export
+            </motion.button>
+          </>
+        )}
       </motion.div>
 
+      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -450,25 +816,58 @@ const AdminStudents = () => {
         </motion.div>
       )}
 
-      {loading ? (
+      {/* Mobile Card View */}
+      {isMobile && (
         <motion.div
           variants={itemVariants}
           style={{
-            padding: 40,
-            textAlign: "center",
-            color: colors.textSecondary,
+            marginBottom: 20,
           }}
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            style={{ display: "inline-block", marginBottom: 10 }}
-          >
-            <FaUserGraduate size={30} color={colors.accent} />
-          </motion.div>
-          <div>Loading students...</div>
+          {loading ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1,
+                  ease: "linear",
+                }}
+                style={{ display: "inline-block", marginBottom: 8 }}
+              >
+                <FaUserGraduate size={24} color={colors.accent} />
+              </motion.div>
+              <p style={{ margin: 0 }}>Loading students...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 32,
+                background: colors.card,
+                borderRadius: 12,
+                border: `1px solid ${colors.cardBorder}`,
+                color: colors.textSecondary,
+              }}
+            >
+              No students found matching your criteria.
+            </div>
+          ) : (
+            filtered.map((student, index) => renderStudentCard(student, index))
+          )}
         </motion.div>
-      ) : (
+      )}
+
+      {/* Desktop/Tablet View - Table */}
+      {!isMobile && (
         <motion.div
           variants={itemVariants}
           style={{
@@ -480,7 +879,14 @@ const AdminStudents = () => {
             transition: "all 0.3s ease",
           }}
         >
-          <div style={{ overflowX: "auto" }}>
+          <div
+            style={{
+              overflowX: "auto",
+              width: "100%",
+              WebkitOverflowScrolling: "touch", // For smooth scrolling on iOS
+              msOverflowStyle: "-ms-autohiding-scrollbar", // Better experience on Edge
+            }}
+          >
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead style={{ background: colors.tableHeader }}>
                 <tr>
@@ -575,7 +981,27 @@ const AdminStudents = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 && (
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      style={{ textAlign: "center", padding: 32 }}
+                    >
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "linear",
+                        }}
+                        style={{ display: "inline-block", marginRight: 10 }}
+                      >
+                        <FaUserGraduate size={16} color={colors.accent} />
+                      </motion.div>
+                      Loading students...
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
@@ -589,122 +1015,127 @@ const AdminStudents = () => {
                       "Add Student" button.
                     </td>
                   </tr>
+                ) : (
+                  filtered.map((s, index) => (
+                    <motion.tr
+                      key={s.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      style={{
+                        borderTop: `1px solid ${colors.tableBorder}`,
+                        background:
+                          index % 2 === 0
+                            ? colors.tableRow
+                            : colors.tableRowAlt,
+                      }}
+                      whileHover={{
+                        backgroundColor:
+                          theme === "dark"
+                            ? "rgba(59, 130, 246, 0.1)"
+                            : "rgba(79, 70, 229, 0.05)",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: 14,
+                          fontWeight: 500,
+                          color: colors.text,
+                        }}
+                      >
+                        {(s.firstName || "") + " " + (s.lastName || "")}
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        <span
+                          style={{
+                            background: colors.accentLight,
+                            color: colors.accent,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {s.class}
+                        </span>
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {s.dob}
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {s.email}
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {s.parentName}
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {s.parentContact}
+                      </td>
+                      <td
+                        style={{
+                          padding: 14,
+                          color: colors.text,
+                          maxWidth: 200,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {s.address}
+                      </td>
+                      <td style={{ padding: 14, textAlign: "center" }}>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleEdit(s)}
+                          style={{
+                            background: colors.warning,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "6px 12px",
+                            marginRight: 8,
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            fontSize: 13,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <FaPen size={12} /> Edit
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDelete(s.id)}
+                          style={{
+                            background: colors.danger,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            fontSize: 13,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <FaTrashAlt size={12} /> Delete
+                        </motion.button>
+                      </td>
+                    </motion.tr>
+                  ))
                 )}
-                {filtered.map((s, index) => (
-                  <motion.tr
-                    key={s.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    style={{
-                      borderTop: `1px solid ${colors.tableBorder}`,
-                      background:
-                        index % 2 === 0 ? colors.tableRow : colors.tableRowAlt,
-                    }}
-                    whileHover={{
-                      backgroundColor:
-                        theme === "dark"
-                          ? "rgba(59, 130, 246, 0.1)"
-                          : "rgba(79, 70, 229, 0.05)",
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: 14,
-                        fontWeight: 500,
-                        color: colors.text,
-                      }}
-                    >
-                      {(s.firstName || "") + " " + (s.lastName || "")}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      <span
-                        style={{
-                          background: colors.accentLight,
-                          color: colors.accent,
-                          padding: "4px 8px",
-                          borderRadius: 6,
-                          fontSize: 13,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {s.class}
-                      </span>
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>{s.dob}</td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {s.email}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {s.parentName}
-                    </td>
-                    <td style={{ padding: 14, color: colors.text }}>
-                      {s.parentContact}
-                    </td>
-                    <td
-                      style={{
-                        padding: 14,
-                        color: colors.text,
-                        maxWidth: 200,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {s.address}
-                    </td>
-                    <td style={{ padding: 14, textAlign: "center" }}>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleEdit(s)}
-                        style={{
-                          background: colors.warning,
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 8,
-                          padding: "6px 12px",
-                          marginRight: 8,
-                          cursor: "pointer",
-                          fontWeight: 500,
-                          fontSize: 13,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                        }}
-                      >
-                        <FaPen size={12} /> Edit
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDelete(s.id)}
-                        style={{
-                          background: colors.danger,
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 8,
-                          padding: "6px 12px",
-                          cursor: "pointer",
-                          fontWeight: 500,
-                          fontSize: 13,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                        }}
-                      >
-                        <FaTrashAlt size={12} /> Delete
-                      </motion.button>
-                    </td>
-                  </motion.tr>
-                ))}
               </tbody>
             </table>
           </div>
         </motion.div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal - Responsive */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -723,6 +1154,7 @@ const AdminStudents = () => {
               alignItems: "center",
               justifyContent: "center",
               backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
             }}
           >
             <motion.div
@@ -733,7 +1165,7 @@ const AdminStudents = () => {
               style={{
                 width: "100%",
                 maxWidth: 600,
-                maxHeight: "90vh",
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
                 overflow: "auto",
                 padding: 0,
                 borderRadius: 16,
@@ -744,10 +1176,10 @@ const AdminStudents = () => {
               <form
                 onSubmit={handleSubmit}
                 style={{
-                  padding: 32,
+                  padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 24,
+                  gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
                 }}
               >
                 <div
@@ -760,7 +1192,7 @@ const AdminStudents = () => {
                 >
                   <h2
                     style={{
-                      fontSize: 22,
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
                       fontWeight: 700,
                       margin: 0,
                       color: colors.text,
@@ -802,17 +1234,30 @@ const AdminStudents = () => {
                   </motion.button>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       First Name *
                     </label>
                     <input
@@ -822,12 +1267,12 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, firstName: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
@@ -835,13 +1280,19 @@ const AdminStudents = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Last Name *
                     </label>
                     <input
@@ -851,29 +1302,42 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, lastName: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Class *
                     </label>
                     <select
@@ -883,12 +1347,12 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, class: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                         cursor: "pointer",
                       }}
@@ -904,13 +1368,19 @@ const AdminStudents = () => {
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Date of Birth *
                     </label>
                     <input
@@ -921,12 +1391,12 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, dob: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                         width: "100%",
                       }}
                     />
@@ -934,9 +1404,19 @@ const AdminStudents = () => {
                 </div>
 
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
                 >
-                  <label style={{ fontWeight: 500, color: colors.text }}>
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
                     Email *
                   </label>
                   <input
@@ -947,12 +1427,12 @@ const AdminStudents = () => {
                       setForm((f) => ({ ...f, email: e.target.value }))
                     }
                     style={{
-                      padding: 12,
+                      padding: isSmallMobile ? 10 : 12,
                       borderRadius: 8,
                       border: `1px solid ${colors.border}`,
                       background: colors.inputBg,
                       color: colors.text,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                     }}
                   />
                 </div>
@@ -960,9 +1440,19 @@ const AdminStudents = () => {
                 {/* Show password field only when adding */}
                 {!editId && (
                   <div
-                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 6 : 10,
+                    }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Password (for parent login)
                     </label>
                     <input
@@ -972,19 +1462,19 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, password: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                       placeholder="Set password for parent login"
                       autoComplete="new-password"
                     />
                     <span
                       style={{
-                        fontSize: 12,
+                        fontSize: isSmallMobile ? 11 : 12,
                         color: colors.textSecondary,
                         marginTop: 4,
                       }}
@@ -995,17 +1485,30 @@ const AdminStudents = () => {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: isSmallMobile ? 12 : 16,
+                    flexWrap: "wrap",
+                    flexDirection: isMobile ? "column" : "row",
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Parent Name *
                     </label>
                     <input
@@ -1015,25 +1518,31 @@ const AdminStudents = () => {
                         setForm((f) => ({ ...f, parentName: e.target.value }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     />
                   </div>
                   <div
                     style={{
                       flex: 1,
-                      minWidth: 200,
+                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 6,
+                      gap: isSmallMobile ? 6 : 10,
                     }}
                   >
-                    <label style={{ fontWeight: 500, color: colors.text }}>
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
                       Parent Contact *
                     </label>
                     <input
@@ -1046,21 +1555,31 @@ const AdminStudents = () => {
                         }))
                       }
                       style={{
-                        padding: 12,
+                        padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: 15,
+                        fontSize: isSmallMobile ? 14 : 15,
                       }}
                     />
                   </div>
                 </div>
 
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
                 >
-                  <label style={{ fontWeight: 500, color: colors.text }}>
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
                     Address
                   </label>
                   <textarea
@@ -1069,13 +1588,13 @@ const AdminStudents = () => {
                       setForm((f) => ({ ...f, address: e.target.value }))
                     }
                     style={{
-                      padding: 12,
+                      padding: isSmallMobile ? 10 : 12,
                       borderRadius: 8,
                       border: `1px solid ${colors.border}`,
                       background: colors.inputBg,
                       color: colors.text,
-                      fontSize: 15,
-                      minHeight: 80,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      minHeight: isSmallMobile ? 60 : 80,
                       resize: "vertical",
                     }}
                   />
@@ -1084,9 +1603,10 @@ const AdminStudents = () => {
                 <div
                   style={{
                     display: "flex",
-                    gap: 16,
-                    marginTop: 8,
+                    gap: isSmallMobile ? 8 : 16,
+                    marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
                     justifyContent: "flex-end",
+                    flexDirection: isMobile ? "column" : "row",
                   }}
                 >
                   <motion.button
@@ -1103,11 +1623,12 @@ const AdminStudents = () => {
                       color: colors.accent,
                       border: `1px solid ${colors.accent}`,
                       borderRadius: 10,
-                      padding: "12px 24px",
+                      padding: isSmallMobile ? "10px 20px" : "12px 24px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
-                      minWidth: 100,
+                      minWidth: isMobile ? "100%" : 100,
+                      order: isMobile ? 2 : 1,
                     }}
                   >
                     Cancel
@@ -1122,15 +1643,16 @@ const AdminStudents = () => {
                       color: "#fff",
                       border: "none",
                       borderRadius: 10,
-                      padding: "12px 32px",
+                      padding: isSmallMobile ? "10px 24px" : "12px 32px",
                       fontWeight: 600,
-                      fontSize: 15,
+                      fontSize: isSmallMobile ? 14 : 15,
                       cursor: "pointer",
                       boxShadow: colors.buttonShadow,
-                      minWidth: 150,
+                      minWidth: isMobile ? "100%" : 150,
+                      order: isMobile ? 1 : 2,
                     }}
                   >
-                    {editId ? "Update" : "Add Student"}
+                    {editId ? "Update Student" : "Add Student"}
                   </motion.button>
                 </div>
               </form>
