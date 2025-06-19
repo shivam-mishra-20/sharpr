@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "../../firebase";
 
 const getThemeColors = (theme) => ({
   primary: theme === "dark" ? "#6366f1" : "#4f46e5",
@@ -32,6 +43,7 @@ const Inquiry = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: "createdAt",
     direction: "desc",
@@ -48,6 +60,10 @@ const Inquiry = () => {
       padding: "80px 20px 40px",
       fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
       color: colors.text,
+      marginTop: "-40px",
+      marginBottom: "-22px",
+      marginLeft: "-30px",
+      marginRight: "-50px",
     },
     header: {
       display: "flex",
@@ -129,11 +145,17 @@ const Inquiry = () => {
         new: { bg: "#EBF5FF", text: "#3B82F6" },
         responded: { bg: "#F0FDF4", text: "#22C55E" },
         resolved: { bg: "#F5F5F5", text: "#6B7280" },
+        // Add a default for any other status that might come from the database
+        default: { bg: "#F5F5F5", text: "#6B7280" },
       };
+
+      // First check if the status exists in our mapping, if not use default
+      const statusColor = statusColors[status] || statusColors.default;
+
       const color =
         theme === "dark"
-          ? { bg: "rgba(255,255,255,0.1)", text: statusColors[status].text }
-          : statusColors[status];
+          ? { bg: "rgba(255,255,255,0.1)", text: statusColor.text }
+          : statusColor;
 
       return {
         padding: "4px 8px",
@@ -304,6 +326,68 @@ const Inquiry = () => {
       maxWidth: "1200px",
       margin: "0 auto",
     },
+    deleteButton: {
+      backgroundColor: colors.error,
+      color: "white",
+      border: "none",
+      padding: "8px 16px",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontWeight: 500,
+      marginLeft: "auto",
+    },
+    confirmDialog: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      zIndex: 1010,
+    },
+    confirmContent: {
+      backgroundColor: colors.card,
+      borderRadius: "16px",
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+      padding: "24px",
+      width: "100%",
+      maxWidth: "400px",
+    },
+    confirmHeader: {
+      fontSize: "1.25rem",
+      fontWeight: 600,
+      marginBottom: "16px",
+      color: colors.text,
+    },
+    confirmText: {
+      marginBottom: "24px",
+      color: colors.text,
+    },
+    confirmActions: {
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: "12px",
+    },
+    cancelButton: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: `1px solid ${colors.border}`,
+      background: "transparent",
+      color: colors.text,
+      cursor: "pointer",
+    },
+    confirmDeleteButton: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: "none",
+      backgroundColor: colors.error,
+      color: "white",
+      fontWeight: 600,
+      cursor: "pointer",
+    },
     "@media (max-width: 768px)": {
       header: {
         flexDirection: "column",
@@ -325,60 +409,24 @@ const Inquiry = () => {
   const fetchInquiries = async () => {
     setLoading(true);
     try {
-      // In a real app, this would be an API call
-      // Simulating API call with timeout
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Get inquiries from Firestore
+      const inquiriesQuery = query(
+        collection(db, "inquiries"),
+        orderBy("createdAt", "desc")
+      );
+      const inquiriesSnapshot = await getDocs(inquiriesQuery);
 
-      // Mock data since there's no actual backend
-      const mockData = [
-        {
-          id: "inq-001",
-          name: "John Doe",
-          email: "john.doe@example.com",
-          message:
-            "I'm interested in your AI development services. Can you please provide more information about how you can help with my project?",
-          createdAt: new Date(2023, 10, 15, 9, 30).toISOString(),
-          status: "new",
-        },
-        {
-          id: "inq-002",
-          name: "Sarah Smith",
-          email: "sarah.smith@company.co",
-          message:
-            "We're looking for a development partner for our new web application. I'd like to schedule a call to discuss the project requirements in detail.",
-          createdAt: new Date(2023, 10, 14, 16, 45).toISOString(),
-          status: "responded",
-        },
-        {
-          id: "inq-003",
-          name: "Michael Chen",
-          email: "michaelc@techfirm.org",
-          message:
-            "Hello! I saw your portfolio and was impressed by your work. I'm working on a startup and need help with creating an MVP. What would be the process to get started?",
-          createdAt: new Date(2023, 10, 12, 11, 20).toISOString(),
-          status: "resolved",
-        },
-        {
-          id: "inq-004",
-          name: "Priya Patel",
-          email: "priya.p@gmail.com",
-          message:
-            "I need assistance with a mobile app development project. The app needs to have user authentication, real-time messaging, and payment processing. Can you handle this type of project?",
-          createdAt: new Date(2023, 10, 10, 14, 15).toISOString(),
-          status: "new",
-        },
-        {
-          id: "inq-005",
-          name: "Robert Johnson",
-          email: "robert@consultancy.net",
-          message:
-            "We're looking to modernize our legacy system. It's a 10-year-old application built with PHP. We'd like to explore options for migrating to a more modern tech stack. Can we discuss this further?",
-          createdAt: new Date(2023, 10, 8, 17, 30).toISOString(),
-          status: "responded",
-        },
-      ];
+      // Map Firestore documents to the expected format
+      const inquiriesData = inquiriesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        // Ensure createdAt is in the expected string format for sorting
+        createdAt:
+          doc.data().createdAt?.toDate?.().toISOString() ||
+          new Date().toISOString(),
+      }));
 
-      setInquiries(mockData);
+      setInquiries(inquiriesData);
       setError(null);
     } catch (err) {
       console.error("Failed to fetch inquiries:", err);
@@ -437,19 +485,46 @@ const Inquiry = () => {
     }).format(date);
   };
 
-  const handleUpdateStatus = (id, newStatus) => {
-    setInquiries(
-      inquiries.map((inquiry) =>
-        inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
-      )
-    );
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      // Update in Firestore
+      await updateDoc(doc(db, "inquiries", id), {
+        status: newStatus,
+        updatedAt: serverTimestamp(),
+      });
 
-    if (selectedInquiry && selectedInquiry.id === id) {
-      setSelectedInquiry({ ...selectedInquiry, status: newStatus });
+      // Update local state
+      setInquiries(
+        inquiries.map((inquiry) =>
+          inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
+        )
+      );
+
+      // Update modal if open
+      if (selectedInquiry && selectedInquiry.id === id) {
+        setSelectedInquiry({ ...selectedInquiry, status: newStatus });
+      }
+    } catch (err) {
+      console.error(`Error updating inquiry ${id} status:`, err);
+      alert("Failed to update status. Please try again.");
     }
+  };
 
-    // In a real app, you would make an API call here
-    console.log(`Updated inquiry ${id} status to ${newStatus}`);
+  const handleDeleteInquiry = async (id) => {
+    try {
+      // Delete document from Firestore
+      await deleteDoc(doc(db, "inquiries", id));
+
+      // Update local state
+      setInquiries(inquiries.filter((inquiry) => inquiry.id !== id));
+
+      // Close the modal and confirmation dialog
+      setSelectedInquiry(null);
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error(`Error deleting inquiry ${id}:`, err);
+      alert("Failed to delete inquiry. Please try again.");
+    }
   };
 
   const getSortIndicator = (key) => {
@@ -632,8 +707,8 @@ const Inquiry = () => {
                       {formatDate(inquiry.createdAt)}
                     </td>
                     <td style={styles.tableCell}>
-                      <span style={styles.badge(inquiry.status)}>
-                        {inquiry.status}
+                      <span style={styles.badge(inquiry.status || "default")}>
+                        {inquiry.status || "Unknown"}
                       </span>
                     </td>
                   </tr>
@@ -682,8 +757,8 @@ const Inquiry = () => {
               }}
             >
               <div>
-                <span style={styles.badge(selectedInquiry.status)}>
-                  {selectedInquiry.status}
+                <span style={styles.badge(selectedInquiry.status || "default")}>
+                  {selectedInquiry.status || "Unknown"}
                 </span>
               </div>
               <div style={{ color: colors.textLight, fontSize: "0.9rem" }}>
@@ -745,6 +820,50 @@ const Inquiry = () => {
                 }
               >
                 Mark as Resolved
+              </button>
+              <button
+                style={styles.deleteButton}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && selectedInquiry && (
+        <motion.div
+          style={styles.confirmDialog}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={(e) =>
+            e.target === e.currentTarget && setShowDeleteConfirm(false)
+          }
+        >
+          <motion.div
+            style={styles.confirmContent}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <div style={styles.confirmHeader}>Confirm Deletion</div>
+            <div style={styles.confirmText}>
+              Are you sure you want to delete this inquiry from{" "}
+              {selectedInquiry.name}? This action cannot be undone.
+            </div>
+            <div style={styles.confirmActions}>
+              <button
+                style={styles.cancelButton}
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                style={styles.confirmDeleteButton}
+                onClick={() => handleDeleteInquiry(selectedInquiry.id)}
+              >
+                Delete
               </button>
             </div>
           </motion.div>

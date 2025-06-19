@@ -140,7 +140,7 @@ const Footer = () => {
             }}
           >
             <img
-              src="/src/assets/logo-01.jpg"
+              src="/logo-01.jpg"
               alt="Sharpr Logo"
               style={{
                 width: 38,

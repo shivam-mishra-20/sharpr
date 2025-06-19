@@ -78,7 +78,6 @@ const ParentDashboard = () => {
   // Handle user logout
   const handleLogout = async () => {
     try {
-      await signOut(auth);
       // Clear all user-related state
       setParent(null);
       setStudent(null);
@@ -88,10 +87,21 @@ const ParentDashboard = () => {
       setTestResults([]);
       setNotices([]);
       setRecentUpdates([]);
-      // Navigate to signup page
-      navigate("/signup");
+
+      // Clear session storage items
+      sessionStorage.removeItem("lastAuthCheck");
+      sessionStorage.removeItem("userRole");
+      localStorage.removeItem("auth"); // If you use localStorage for any auth data
+
+      // Sign out from Firebase
+      await signOut(auth);
+
+      // Navigate to signup page with replace to prevent back navigation
+      navigate("/signup", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
+      // Force navigation even if there's an error
+      navigate("/signup", { replace: true });
     }
   };
 

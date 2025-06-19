@@ -5,7 +5,8 @@ import { auth, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut, // Add this import for signOut function
+  signOut,
+  onAuthStateChanged, // Add this import
 } from "firebase/auth";
 import {
   doc,
@@ -234,6 +235,52 @@ const SignUp = () => {
 
   // Use destructuring for cleaner code
   const { isMobile, isVerySmall } = screenSize;
+
+  // Update your useEffect for auth checking
+  useEffect(() => {
+    // Check if user is already authenticated
+    const checkAuth = () => {
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+          try {
+            // Check user role in Firestore
+            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+            if (userDoc.exists()) {
+              const role = userDoc.data().role;
+
+              // Store role in sessionStorage for quicker access
+              sessionStorage.setItem("userRole", role);
+              sessionStorage.setItem("lastAuthCheck", Date.now().toString());
+
+              // Redirect based on role
+              if (role === "admin") {
+                navigate("/admin_dashboard", { replace: true });
+              } else if (role === "parent") {
+                navigate("/parent_dashboard", { replace: true });
+              }
+            }
+          } catch (error) {
+            console.error("Error checking authentication:", error);
+            // If error, attempt to sign out
+            try {
+              await signOut(auth);
+            } catch (signOutError) {
+              console.error("Error signing out:", signOutError);
+            }
+          }
+        }
+      });
+
+      return unsubscribe;
+    };
+
+    const unsubscribe = checkAuth();
+
+    // Cleanup function
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <div

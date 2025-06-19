@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
@@ -32,6 +33,11 @@ import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
 import NotFound from "./pages/404Notfound";
 import AdminInquiry from "./components/admin/Inquiry";
+import { auth, db } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import ProtectedRoutes from "./pages/ProtectedRoutes";
+import Unauthorized from "./pages/Unauthorized";
 
 // Theme-based colors
 const getThemeColors = (theme) => ({
@@ -53,7 +59,8 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Home />} />
+        {/* Public Routes */}
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/aboutus" element={<Aboutus />} />
         <Route path="/programs" element={<Programs />} />
         <Route path="/contact" element={<Contact />} />
@@ -61,24 +68,95 @@ const AnimatedRoutes = () => {
         <Route path="/results" element={<Results />} />
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/locations" element={<Locations />} />
-        <Route path="/parent_dashboard" element={<ParentDashboard />} />
         <Route path="/notfound" element={<NotFound />} />
-        <Route path="/admin_dashboard/*" element={<AdminDashboard />}>
-          <Route index element={<AdminOverview />} />
-          <Route path="overview" element={<AdminOverview />} />
-          <Route path="students" element={<AdminStudents />} />
-          <Route path="attendance" element={<AdminAttendance />} />
-          <Route path="homework" element={<AdminHomework />} />
-          <Route path="test-results" element={<AdminTestResults />} />
-          <Route path="fee-management" element={<AdminFeeManagement />} />
-          <Route path="notices" element={<AdminNotices />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="help" element={<AdminHelp />} />
-          <Route path="inquiry" element={<AdminInquiry />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected Parent Routes */}
+        <Route element={<ProtectedRoutes allowedRoles={["parent"]} />}>
+          <Route path="/parent_dashboard" element={<ParentDashboard />} />
+        </Route>
+
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoutes allowedRoles={["admin"]} />}>
+          <Route path="/admin_dashboard" element={<AdminDashboard />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="overview" element={<AdminOverview />} />
+            <Route path="students" element={<AdminStudents />} />
+            <Route path="attendance" element={<AdminAttendance />} />
+            <Route path="homework" element={<AdminHomework />} />
+            <Route path="test-results" element={<AdminTestResults />} />
+            <Route path="fee-management" element={<AdminFeeManagement />} />
+            <Route path="notices" element={<AdminNotices />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="help" element={<AdminHelp />} />
+            <Route path="inquiry" element={<AdminInquiry />} />
+          </Route>
         </Route>
       </Routes>
     </AnimatePresence>
   );
+};
+
+// Add this component
+const RootRedirect = () => {
+  const [loading, setLoading] = useState(true);
+  const [redirectTo, setRedirectTo] = useState("/signup");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const role = userDoc.data().role;
+            if (role === "admin") {
+              setRedirectTo("/admin_dashboard");
+            } else if (role === "parent") {
+              setRedirectTo("/parent_dashboard");
+            } else {
+              setRedirectTo("/signup");
+            }
+          } else {
+            setRedirectTo("/signup");
+          }
+        } catch (error) {
+          console.error("Error checking user role:", error);
+          setRedirectTo("/signup");
+        }
+      } else {
+        setRedirectTo("/signup");
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            border: "4px solid rgba(0, 0, 0, 0.1)",
+            borderTopColor: "#3b82f6",
+            animation: "spin 1s linear infinite",
+          }}
+        />
+      </div>
+    );
+  }
+
+  return <Navigate to={redirectTo} replace />;
 };
 
 function App() {
