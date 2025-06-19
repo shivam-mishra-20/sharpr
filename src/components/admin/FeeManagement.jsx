@@ -80,7 +80,7 @@ const AdminFeeManagement = () => {
   const isMobile = width <= 768;
   const isTablet = width <= 1024 && width > 768;
 
-  const feeTypeOptions = ["Tuition", "Transport", "Books", "Uniform", "Other"];
+  const feeTypeOptions = ["Tuition", "Books", "Uniform", "Other"];
   const feeStatusOptions = ["pending", "paid", "partial"];
   const classOptions = [
     "Class 1",

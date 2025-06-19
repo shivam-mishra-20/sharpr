@@ -230,7 +230,7 @@ const Locations = () => {
             }}
           >
             <motion.a
-              href="tel:+1234567890"
+              href="tel:9369428170"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               style={{
@@ -251,7 +251,7 @@ const Locations = () => {
             </motion.a>
 
             <motion.a
-              href="/locations"
+              href="/notfound"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               style={{

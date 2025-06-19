@@ -31,6 +31,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
 import NotFound from "./pages/404Notfound";
+import AdminInquiry from "./components/admin/Inquiry";
 
 // Theme-based colors
 const getThemeColors = (theme) => ({
@@ -73,6 +74,7 @@ const AnimatedRoutes = () => {
           <Route path="notices" element={<AdminNotices />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="help" element={<AdminHelp />} />
+          <Route path="inquiry" element={<AdminInquiry />} />
         </Route>
       </Routes>
     </AnimatePresence>

@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { setDoc } from "firebase/firestore";
 import { motion } from "framer-motion";
+// Replacing the Add Student button with View Inquiries button
+
+import { useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaBook,
@@ -26,6 +29,7 @@ import {
   FaTag,
   FaExclamationTriangle,
   FaUsers,
+  FaComment,
 } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import { db, auth } from "../../firebase";
@@ -67,6 +71,14 @@ const AdminOverview = () => {
     address: "",
     password: "", // Add password field to match Students.jsx
   });
+
+  const navigate = useNavigate();
+
+  // Replace handleAddStudent function with handleViewInquiries
+  const handleViewInquiries = () => {
+    // This follows the same routing pattern as sidebar navigation
+    navigate("/admin_dashboard/inquiry");
+  };
 
   const [homeworkForm, setHomeworkForm] = useState({
     title: "",
@@ -4057,11 +4069,12 @@ const AdminOverview = () => {
           }}
         >
           {/* Action buttons - Use same component for consistent styling */}
+          {/* // Then replace the button in the Quick Actions section: */}
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
             whileTap="tap"
-            onClick={handleAddStudent}
+            onClick={handleViewInquiries}
             style={{
               display: "flex",
               alignItems: "center",
@@ -4080,8 +4093,8 @@ const AdminOverview = () => {
               letterSpacing: "0.3px",
             }}
           >
-            <FaUser size={16} />
-            Add Student
+            <FaComments size={16} />
+            View Inquiries
           </motion.button>
           <motion.button
             variants={buttonVariants}
@@ -4161,7 +4174,6 @@ const AdminOverview = () => {
             <FaFileAlt size={16} />
             Add Test Result
           </motion.button>
-
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
@@ -4188,7 +4200,6 @@ const AdminOverview = () => {
             <FaCreditCard size={16} />
             Update Fees
           </motion.button>
-
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
