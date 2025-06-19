@@ -524,7 +524,6 @@ const AdminTestResults = () => {
           </h1>
         </motion.div>
       )}
-
       {/* Desktop/Tablet Header */}
       {!isMobile && (
         <>
@@ -555,7 +554,6 @@ const AdminTestResults = () => {
           </motion.p>
         </>
       )}
-
       {/* Search & Filter Bar - Responsive Layout */}
       <motion.div
         variants={itemVariants}
@@ -870,7 +868,7 @@ const AdminTestResults = () => {
                 alignItems: "center",
                 gap: 10,
                 boxShadow: colors.buttonShadow,
-                minWidth: "fit-content",
+                width: "fit-content",
               }}
             >
               <FaPlus size={14} /> Add Test Result
@@ -901,7 +899,6 @@ const AdminTestResults = () => {
           </>
         )}
       </motion.div>
-
       {/* Desktop Filters */}
       {!isMobile && (
         <motion.div
@@ -1039,7 +1036,6 @@ const AdminTestResults = () => {
           </motion.button>
         </motion.div>
       )}
-
       {/* Mobile Card View */}
       {isMobile && (
         <motion.div
@@ -1091,7 +1087,6 @@ const AdminTestResults = () => {
           )}
         </motion.div>
       )}
-
       {/* Desktop/Tablet View - Table */}
       {!isMobile && (
         <motion.div
@@ -1105,7 +1100,7 @@ const AdminTestResults = () => {
             transition: "all 0.3s ease",
           }}
         >
-          <div style={{ overflowX: "auto", width: "100%" }}>
+          <div style={{ overflowX: "none", width: "80%" }}>
             <table
               style={{
                 width: "100%",
@@ -1292,14 +1287,14 @@ const AdminTestResults = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "95vw",
               height: "100vh",
-              background: "rgba(0,0,0,0.5)",
+              background: "rgba(0,0,0,0.6)",
               zIndex: 1000,
               display: "flex",
               alignItems: isMobile ? "flex-end" : "center",
               justifyContent: "center",
-              backdropFilter: "blur(2px)",
+              backdropFilter: "blur(4px)",
               padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
             }}
           >
@@ -1322,23 +1317,27 @@ const AdminTestResults = () => {
               transition={{ type: "spring", damping: 25 }}
               style={{
                 width: "100%",
-                maxWidth: isMobile ? "100%" : 540,
+                maxWidth: isMobile ? "100%" : 580,
                 maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
                 overflow: "auto",
                 padding: 0,
-                borderRadius: isMobile ? "16px 16px 0 0" : 16,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                borderRadius: isMobile ? "20px 20px 0 0" : 20,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
                 background: colors.card,
               }}
             >
               <form
                 onSubmit={handleSubmit}
                 style={{
-                  padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
+                  padding: isSmallMobile
+                    ? "20px 16px"
+                    : isMobile
+                    ? "24px 20px"
+                    : "32px",
                   display: "flex",
                   flexDirection: "column",
-                  gap: isSmallMobile ? 16 : 20,
-                  width: "100%",
+                  gap: isSmallMobile ? 16 : 18,
+                  width: "90%",
                 }}
               >
                 <div
@@ -1346,12 +1345,15 @@ const AdminTestResults = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: 8,
+                    marginBottom: 4,
+                    borderBottom: `1px solid ${colors.border}`,
+                    paddingBottom: isSmallMobile ? 12 : 16,
+                    gap: 2, // Reduce gap between title and close button
                   }}
                 >
                   <h2
                     style={{
-                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                      fontSize: isSmallMobile ? 18 : isMobile ? 20 : 24,
                       fontWeight: 700,
                       margin: 0,
                       color: colors.text,
@@ -1375,36 +1377,43 @@ const AdminTestResults = () => {
                           : "rgba(0,0,0,0.05)",
                       border: "none",
                       borderRadius: "50%",
-                      width: 32,
-                      height: 32,
+                      width: 36,
+                      height: 36,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
                       color: colors.text,
                       fontSize: 20,
+                      marginLeft: "auto", // Push button to the right
+                      flexShrink: 0, // Prevent button from shrinking
                     }}
                     aria-label="Close"
                   >
                     ×
                   </motion.button>
                 </div>
+
+                {/* Student Selection Field */}
                 <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: isSmallMobile ? 6 : 10,
+                    gap: isSmallMobile ? 8 : 10,
+                    width: "100%",
                   }}
                 >
                   <label
+                    htmlFor="studentId"
                     style={{
-                      fontWeight: 500,
+                      fontWeight: 600,
                       color: colors.text,
-                      marginBottom: isSmallMobile ? 2 : 4,
                       fontSize: isSmallMobile ? 14 : 15,
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
+                      marginBottom: 4,
+                      width: "100px",
                     }}
                   >
                     <FaUserGraduate
@@ -1414,17 +1423,27 @@ const AdminTestResults = () => {
                     Student *
                   </label>
                   <select
+                    id="studentId"
                     required
                     name="studentId"
                     value={form.studentId}
                     onChange={handleFormChange}
                     style={{
-                      padding: isSmallMobile ? 10 : 12,
-                      borderRadius: 8,
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
                       border: `1px solid ${colors.border}`,
                       background: colors.inputBg,
                       color: colors.text,
-                      fontSize: isSmallMobile ? 14 : 15,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      appearance: "none",
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
+                        theme === "dark" ? "%2394a3b8" : "%2364748b"
+                      }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 14px center",
+                      backgroundSize: "16px",
+                      paddingRight: "40px",
                     }}
                   >
                     <option value="">Select Student</option>
@@ -1435,224 +1454,271 @@ const AdminTestResults = () => {
                     ))}
                   </select>
                 </div>
+
+                {/* Subject and Test Type Section */}
                 <div
                   style={{
-                    display: "flex",
-                    gap: isSmallMobile ? 12 : 16,
-                    flexWrap: "wrap",
-                    flexDirection: isMobile ? "column" : "row",
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                    gap: isSmallMobile ? 28 : isMobile ? 28 : 45,
+                    justifyContent: "space-between",
+                    width: "98%",
                   }}
                 >
                   <div
                     style={{
-                      flex: 1,
-                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: isSmallMobile ? 6 : 10,
+                      gap: isSmallMobile ? 8 : 10,
+                      maxWidth: "100%",
                     }}
                   >
                     <label
+                      htmlFor="subject"
                       style={{
-                        fontWeight: 500,
+                        fontWeight: 600,
                         color: colors.text,
-                        marginBottom: isSmallMobile ? 2 : 4,
                         fontSize: isSmallMobile ? 14 : 15,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 4,
+                        width: "fit-content",
                       }}
                     >
+                      <FaBook size={14} style={{ color: colors.accent }} />
                       Subject *
                     </label>
                     <input
+                      id="subject"
                       required
                       name="subject"
                       value={form.subject}
                       onChange={handleFormChange}
                       style={{
-                        padding: isSmallMobile ? 10 : 12,
-                        borderRadius: 8,
+                        padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                        borderRadius: 10,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: isSmallMobile ? 14 : 15,
+                        fontSize: isSmallMobile ? 15 : 16,
                         width: "100%",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                       }}
+                      placeholder="e.g. Mathematics"
                     />
                   </div>
+
                   <div
                     style={{
-                      flex: 1,
-                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: isSmallMobile ? 6 : 10,
+                      gap: isSmallMobile ? 8 : 10,
+
+                      width: "90%",
                     }}
                   >
                     <label
+                      htmlFor="testType"
                       style={{
-                        fontWeight: 500,
+                        fontWeight: 600,
                         color: colors.text,
-                        marginBottom: isSmallMobile ? 2 : 4,
                         fontSize: isSmallMobile ? 14 : 15,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 4,
+                        width: "fit-content",
                       }}
                     >
+                      <FaCheckCircle
+                        size={14}
+                        style={{ color: colors.accent }}
+                      />
                       Test Type *
                     </label>
                     <input
+                      id="testType"
                       required
                       name="testType"
                       value={form.testType}
                       onChange={handleFormChange}
                       style={{
-                        padding: isSmallMobile ? 10 : 12,
-                        borderRadius: 8,
+                        padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                        borderRadius: 10,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: isSmallMobile ? 14 : 15,
+                        fontSize: isSmallMobile ? 15 : 16,
                         width: "100%",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                       }}
+                      placeholder="e.g. Midterm"
                     />
                   </div>
                 </div>
+
+                {/* Test Date Field */}
                 <div
                   style={{
                     display: "flex",
-                    gap: isSmallMobile ? 12 : 16,
-                    flexWrap: "wrap",
-                    flexDirection: isMobile ? "column" : "row",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 8 : 10,
+                    width: "94%",
+                  }}
+                >
+                  <label
+                    htmlFor="testDate"
+                    style={{
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                      width: "fit-content",
+                    }}
+                  >
+                    <FaCalendarAlt size={14} style={{ color: colors.accent }} />
+                    Test Date *
+                  </label>
+                  <input
+                    id="testDate"
+                    required
+                    type="date"
+                    name="testDate"
+                    value={form.testDate}
+                    onChange={handleFormChange}
+                    style={{
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      width: "100%",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    }}
+                  />
+                </div>
+
+                {/* Marks Section */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                    gap: isSmallMobile ? 22 : isMobile ? 24 : 45,
+                    justifyContent: "space-between",
+                    width: "94%",
                   }}
                 >
                   <div
                     style={{
-                      flex: 1,
-                      minWidth: isMobile ? "100%" : 200,
                       display: "flex",
                       flexDirection: "column",
-                      gap: isSmallMobile ? 6 : 10,
+                      gap: isSmallMobile ? 8 : 10,
+                      maxWidth: "100%",
                     }}
                   >
                     <label
+                      htmlFor="marksObtained"
                       style={{
-                        fontWeight: 500,
+                        fontWeight: 600,
                         color: colors.text,
-                        marginBottom: isSmallMobile ? 2 : 4,
                         fontSize: isSmallMobile ? 14 : 15,
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
+                        marginBottom: 4,
+                        width: "fit-content",
                       }}
                     >
-                      <FaCalendarAlt
-                        size={14}
-                        style={{ color: colors.accent }}
-                      />
-                      Test Date *
+                      <FaTrophy size={14} style={{ color: colors.accent }} />
+                      Marks Obtained *
                     </label>
                     <input
+                      id="marksObtained"
                       required
-                      type="date"
-                      name="testDate"
-                      value={form.testDate}
+                      type="number"
+                      name="marksObtained"
+                      value={form.marksObtained}
                       onChange={handleFormChange}
                       style={{
-                        padding: isSmallMobile ? 10 : 12,
-                        borderRadius: 8,
+                        padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                        borderRadius: 10,
                         border: `1px solid ${colors.border}`,
                         background: colors.inputBg,
                         color: colors.text,
-                        fontSize: isSmallMobile ? 14 : 15,
+                        fontSize: isSmallMobile ? 15 : 16,
                         width: "100%",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                       }}
+                      placeholder="e.g. 85"
                     />
                   </div>
+
                   <div
                     style={{
                       display: "flex",
-                      gap: isSmallMobile ? 8 : 16,
-                      flex: 1,
-                      minWidth: isMobile ? "100%" : 200,
-                      flexDirection: isMobile ? "column" : "row",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 8 : 10,
+                      maxWidth: "100%",
                     }}
                   >
-                    <div
+                    <label
+                      htmlFor="totalMarks"
                       style={{
-                        flex: 1,
+                        fontWeight: 600,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
                         display: "flex",
-                        flexDirection: "column",
-                        gap: isSmallMobile ? 6 : 10,
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 4,
+                        width: "fit-content",
                       }}
                     >
-                      <label
-                        style={{
-                          fontWeight: 500,
-                          color: colors.text,
-                          marginBottom: isSmallMobile ? 2 : 4,
-                          fontSize: isSmallMobile ? 14 : 15,
-                        }}
-                      >
-                        Marks Obtained *
-                      </label>
-                      <input
-                        required
-                        type="number"
-                        name="marksObtained"
-                        value={form.marksObtained}
-                        onChange={handleFormChange}
-                        style={{
-                          padding: isSmallMobile ? 10 : 12,
-                          borderRadius: 8,
-                          border: `1px solid ${colors.border}`,
-                          background: colors.inputBg,
-                          color: colors.text,
-                          fontSize: isSmallMobile ? 14 : 15,
-                          width: "100%",
-                        }}
+                      <FaCertificate
+                        size={14}
+                        style={{ color: colors.accent }}
                       />
-                    </div>
-                    <div
+                      Total Marks *
+                    </label>
+                    <input
+                      id="totalMarks"
+                      required
+                      type="number"
+                      name="totalMarks"
+                      value={form.totalMarks}
+                      onChange={handleFormChange}
                       style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: isSmallMobile ? 6 : 10,
+                        padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                        borderRadius: 10,
+                        border: `1px solid ${colors.border}`,
+                        background: colors.inputBg,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 15 : 16,
+                        width: "100%",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                       }}
-                    >
-                      <label
-                        style={{
-                          fontWeight: 500,
-                          color: colors.text,
-                          marginBottom: isSmallMobile ? 2 : 4,
-                          fontSize: isSmallMobile ? 14 : 15,
-                        }}
-                      >
-                        Total Marks *
-                      </label>
-                      <input
-                        required
-                        type="number"
-                        name="totalMarks"
-                        value={form.totalMarks}
-                        onChange={handleFormChange}
-                        style={{
-                          padding: isSmallMobile ? 10 : 12,
-                          borderRadius: 8,
-                          border: `1px solid ${colors.border}`,
-                          background: colors.inputBg,
-                          color: colors.text,
-                          fontSize: isSmallMobile ? 14 : 15,
-                          width: "100%",
-                        }}
-                      />
-                    </div>
+                      placeholder="e.g. 100"
+                    />
                   </div>
                 </div>
+
+                {/* Form Buttons */}
                 <div
                   style={{
                     display: "flex",
-                    gap: isSmallMobile ? 8 : 16,
-                    marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
+                    gap: isSmallMobile ? 10 : 16,
+                    marginTop: isSmallMobile ? 8 : isMobile ? 12 : 16,
                     justifyContent: "flex-end",
-                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: "center",
+                    flexDirection: isMobile ? "column-reverse" : "row",
+                    borderTop: `1px solid ${colors.border}`,
+                    paddingTop: isSmallMobile ? 16 : 20,
+                    width: "90%",
                   }}
                 >
                   <motion.button
@@ -1662,16 +1728,20 @@ const AdminTestResults = () => {
                     type="button"
                     onClick={handleCloseForm}
                     style={{
-                      background: "transparent",
-                      color: colors.accent,
-                      border: `1px solid ${colors.accent}`,
-                      borderRadius: 10,
-                      padding: isSmallMobile ? "10px 20px" : "12px 24px",
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(0,0,0,0.03)",
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 12,
+                      padding: isSmallMobile ? "12px 20px" : "14px 28px",
                       fontWeight: 600,
-                      fontSize: isSmallMobile ? 14 : 15,
+                      fontSize: isSmallMobile ? 15 : 16,
                       cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 100,
-                      order: isMobile ? 2 : 1,
+                      minWidth: isMobile ? "100%" : 120,
+                      flex: isMobile ? "unset" : 1,
+                      maxWidth: isMobile ? "unset" : 180,
                     }}
                   >
                     Cancel
@@ -1685,21 +1755,30 @@ const AdminTestResults = () => {
                       background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
                       color: "#fff",
                       border: "none",
-                      borderRadius: 10,
-                      padding: isSmallMobile ? "10px 24px" : "12px 32px",
+                      borderRadius: 12,
+                      padding: isSmallMobile ? "12px 20px" : "14px 28px",
                       fontWeight: 600,
-                      fontSize: isSmallMobile ? 14 : 15,
+                      fontSize: isSmallMobile ? 15 : 16,
                       cursor: "pointer",
-                      boxShadow: colors.buttonShadow,
-                      minWidth: isMobile ? "100%" : 120,
-                      order: isMobile ? 1 : 2,
+                      boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)",
+                      minWidth: isMobile ? "100%" : 140,
+                      flex: isMobile ? "unset" : 1,
+                      maxWidth: isMobile ? "unset" : 220,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 8,
+                      gap: 10,
                     }}
                   >
-                    {editId ? "Update" : "Add Result"}
+                    {editId ? (
+                      <>
+                        <FaEdit size={16} /> Update Result
+                      </>
+                    ) : (
+                      <>
+                        <FaPlus size={16} /> Add Result
+                      </>
+                    )}
                   </motion.button>
                 </div>
               </form>

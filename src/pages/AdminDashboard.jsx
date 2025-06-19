@@ -200,6 +200,38 @@ const AdminDashboard = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  // Enhanced mobile animations
+  const mobileSidebarAnimation = {
+    hidden: { x: -300, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    exit: {
+      x: -300,
+      opacity: 0,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
+  // Improved mobile toggle button animation
+  const toggleButtonAnimation = {
+    initial: { opacity: 0, scale: 0.8 },
+    animate: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+    tap: { scale: 0.9, transition: { duration: 0.1 } },
+    hover: { scale: 1.05, transition: { duration: 0.2 } },
+  };
+
+  // Define the main navbar height
+  const mainNavbarHeight = 70; // Height of the main Sharpr navbar at the top
+
   return (
     <div
       style={{
@@ -208,176 +240,271 @@ const AdminDashboard = () => {
         background: colors.background,
         position: "relative",
         transition: "all 0.3s ease",
+        marginTop: 10, // Add margin to account for main navbar
       }}
     >
-      {/* Mobile Toggle Button */}
+      {/* Mobile Toggle Button with enhanced modern design */}
       {isMobile && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
+          variants={toggleButtonAnimation}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
+          whileTap="tap"
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           style={{
             position: "fixed",
-            top: "70px",
+            top: `${mainNavbarHeight + 55}px`, // Position below main navbar
             left: "16px",
             zIndex: 1000,
-            width: "40px",
-            height: "40px",
-            borderRadius: "8px",
-            background: colors.button.primary,
+            width: "46px",
+            height: "46px",
+            borderRadius: "12px",
+            background: `linear-gradient(135deg, ${colors.button.primary}, ${colors.button.hover})`,
             color: "#fff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             border: "none",
             cursor: "pointer",
-            boxShadow: colors.button.shadow,
+            boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
           }}
         >
-          {mobileSidebarOpen ? <FaTimes /> : <FaBars />}
+          {mobileSidebarOpen ? (
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 90 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FaTimes size={18} />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FaBars size={18} />
+            </motion.div>
+          )}
         </motion.button>
       )}
 
-      {/* Mobile Sidebar (separate component for mobile) */}
+      {/* Mobile Sidebar with improved animation and backdrop */}
       {isMobile && (
         <AnimatePresence>
           {mobileSidebarOpen && (
-            <motion.aside
-              key="mobile-sidebar"
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{
-                width: 250,
-                background: colors.sidebar.background,
-                color: colors.sidebar.text,
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "1px 0 15px rgba(0,0,0,0.2)",
-                zIndex: 1000,
-                position: "fixed",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                overflowY: "auto",
-                overflowX: "hidden",
-              }}
-            >
-              <div
+            <>
+              {/* Backdrop for mobile sidebar */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileSidebarOpen(false)}
                 style={{
-                  padding: "28px 0 20px 0",
-                  textAlign: "center",
-                  borderBottom: `1px solid ${colors.sidebar.border}`,
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "black",
+                  zIndex: 900,
+                }}
+              />
+
+              {/* Mobile sidebar with improved animation */}
+              <motion.aside
+                key="mobile-sidebar"
+                variants={mobileSidebarAnimation}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                style={{
+                  width: "260px",
+                  background: colors.sidebar.background,
+                  color: colors.sidebar.text,
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: "1px 0 20px rgba(0,0,0,0.25)",
+                  zIndex: 1000,
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
                 }}
               >
-                <motion.div
-                  initial="initial"
-                  animate="animate"
-                  whileHover="hover"
-                  variants={logoAnimation}
-                >
-                  <img
-                    src="/src/assets/logo-01.jpg"
-                    alt="Sharpr Logo"
-                    style={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: "14px",
-                      marginBottom: 8,
-                      objectFit: "cover",
-                      boxShadow: colors.logo.shadow,
-                    }}
-                  />
-                </motion.div>
                 <div
                   style={{
-                    fontWeight: 700,
-                    fontSize: 20,
-                    letterSpacing: "0.5px",
-                    color: colors.logo.text,
-                    marginTop: "10px",
+                    padding: "28px 0 20px 0",
+                    textAlign: "center",
+                    borderBottom: `1px solid ${colors.sidebar.border}`,
                   }}
                 >
-                  Admin Dashboard
-                </div>
-              </div>
-              <nav style={{ flex: 1, marginTop: 20, padding: "10px 0" }}>
-                {sidebarLinks.map((item) => (
                   <motion.div
-                    key={item.to}
-                    initial="rest"
+                    initial="initial"
+                    animate="animate"
                     whileHover="hover"
-                    variants={linkHoverAnimation}
+                    variants={logoAnimation}
                   >
-                    <NavLink
-                      to={item.to}
-                      style={({ isActive }) => ({
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "12px 16px",
-                        marginLeft: "12px",
-                        marginRight: "12px",
-                        marginBottom: "2px",
-                        borderRadius: "8px",
-                        color: isActive
-                          ? colors.sidebar.activeText
-                          : colors.sidebar.text,
-                        background: isActive
-                          ? colors.sidebar.activeBg
-                          : "transparent",
-                        fontWeight: isActive ? 600 : 500,
-                        textDecoration: "none",
-                        fontSize: 15,
-                        transition: "all 0.2s ease",
-                        cursor: "pointer",
-                      })}
-                      onClick={() => setMobileSidebarOpen(false)}
-                    >
-                      <span
-                        style={{
-                          fontSize: 16,
-                          color: colors.sidebar.icon,
-                        }}
-                      >
-                        {item.icon}
-                      </span>
-                      {item.label}
-                    </NavLink>
+                    <img
+                      src="/logo-01.jpg"
+                      alt="Sharpr Logo"
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: "14px",
+                        marginBottom: 8,
+                        objectFit: "cover",
+                        boxShadow: colors.logo.shadow,
+                      }}
+                    />
                   </motion.div>
-                ))}
-              </nav>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleLogout}
-                style={{
-                  margin: "16px 16px 24px 16px",
-                  padding: "12px 0",
-                  border: "none",
-                  borderRadius: 8,
-                  background: colors.button.primary,
-                  color: colors.button.primaryText,
-                  fontWeight: 600,
-                  fontSize: 15,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  cursor: "pointer",
-                  boxShadow: colors.button.shadow,
-                }}
-              >
-                <FaSignOutAlt /> Sign Out
-              </motion.button>
-            </motion.aside>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 20,
+                      letterSpacing: "0.5px",
+                      color: colors.logo.text,
+                      marginTop: "10px",
+                    }}
+                  >
+                    Admin Dashboard
+                  </div>
+                </div>
+                <nav style={{ flex: 1, marginTop: 20, padding: "10px 0" }}>
+                  {sidebarLinks.map((item) => (
+                    <motion.div
+                      key={item.to}
+                      initial="rest"
+                      whileHover="hover"
+                      variants={linkHoverAnimation}
+                    >
+                      <NavLink
+                        to={item.to}
+                        style={({ isActive }) => ({
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "12px 16px",
+                          marginLeft: "12px",
+                          marginRight: "12px",
+                          marginBottom: "2px",
+                          borderRadius: "8px",
+                          color: isActive
+                            ? colors.sidebar.activeText
+                            : colors.sidebar.text,
+                          background: isActive
+                            ? colors.sidebar.activeBg
+                            : "transparent",
+                          fontWeight: isActive ? 600 : 500,
+                          textDecoration: "none",
+                          fontSize: 15,
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                        })}
+                        onClick={() => setMobileSidebarOpen(false)}
+                      >
+                        <span
+                          style={{
+                            fontSize: 16,
+                            color: colors.sidebar.icon,
+                          }}
+                        >
+                          {item.icon}
+                        </span>
+                        {item.label}
+                      </NavLink>
+                    </motion.div>
+                  ))}
+                </nav>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleLogout}
+                  style={{
+                    margin: "16px 16px 24px 16px",
+                    padding: "12px 0",
+                    border: "none",
+                    borderRadius: 8,
+                    background: colors.button.primary,
+                    color: colors.button.primaryText,
+                    fontWeight: 600,
+                    fontSize: 15,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    cursor: "pointer",
+                    boxShadow: colors.button.shadow,
+                  }}
+                >
+                  <FaSignOutAlt /> Sign Out
+                </motion.button>
+              </motion.aside>
+            </>
           )}
         </AnimatePresence>
       )}
 
-      {/* Desktop Sidebar with collapsible feature */}
+      {/* Desktop Sidebar Toggle Button - Moved OUTSIDE sidebar component */}
+      {!isMobile && (
+        <motion.button
+          whileHover={{
+            scale: 1.12,
+            boxShadow: "0 5px 15px rgba(59, 130, 246, 0.45)",
+          }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleSidebar}
+          style={{
+            position: "fixed",
+            left: sidebarCollapsed ? "42px" : "222px",
+            top: 576, // Position more visibly below the navbar
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${colors.button.primary}, ${colors.button.hover})`,
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)",
+            transition: "all 0.25s ease, left 0.3s ease",
+            transform: sidebarCollapsed ? "rotate(0deg)" : "rotate(180deg)",
+            border: `3px solid ${theme === "dark" ? "#1f2937" : "#ffffff"}`,
+            outline: `2px solid ${colors.button.primary}30`,
+            zIndex: 999, // Lower z-index to stay below topbar
+            marginLeft: "10px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: sidebarCollapsed ? "1px" : "-1px",
+            }}
+          >
+            <FaChevronRight size={14} />
+          </div>
+        </motion.button>
+      )}
+
+      {/* Desktop Sidebar with collapsible feature - adjust top position */}
       {!isMobile && (
         <motion.aside
           key="desktop-sidebar"
@@ -396,7 +523,7 @@ const AdminDashboard = () => {
                 : "1px 0 5px rgba(0,0,0,0.05)",
             zIndex: 20,
             position: "fixed",
-            top: "60px",
+            top: 60, // Position just below the main navbar
             left: 0,
             bottom: 0,
             overflowY: "auto",
@@ -404,36 +531,6 @@ const AdminDashboard = () => {
             transition: "width 0.3s ease",
           }}
         >
-          {/* Collapse toggle button */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleSidebar}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "-12px",
-              width: "24px",
-              height: "24px",
-              borderRadius: "50%",
-              background: colors.button.primary,
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "none",
-              cursor: "pointer",
-              boxShadow: colors.button.shadow,
-              zIndex: 25,
-            }}
-          >
-            {sidebarCollapsed ? (
-              <FaChevronRight size={10} />
-            ) : (
-              <FaChevronLeft size={10} />
-            )}
-          </motion.button>
-
           <div
             style={{
               padding: sidebarCollapsed ? "20px 0 15px 0" : "28px 0 20px 0",
@@ -449,7 +546,7 @@ const AdminDashboard = () => {
               variants={logoAnimation}
             >
               <img
-                src="/src/assets/logo-01.jpg"
+                src="/logo-01.jpg"
                 alt="Sharpr Logo"
                 style={{
                   width: sidebarCollapsed ? 40 : 50,
@@ -556,7 +653,7 @@ const AdminDashboard = () => {
         </motion.aside>
       )}
 
-      {/* Main Content - Adjust margin based on sidebar state */}
+      {/* Main Content - Adjust margin to match the topbar position */}
       <div
         style={{
           flex: 1,
@@ -564,11 +661,11 @@ const AdminDashboard = () => {
           flexDirection: "column",
           minHeight: "100vh",
           marginLeft: isMobile ? 0 : sidebarWidth,
-          marginTop: "60px",
+          marginTop: "60px", // This is for the admin topbar, not the main navbar
           transition: "all 0.3s ease",
         }}
       >
-        {/* Topbar - Adjust left based on sidebar state */}
+        {/* Topbar - Position it below the main navbar */}
         <header
           style={{
             height: 60,
@@ -578,13 +675,17 @@ const AdminDashboard = () => {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 24px",
-            boxShadow: colors.topbar.shadow,
+            boxShadow:
+              theme === "dark"
+                ? "0 2px 5px rgba(0, 0, 0, 0.5)"
+                : "0 2px 5px rgba(0, 0, 0, 0.1)",
             position: "fixed",
-            top: 0,
+            top: 60, // Position just below main navbar
             right: 0,
             left: isMobile ? 0 : sidebarWidth,
-            zIndex: 10,
+            zIndex: 50, // Lower than mobile sidebar but higher than content
             transition: "all 0.3s ease",
+            borderTop: theme === "dark" ? "1px solid #374151" : "none",
           }}
         >
           <motion.div
@@ -619,10 +720,15 @@ const AdminDashboard = () => {
               display: "flex",
               alignItems: "center",
               gap: 12,
-              background: theme === "dark" ? "#2d3748" : "#f1f5f9",
+              background:
+                theme === "dark"
+                  ? "rgba(45, 55, 72, 0.8)"
+                  : "rgba(241, 245, 249, 0.8)",
               padding: isMobile ? "4px 8px" : "6px 12px",
               borderRadius: "24px",
               transition: "background 0.3s ease",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
             }}
           >
             <div
@@ -635,6 +741,7 @@ const AdminDashboard = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 color: "#fff",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               }}
             >
               <FaUserTie style={{ fontSize: 16 }} />
@@ -654,12 +761,12 @@ const AdminDashboard = () => {
           </motion.div>
         </header>
 
-        {/* Routed Content - Add top margin to accommodate fixed topbar */}
+        {/* Routed Content - Add top margin to accommodate fixed topbar + main navbar */}
         <main
           style={{
             flex: 1,
             padding: isMobile ? "16px" : "24px",
-            paddingTop: isMobile ? "76px" : "84px",
+            paddingTop: isMobile ? "76px" : "84px", // This is relative to the container which already has marginTop
             background: colors.main.background,
             minHeight: 0,
             transition: "background 0.3s ease",

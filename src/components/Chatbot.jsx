@@ -62,12 +62,6 @@ const chatbotData = [
     answer:
       "We have multiple learning centers across major cities including Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, and Pune. Each center is equipped with modern facilities to ensure an optimal learning environment.",
   },
-  {
-    id: 9,
-    question: "For more questions, please contact us",
-    answer: "contact",
-    isContact: true,
-  },
 ];
 
 const Chatbot = () => {
@@ -85,25 +79,38 @@ const Chatbot = () => {
   const [typingEffect, setTypingEffect] = useState(false);
   const messagesEndRef = useRef(null);
   const [customQuestion, setCustomQuestion] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Theme colors
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Theme colors - Updated to black-white theme
   const colors = {
-    primary: theme === "dark" ? "#6366f1" : "#4f46e5",
+    primary: theme === "dark" ? "#ffffff" : "#000000",
     primaryLight:
-      theme === "dark" ? "rgba(99, 102, 241, 0.1)" : "rgba(79, 70, 229, 0.1)",
-    secondary: theme === "dark" ? "#60a5fa" : "#3b82f6",
-    background: theme === "dark" ? "#1e293b" : "#ffffff",
-    card: theme === "dark" ? "#0f172a" : "#f8fafc",
-    text: theme === "dark" ? "#e5e7eb" : "#1e293b",
-    textLight: theme === "dark" ? "#94a3b8" : "#6b7280",
-    border: theme === "dark" ? "#334155" : "#e2e8f0",
-    botMessage: theme === "dark" ? "#1e293b" : "#f1f5f9",
-    userMessage: theme === "dark" ? "#4f46e5" : "#4f46e5",
+      theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+    secondary: theme === "dark" ? "#a3a3a3" : "#666666",
+    background: theme === "dark" ? "#121212" : "#ffffff",
+    card: theme === "dark" ? "#1e1e1e" : "#f8f8f8",
+    text: theme === "dark" ? "#e5e5e5" : "#121212",
+    textLight: theme === "dark" ? "#a3a3a3" : "#6e6e6e",
+    border: theme === "dark" ? "#333333" : "#e2e2e2",
+    botMessage: theme === "dark" ? "#1e1e1e" : "#f5f5f5",
+    userMessage: theme === "dark" ? "#333333" : "#333333",
     shadow:
       theme === "dark"
         ? "0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)"
         : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    iconBg: theme === "dark" ? "#4f46e5" : "#4f46e5",
+    iconBg: theme === "dark" ? "#333333" : "#333333",
   };
 
   // Auto scroll to bottom when messages update
@@ -170,8 +177,7 @@ const Chatbot = () => {
         ...prev,
         {
           type: "bot",
-          content:
-            "Thanks for your question! That's a bit complex for me at the moment. For detailed information about this topic, please contact our team directly.",
+          content: "For this info, please contact our support team directly.",
           timestamp: new Date(),
         },
         {
@@ -197,7 +203,7 @@ const Chatbot = () => {
     });
   };
 
-  // Animation variants
+  // Animation variants - Adjusted for mobile
   const chatbotVariants = {
     closed: {
       width: "60px",
@@ -205,8 +211,8 @@ const Chatbot = () => {
       borderRadius: "30px",
     },
     open: {
-      width: "380px",
-      height: "520px",
+      width: isMobile ? "90vw" : "380px",
+      height: isMobile ? "80vh" : "520px",
       borderRadius: "16px",
       transition: {
         type: "spring",
@@ -236,6 +242,7 @@ const Chatbot = () => {
         display: "flex",
         flexDirection: "column",
         gap: "12px",
+        marginBottom: "10px",
       }}
     >
       {messages.map((message, index) => (
@@ -246,7 +253,7 @@ const Chatbot = () => {
           transition={{ duration: 0.3 }}
           style={{
             alignSelf: message.type === "bot" ? "flex-start" : "flex-end",
-            maxWidth: "80%",
+            maxWidth: "85%",
           }}
         >
           <div
@@ -268,8 +275,7 @@ const Chatbot = () => {
               <div className="contact-info">
                 <div
                   style={{
-                    background:
-                      "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                    background: theme === "dark" ? "#333333" : "#333333",
                     color: "#fff",
                     padding: "16px",
                     borderTopLeftRadius: "16px",
@@ -309,7 +315,7 @@ const Chatbot = () => {
                       >
                         Phone
                       </div>
-                      <div style={{ fontWeight: "500" }}>+91 98765 43210</div>
+                      <div style={{ fontWeight: "500" }}>+919369428170</div>
                     </div>
                   </div>
                   <div
@@ -378,8 +384,7 @@ const Chatbot = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   style={{
-                    background:
-                      "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                    background: theme === "dark" ? "#333333" : "#333333",
                     color: "#fff",
                     border: "none",
                     width: "100%",
@@ -449,7 +454,7 @@ const Chatbot = () => {
   );
 
   const renderQuestions = () => (
-    <div style={{ padding: "0 16px 16px" }}>
+    <div style={{ padding: "0 16px 10px" }}>
       <p
         style={{
           fontSize: "14px",
@@ -463,12 +468,13 @@ const Chatbot = () => {
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          maxHeight: "180px",
-          overflowY: "auto",
-          padding: "4px",
+          overflowX: "auto",
+          gap: "10px",
+          padding: "4px 0",
+          scrollbarWidth: "none", // Firefox
+          maxWidth: "100%",
         }}
+        className="horizontal-questions"
       >
         {chatbotData.map((question) => (
           <motion.button
@@ -489,10 +495,16 @@ const Chatbot = () => {
               textAlign: "left",
               fontSize: "14px",
               fontWeight: "500",
+              minWidth: "220px",
+              flexShrink: 0,
               transition: "all 0.2s ease",
+              height: "auto",
+              maxWidth: isMobile ? "80%" : "300px",
             }}
           >
-            <span style={{ flex: 1 }}>{question.question}</span>
+            <span style={{ flex: 1, marginRight: "8px" }}>
+              {question.question}
+            </span>
             <FaAngleRight color={colors.primary} size={16} />
           </motion.button>
         ))}
@@ -502,7 +514,7 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Add CSS for typing indicator animation */}
+      {/* Add CSS for typing indicator animation and responsiveness */}
       <style>
         {`
           .typing-indicator {
@@ -539,17 +551,37 @@ const Chatbot = () => {
           }
           
           .messages-container::-webkit-scrollbar-track {
-            background: ${theme === "dark" ? "#1f2937" : "#f1f5f9"};
+            background: ${theme === "dark" ? "#1a1a1a" : "#f5f5f5"};
             border-radius: 10px;
           }
           
           .messages-container::-webkit-scrollbar-thumb {
-            background: ${theme === "dark" ? "#374151" : "#cbd5e1"};
+            background: ${theme === "dark" ? "#333333" : "#cccccc"};
             border-radius: 10px;
           }
           
           .messages-container::-webkit-scrollbar-thumb:hover {
-            background: ${theme === "dark" ? "#4b5563" : "#94a3b8"};
+            background: ${theme === "dark" ? "#444444" : "#999999"};
+          }
+          
+          /* Hide horizontal scrollbar but keep functionality */
+          .horizontal-questions::-webkit-scrollbar {
+            height: 4px;
+          }
+          
+          .horizontal-questions::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .horizontal-questions::-webkit-scrollbar-thumb {
+            background: ${colors.border};
+            border-radius: 10px;
+          }
+          
+          @media (max-width: 768px) {
+            .horizontal-questions::-webkit-scrollbar {
+              display: none;
+            }
           }
         `}
       </style>
@@ -560,8 +592,8 @@ const Chatbot = () => {
         variants={chatbotVariants}
         style={{
           position: "fixed",
-          bottom: "24px",
-          right: "24px",
+          bottom: isMobile ? "16px" : "24px",
+          right: isMobile ? "16px" : "24px",
           background: colors.background,
           boxShadow: colors.shadow,
           zIndex: 1000,
@@ -569,6 +601,8 @@ const Chatbot = () => {
           display: "flex",
           flexDirection: "column",
           border: `1px solid ${colors.border}`,
+          maxWidth: isMobile ? "90vw" : "380px",
+          maxHeight: isMobile ? "80vh" : "520px",
         }}
       >
         {isOpen ? (
@@ -577,7 +611,7 @@ const Chatbot = () => {
             <div
               style={{
                 padding: "16px",
-                background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                background: theme === "dark" ? "#333333" : "#333333",
                 color: "#ffffff",
                 display: "flex",
                 justifyContent: "space-between",
@@ -631,8 +665,17 @@ const Chatbot = () => {
               </motion.button>
             </div>
 
-            {/* Chat messages */}
-            {renderChatMessages()}
+            {/* Chat messages - Increased space by making it flex: 1 */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                overflowY: "hidden",
+              }}
+            >
+              {renderChatMessages()}
+            </div>
 
             {/* Custom question input */}
             <form
@@ -641,7 +684,7 @@ const Chatbot = () => {
                 display: "flex",
                 padding: "12px 16px",
                 borderTop: `1px solid ${colors.border}`,
-                background: theme === "dark" ? "#111827" : "#f8fafc",
+                background: theme === "dark" ? "#1a1a1a" : "#f8f8f8",
               }}
             >
               <input
@@ -666,7 +709,7 @@ const Chatbot = () => {
                 type="submit"
                 style={{
                   background: colors.primary,
-                  color: "#ffffff",
+                  color: theme === "dark" ? "#000000" : "#ffffff",
                   border: "none",
                   width: "36px",
                   height: "36px",
@@ -683,7 +726,7 @@ const Chatbot = () => {
               </motion.button>
             </form>
 
-            {/* Questions section */}
+            {/* Questions section - Now horizontally scrollable */}
             {renderQuestions()}
           </>
         ) : (
@@ -692,7 +735,7 @@ const Chatbot = () => {
             whileTap={{ scale: 0.95 }}
             onClick={toggleChat}
             style={{
-              background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+              background: theme === "dark" ? "#333333" : "#333333",
               color: "#ffffff",
               border: "none",
               width: "100%",

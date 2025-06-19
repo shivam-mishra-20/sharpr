@@ -1,0 +1,270 @@
+.not-found-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background-color: #0a0a2a;
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: #fff;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Space background */
+.space-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #0a0a2a, #1a1a4a);
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  background-color: #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 3D Planet */
+.planet-3d {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3a1c71, #d76d77, #ffaf7b);
+  box-shadow: 0 0 30px rgba(215, 109, 119, 0.7),
+    inset 0 0 50px rgba(0, 0, 0, 0.5);
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
+  z-index: 2;
+  right: 15%;
+  bottom: 15%;
+}
+
+.planet-rings {
+  position: absolute;
+  width: 250px;
+  height: 40px;
+  left: -35px;
+  top: 70px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  transform: rotateX(75deg);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  filter: blur(1px);
+}
+
+/* Asteroids */
+.asteroid-field {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+.asteroid {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #aaa;
+  border-radius: 50%;
+  box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease-out;
+}
+
+.asteroid-1 {
+  top: 20%;
+  left: 20%;
+  width: 15px;
+  height: 15px;
+  background: #ccc;
+}
+
+.asteroid-2 {
+  top: 35%;
+  left: 75%;
+  width: 25px;
+  height: 25px;
+  background: #aaa;
+}
+
+.asteroid-3 {
+  top: 65%;
+  left: 30%;
+  width: 12px;
+  height: 12px;
+  background: #bbb;
+}
+
+.asteroid-4 {
+  top: 75%;
+  left: 70%;
+  width: 18px;
+  height: 18px;
+  background: #999;
+}
+
+.asteroid-5 {
+  top: 15%;
+  left: 65%;
+  width: 10px;
+  height: 10px;
+  background: #ddd;
+}
+
+.asteroid-6 {
+  top: 50%;
+  left: 10%;
+  width: 22px;
+  height: 22px;
+  background: #aaa;
+}
+
+/* Content styling */
+.content-container {
+  z-index: 5;
+  text-align: center;
+  padding: 2.5rem;
+  background-color: rgba(20, 20, 55, 0.7);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 100px rgba(78, 78, 255, 0.3);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 1s ease-in-out;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
+}
+
+.error-code {
+  font-size: 8rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(45deg, #ff5e62, #ff9966);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse 3s infinite;
+  text-shadow: 0 0 20px rgba(255, 94, 98, 0.2);
+}
+
+.error-text {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0.5rem 0 1.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.error-text.animate {
+  animation: slideUp 0.8s forwards 0.3s;
+}
+
+.error-description {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #ccccff;
+}
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.8rem 1.8rem;
+  background: linear-gradient(45deg, #ff5e62, #ff9966);
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 94, 98, 0.5);
+}
+
+.button-text {
+  margin-right: 8px;
+}
+
+.button-icon {
+  transition: transform 0.3s ease;
+}
+
+.home-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(255, 94, 98, 0.7),
+    0 0 30px rgba(255, 94, 98, 0.4);
+}
+
+.home-button:hover .button-icon {
+  transform: translateX(5px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .error-code {
+    font-size: 6rem;
+  }
+
+  .error-text {
+    font-size: 1.5rem;
+  }
+
+  .planet-3d {
+    width: 120px;
+    height: 120px;
+    right: 10%;
+  }
+
+  .planet-rings {
+    width: 170px;
+    height: 30px;
+    left: -25px;
+    top: 45px;
+  }
+}

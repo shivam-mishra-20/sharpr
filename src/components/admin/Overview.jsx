@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc } from "firebase/firestore";
 import { motion } from "framer-motion";
 import {
   FaUser,
@@ -11,9 +13,22 @@ import {
   FaFileExport,
   FaComments,
   FaFileAlt,
+  FaCalendarAlt,
+  FaPlus,
+  FaSchool,
+  FaUserGraduate,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaTrophy,
+  FaCertificate,
+  FaMoneyBill,
+  FaBullhorn,
+  FaTag,
+  FaExclamationTriangle,
+  FaUsers,
 } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
-import { db } from "../../firebase";
+import { db, auth } from "../../firebase";
 import {
   collection,
   addDoc,
@@ -40,17 +55,19 @@ const AdminOverview = () => {
   const [showTestResultForm, setShowTestResultForm] = useState(false);
   const [showNoticeForm, setShowNoticeForm] = useState(false);
   const [showFeeForm, setShowFeeForm] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [studentForm, setStudentForm] = useState({
     firstName: "",
     lastName: "",
     class: "",
-
     dob: "",
     email: "",
     parentName: "",
     parentContact: "",
     address: "",
+    password: "", // Add password field to match Students.jsx
   });
+
   const [homeworkForm, setHomeworkForm] = useState({
     title: "",
     subject: "",
@@ -71,6 +88,7 @@ const AdminOverview = () => {
     marksObtained: "",
     totalMarks: "",
   });
+  // 1. Update the noticeForm initial state to include the new fields
   const [noticeForm, setNoticeForm] = useState({
     title: "",
     priority: "",
@@ -78,7 +96,11 @@ const AdminOverview = () => {
     content: "",
     expiryDate: "",
     status: "Active",
+    targetClass: "", // New field for class targeting
+    targetStudent: "", // New field for student targeting
+    targetStudentName: "", // To store the student's name for display
   });
+
   const [feeForm, setFeeForm] = useState({
     id: "",
     studentId: "",
@@ -98,7 +120,15 @@ const AdminOverview = () => {
   const [error, setError] = useState(null);
 
   const priorityOptions = ["High", "Medium", "Low"];
-  const audienceOptions = ["All", "Students", "Parents", "Teachers"];
+  // 2. Update the audienceOptions to match Notices.jsx
+  const audienceOptions = [
+    "All",
+    "Students",
+    "Parents",
+    "Teachers",
+    "Class",
+    "Individual Student",
+  ];
   const statusOptions = ["Active", "Inactive"];
 
   // Theme colors (same as AdminDashboard)
@@ -307,10 +337,6 @@ const AdminOverview = () => {
     setShowStudentForm(true);
   };
   const classOptions = [
-    "Class 1",
-    "Class 2",
-    "Class 3",
-    "Class 4",
     "Class 5",
     "Class 6",
     "Class 7",
@@ -318,13 +344,41 @@ const AdminOverview = () => {
     "Class 9",
     "Class 10",
   ];
+  // Update the submitStudentForm function to use authentication like Students.jsx
   const submitStudentForm = async (e) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, "students"), {
-        ...studentForm,
-        createdAt: serverTimestamp(),
-      });
+      if (studentForm.password && studentForm.email) {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          studentForm.email,
+          studentForm.password
+        );
+        const userUid = userCredential.user.uid;
+        // Create parent user doc with UID as doc ID
+        await setDoc(doc(db, "users", userUid), {
+          uid: userUid,
+          name: studentForm.firstName + " " + studentForm.lastName,
+          email: studentForm.email,
+          role: "parent",
+          createdAt: serverTimestamp(),
+        });
+        // Create student doc with UID as doc ID
+        const { password, ...formData } = studentForm;
+        await setDoc(doc(db, "students", userUid), {
+          ...formData,
+          authUid: userUid,
+          createdAt: serverTimestamp(),
+        });
+      } else {
+        // If no password, fallback to addDoc (not recommended for parent login)
+        const { password, ...formData } = studentForm;
+        await addDoc(collection(db, "students"), {
+          ...formData,
+          authUid: null,
+          createdAt: serverTimestamp(),
+        });
+      }
       setShowStudentForm(false);
       setStudentForm({
         firstName: "",
@@ -335,6 +389,7 @@ const AdminOverview = () => {
         parentName: "",
         parentContact: "",
         address: "",
+        password: "",
       });
       await fetchData();
     } catch (err) {
@@ -343,7 +398,21 @@ const AdminOverview = () => {
   };
 
   // Assign Homework
-  const handleAssignHomework = async () => {
+  // Fix the handleAssignHomework function in Overview.jsx to properly initialize form values
+  const handleAssignHomework = () => {
+    // Initialize form with today's date as assigned date
+    const today = new Date().toISOString().split("T")[0];
+
+    setHomeworkForm({
+      title: "",
+      subject: "",
+      class: "",
+      description: "",
+      assignedDate: today, // Set today as the default assigned date
+      dueDate: "",
+    });
+
+    // Show the form
     setShowHomeworkForm(true);
   };
   const subjectOptions = [
@@ -355,6 +424,7 @@ const AdminOverview = () => {
     "Hindi",
     "Other",
   ];
+  // Updated submitHomeworkForm function to fix the blank form issue
   const submitHomeworkForm = async (e) => {
     e.preventDefault();
     try {
@@ -363,15 +433,23 @@ const AdminOverview = () => {
         assignedBy: "Admin",
         createdAt: serverTimestamp(),
       });
+
+      // Initialize with today's date before closing the form
+      const today = new Date().toISOString().split("T")[0];
+
+      // Close form first, then reset it with proper initial values
       setShowHomeworkForm(false);
+
+      // Reset form with today's date for the next time
       setHomeworkForm({
         title: "",
         subject: "",
         class: "",
         description: "",
-        assignedDate: "",
+        assignedDate: today,
         dueDate: "",
       });
+
       await fetchData();
     } catch (err) {
       alert("Failed to assign homework: " + err.message);
@@ -441,14 +519,56 @@ const AdminOverview = () => {
     }
   };
 
-  // Send Notice
-  const handleSendNotice = () => setShowNoticeForm(true);
+  // 3. Update the handleSendNotice function
+  const handleSendNotice = () => {
+    setNoticeForm({
+      title: "",
+      priority: "",
+      audience: "",
+      content: "",
+      expiryDate: "",
+      status: "Active",
+      targetClass: "",
+      targetStudent: "",
+      targetStudentName: "",
+    });
+    setShowNoticeForm(true);
+  };
 
+  // 4. Add a helper function to handle student selection
+  const handleStudentSelect = (e) => {
+    const studentId = e.target.value;
+    const selectedStudent = students.find(
+      (student) => student.id === studentId
+    );
+    setNoticeForm((f) => ({
+      ...f,
+      targetStudent: studentId,
+      targetStudentName: selectedStudent
+        ? `${selectedStudent.firstName || ""} ${selectedStudent.lastName || ""}`
+        : "",
+    }));
+  };
+
+  // 5. Update the submit notice form function
   const submitNoticeForm = async (e) => {
     e.preventDefault();
     try {
+      // Prepare notice data based on audience selection
+      const noticeData = { ...noticeForm };
+
+      // Clean up unnecessary fields based on audience
+      if (noticeForm.audience !== "Class") {
+        delete noticeData.targetClass;
+      }
+
+      if (noticeForm.audience !== "Individual Student") {
+        delete noticeData.targetStudent;
+        delete noticeData.targetStudentName;
+      }
+
       await addDoc(collection(db, "notices"), {
-        ...noticeForm,
+        ...noticeData,
         createdAt: serverTimestamp(),
       });
       setShowNoticeForm(false);
@@ -459,6 +579,9 @@ const AdminOverview = () => {
         content: "",
         expiryDate: "",
         status: "Active",
+        targetClass: "",
+        targetStudent: "",
+        targetStudentName: "",
       });
       await fetchData();
     } catch (err) {
@@ -478,7 +601,6 @@ const AdminOverview = () => {
     e.preventDefault();
     try {
       if (feeForm.id) {
-        // Update existing fee record
         const docRef = doc(db, "fees", feeForm.id);
         await updateDoc(docRef, {
           studentId: feeForm.studentId,
@@ -627,7 +749,7 @@ const AdminOverview = () => {
 
   return (
     <div>
-      {/* Student Form Modal - Using responsive components */}
+      {/* Replace the existing student form modal with this */}
       {showStudentForm && (
         <div
           style={{
@@ -642,16 +764,17 @@ const AdminOverview = () => {
             alignItems: "center",
             justifyContent: "center",
             padding: "16px",
+            backdropFilter: "blur(2px)",
           }}
         >
           <form
             onSubmit={submitStudentForm}
             style={{
-              background: "#fff",
+              background: colors.card,
               padding: isSmallMobile ? "20px" : "24px",
               borderRadius: "16px",
               width: "100%",
-              maxWidth: "480px",
+              maxWidth: "500px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
               display: "flex",
               flexDirection: "column",
@@ -673,19 +796,33 @@ const AdminOverview = () => {
                   fontSize: isSmallMobile ? "18px" : "22px",
                   fontWeight: 700,
                   margin: 0,
+                  color: colors.text,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
                 }}
               >
+                <FaUser style={{ color: colors.accent || colors.highlight }} />
                 Add New Student
               </h2>
               <button
                 type="button"
                 onClick={() => setShowStudentForm(false)}
                 style={{
-                  background: "none",
+                  background:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.05)",
                   border: "none",
-                  fontSize: "22px",
+                  borderRadius: "50%",
+                  width: 32,
+                  height: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   cursor: "pointer",
-                  color: "#888",
+                  color: colors.text,
+                  fontSize: 20,
                 }}
                 aria-label="Close"
               >
@@ -701,7 +838,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>First Name *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  First Name *
+                </label>
                 <input
                   required
                   value={studentForm.firstName}
@@ -710,8 +849,10 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
                 />
@@ -724,7 +865,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Last Name *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  Last Name *
+                </label>
                 <input
                   required
                   value={studentForm.lastName}
@@ -733,8 +876,10 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
                 />
@@ -749,7 +894,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Class *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  Class *
+                </label>
                 <select
                   required
                   value={studentForm.class}
@@ -758,8 +905,10 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
                 >
@@ -779,7 +928,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Date of Birth *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  Date of Birth *
+                </label>
                 <input
                   required
                   type="date"
@@ -789,18 +940,21 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
-                  placeholder="dd-mm-yyyy"
                 />
               </div>
             </div>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "6px" }}
             >
-              <label style={{ fontWeight: 500 }}>Email *</label>
+              <label style={{ fontWeight: 500, color: colors.text }}>
+                Email *
+              </label>
               <input
                 required
                 type="email"
@@ -810,11 +964,47 @@ const AdminOverview = () => {
                 }
                 style={{
                   padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  border: `1px solid ${colors.border}`,
+                  background: colors.inputBg || colors.card,
+                  color: colors.text,
                   width: "100%",
                 }}
               />
+            </div>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
+              <label style={{ fontWeight: 500, color: colors.text }}>
+                Password (for parent login)
+              </label>
+              <input
+                type="password"
+                value={studentForm.password || ""}
+                onChange={(e) =>
+                  setStudentForm((f) => ({ ...f, password: e.target.value }))
+                }
+                style={{
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: `1px solid ${colors.border}`,
+                  background: colors.inputBg || colors.card,
+                  color: colors.text,
+                  width: "100%",
+                }}
+                placeholder="Set password for parent login"
+                autoComplete="new-password"
+              />
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: colors.textSecondary,
+                  marginTop: 4,
+                }}
+              >
+                This password, along with the email, can be used to log in as a
+                parent.
+              </span>
             </div>
             <div style={{ display: "flex", gap: "16px" }}>
               <div
@@ -825,7 +1015,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Parent Name *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  Parent Name *
+                </label>
                 <input
                   required
                   value={studentForm.parentName}
@@ -837,8 +1029,10 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
                 />
@@ -851,7 +1045,9 @@ const AdminOverview = () => {
                   gap: "6px",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Parent Contact *</label>
+                <label style={{ fontWeight: 500, color: colors.text }}>
+                  Parent Contact *
+                </label>
                 <input
                   required
                   value={studentForm.parentContact}
@@ -863,8 +1059,10 @@ const AdminOverview = () => {
                   }
                   style={{
                     padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
                     width: "100%",
                   }}
                 />
@@ -873,7 +1071,9 @@ const AdminOverview = () => {
             <div
               style={{ display: "flex", flexDirection: "column", gap: "6px" }}
             >
-              <label style={{ fontWeight: 500 }}>Address</label>
+              <label style={{ fontWeight: 500, color: colors.text }}>
+                Address
+              </label>
               <textarea
                 value={studentForm.address}
                 onChange={(e) =>
@@ -881,9 +1081,11 @@ const AdminOverview = () => {
                 }
                 style={{
                   padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  minHeight: "48px",
+                  borderRadius: "8px",
+                  border: `1px solid ${colors.border}`,
+                  background: colors.inputBg || colors.card,
+                  color: colors.text,
+                  minHeight: "64px",
                   width: "100%",
                 }}
               />
@@ -892,14 +1094,15 @@ const AdminOverview = () => {
               <button
                 type="submit"
                 style={{
-                  background: "#4f46e5",
+                  background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
                   color: "#fff",
                   border: "none",
                   borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: "16px",
+                  fontSize: "15px",
                   cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   width: "100%",
                 }}
               >
@@ -909,13 +1112,13 @@ const AdminOverview = () => {
                 type="button"
                 onClick={() => setShowStudentForm(false)}
                 style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
+                  background: colors.card,
+                  color: colors.highlight,
+                  border: `1px solid ${colors.highlight}`,
                   borderRadius: "8px",
                   padding: "10px 24px",
                   fontWeight: 600,
-                  fontSize: "16px",
+                  fontSize: "15px",
                   cursor: "pointer",
                   width: "100%",
                 }}
@@ -926,7 +1129,563 @@ const AdminOverview = () => {
           </form>
         </div>
       )}
+      {/* Notice Form Modal */}
+      {/* 6. Update the Notice Form Modal - replace the current showNoticeForm section with: */}
+      {showNoticeForm && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: isMobile ? "flex-end" : "center",
+            justifyContent: "center",
+            backdropFilter: "blur(2px)",
+            padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
+          }}
+        >
+          <motion.div
+            initial={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            transition={{ type: "spring", damping: 25 }}
+            style={{
+              width: "100%",
+              maxWidth: isMobile ? "100%" : 580,
+              maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+              overflow: "auto",
+              padding: 0,
+              borderRadius: isMobile ? "16px 16px 0 0" : 16,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              background: colors.card,
+            }}
+          >
+            <form
+              onSubmit={submitNoticeForm}
+              style={{
+                padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
+                display: "flex",
+                flexDirection: "column",
+                gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                    fontWeight: 700,
+                    margin: 0,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <FaBullhorn
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  {editId ? "Edit Notice" : "Add Notice"}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setShowNoticeForm(false)}
+                  style={{
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: colors.text,
+                    fontSize: 20,
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </motion.button>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: isSmallMobile ? 6 : 10,
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: 500,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: isSmallMobile ? 14 : 15,
+                  }}
+                >
+                  <FaTag
+                    size={14}
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  Title *
+                </label>
+                <input
+                  required
+                  value={noticeForm.title}
+                  onChange={(e) =>
+                    setNoticeForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                  style={{
+                    padding: isSmallMobile ? 10 : 12,
+                    borderRadius: 8,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                  }}
+                  placeholder="Enter notice title"
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaExclamationTriangle
+                      size={14}
+                      style={{ color: colors.warning }}
+                    />
+                    Priority *
+                  </label>
+                  <select
+                    required
+                    value={noticeForm.priority}
+                    onChange={(e) =>
+                      setNoticeForm((f) => ({ ...f, priority: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Priority</option>
+                    {priorityOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaUsers
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Audience *
+                  </label>
+                  <select
+                    required
+                    value={noticeForm.audience}
+                    onChange={(e) =>
+                      setNoticeForm((f) => ({
+                        ...f,
+                        audience: e.target.value,
+                        // Reset targeting fields when audience changes
+                        targetClass: "",
+                        targetStudent: "",
+                        targetStudentName: "",
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Audience</option>
+                    {audienceOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Conditional fields for Class or Individual Student selection */}
+              {noticeForm.audience === "Class" && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaChalkboardTeacher
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Select Class *
+                  </label>
+                  <select
+                    required
+                    value={noticeForm.targetClass}
+                    onChange={(e) =>
+                      setNoticeForm((f) => ({
+                        ...f,
+                        targetClass: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Class</option>
+                    {classOptions.map((cls) => (
+                      <option key={cls} value={cls}>
+                        {cls}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {noticeForm.audience === "Individual Student" && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaUserGraduate
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Select Student *
+                  </label>
+                  <select
+                    required
+                    value={noticeForm.targetStudent}
+                    onChange={handleStudentSelect}
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Student</option>
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.firstName || ""} {student.lastName || ""} (
+                        {student.class || ""})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: isSmallMobile ? 6 : 10,
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: 500,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                  }}
+                >
+                  Content *
+                </label>
+                <textarea
+                  required
+                  value={noticeForm.content}
+                  onChange={(e) =>
+                    setNoticeForm((f) => ({ ...f, content: e.target.value }))
+                  }
+                  style={{
+                    padding: isSmallMobile ? 10 : 12,
+                    borderRadius: 8,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    minHeight: isSmallMobile ? 80 : isMobile ? 100 : 120,
+                    resize: "vertical",
+                  }}
+                  placeholder="Enter notice content"
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaCalendarAlt
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={noticeForm.expiryDate}
+                    onChange={(e) =>
+                      setNoticeForm((f) => ({
+                        ...f,
+                        expiryDate: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    Status *
+                  </label>
+                  <select
+                    required
+                    value={noticeForm.status}
+                    onChange={(e) =>
+                      setNoticeForm((f) => ({ ...f, status: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    {statusOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: isSmallMobile ? 8 : 16,
+                  marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
+                  justifyContent: "flex-end",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="button"
+                  onClick={() => setShowNoticeForm(false)}
+                  style={{
+                    background: "transparent",
+                    color: colors.accent || colors.highlight,
+                    border: `1px solid ${colors.accent || colors.highlight}`,
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 20px" : "12px 24px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    minWidth: isMobile ? "100%" : 100,
+                    order: isMobile ? 2 : 1,
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 24px" : "12px 32px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    boxShadow:
+                      colors.buttonShadow ||
+                      "0 4px 12px rgba(79, 70, 229, 0.25)",
+                    minWidth: isMobile ? "100%" : 120,
+                    order: isMobile ? 1 : 2,
+                  }}
+                >
+                  Send Notice
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
       {/* Homework Form Modal - Using responsive components */}
+      {/* // Update to the homework form modal in Overview.jsx to match Homework.jsx */}
       {showHomeworkForm && (
         <div
           style={{
@@ -940,258 +1699,430 @@ const AdminOverview = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "16px",
+            backdropFilter: "blur(2px)",
+            padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
           }}
         >
-          <form
-            onSubmit={submitHomeworkForm}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25 }}
             style={{
-              background: "#fff",
-              padding: isSmallMobile ? "20px" : "24px",
-              borderRadius: "16px",
               width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              maxHeight: "90vh",
-              overflowY: "auto",
+              maxWidth: 600,
+              maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+              overflow: "auto",
+              padding: 0,
+              borderRadius: 16,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              background: colors.card,
             }}
           >
-            <div
+            <form
+              onSubmit={submitHomeworkForm}
               style={{
+                padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "8px",
+                flexDirection: "column",
+                gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
               }}
             >
-              <h2
-                style={{
-                  fontSize: isSmallMobile ? "18px" : "22px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Assign Homework
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowHomeworkForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#888",
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Assignment Title *</label>
-              <input
-                required
-                value={homeworkForm.title}
-                onChange={(e) =>
-                  setHomeworkForm((f) => ({ ...f, title: e.target.value }))
-                }
-                style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  width: "100%",
-                }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Subject *</label>
-                <select
-                  required
-                  value={homeworkForm.subject}
-                  onChange={(e) =>
-                    setHomeworkForm((f) => ({ ...f, subject: e.target.value }))
-                  }
+                <h2
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                    fontWeight: 700,
+                    margin: 0,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
                   }}
                 >
-                  <option value="">Select Subject</option>
-                  {subjectOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Class *</label>
-                <select
-                  required
-                  value={homeworkForm.class}
-                  onChange={(e) =>
-                    setHomeworkForm((f) => ({ ...f, class: e.target.value }))
-                  }
+                  <FaBook
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  {editId ? "Edit Homework" : "Assign Homework"}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setShowHomeworkForm(false)}
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: colors.text,
+                    fontSize: 20,
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </motion.button>
+              </div>
+
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
+                <label
+                  style={{
+                    fontWeight: 500,
+                    color: colors.text,
+                    marginBottom: 2,
+                    fontSize: isSmallMobile ? 14 : 15,
                   }}
                 >
-                  <option value="">Select Class</option>
-                  {classOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Description *</label>
-              <textarea
-                required
-                value={homeworkForm.description}
-                onChange={(e) =>
-                  setHomeworkForm((f) => ({
-                    ...f,
-                    description: e.target.value,
-                  }))
-                }
-                style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  minHeight: "64px",
-                  width: "100%",
-                }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Assigned Date *</label>
+                  Assignment Title *
+                </label>
                 <input
                   required
-                  type="date"
-                  value={homeworkForm.assignedDate}
+                  value={homeworkForm.title}
+                  onChange={(e) =>
+                    setHomeworkForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                  style={{
+                    padding: isSmallMobile ? 10 : 12,
+                    borderRadius: 8,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: 15,
+                  }}
+                  placeholder="Enter homework title"
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      marginBottom: 2,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    Subject *
+                  </label>
+                  <select
+                    required
+                    value={homeworkForm.subject}
+                    onChange={(e) =>
+                      setHomeworkForm((f) => ({
+                        ...f,
+                        subject: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Subject</option>
+                    {subjectOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      marginBottom: 2,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    Class *
+                  </label>
+                  <select
+                    required
+                    value={homeworkForm.class}
+                    onChange={(e) =>
+                      setHomeworkForm((f) => ({ ...f, class: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Class</option>
+                    {classOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: isSmallMobile ? 6 : 10,
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: 500,
+                    color: colors.text,
+                    marginBottom: 2,
+                    fontSize: isSmallMobile ? 14 : 15,
+                  }}
+                >
+                  Description *
+                </label>
+                <textarea
+                  required
+                  value={homeworkForm.description}
                   onChange={(e) =>
                     setHomeworkForm((f) => ({
                       ...f,
-                      assignedDate: e.target.value,
+                      description: e.target.value,
                     }))
                   }
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    padding: isSmallMobile ? 10 : 12,
+                    borderRadius: 8,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    minHeight: isSmallMobile ? 60 : isMobile ? 80 : 100,
+                    resize: "vertical",
                   }}
+                  placeholder="Enter homework description and requirements"
                 />
               </div>
+
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Due Date *</label>
-                <input
-                  required
-                  type="date"
-                  value={homeworkForm.dueDate}
-                  onChange={(e) =>
-                    setHomeworkForm((f) => ({ ...f, dueDate: e.target.value }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
                   }}
-                />
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      marginBottom: 2,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <FaCalendarAlt
+                      size={12}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />{" "}
+                    Assigned Date *
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={homeworkForm.assignedDate}
+                    onChange={(e) =>
+                      setHomeworkForm((f) => ({
+                        ...f,
+                        assignedDate: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      marginBottom: 2,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <FaCalendarAlt
+                      size={12}
+                      style={{ color: colors.warning }}
+                    />{" "}
+                    Due Date *
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={homeworkForm.dueDate}
+                    onChange={(e) =>
+                      setHomeworkForm((f) => ({
+                        ...f,
+                        dueDate: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "8px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowHomeworkForm(false)}
+
+              <div
                 style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
+                  display: "flex",
+                  gap: isSmallMobile ? 8 : 16,
+                  marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
+                  justifyContent: "flex-end",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  background: "#111",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Assign Homework
-              </button>
-            </div>
-          </form>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="button"
+                  onClick={() => {
+                    setShowHomeworkForm(false);
+                    setHomeworkForm({
+                      title: "",
+                      subject: "",
+                      class: "",
+                      description: "",
+                      assignedDate: "",
+                      dueDate: "",
+                    });
+                  }}
+                  style={{
+                    background: "transparent",
+                    color: colors.accent || colors.highlight,
+                    border: `1px solid ${colors.accent || colors.highlight}`,
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 20px" : "12px 24px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    minWidth: isMobile ? "100%" : 100,
+                    order: isMobile ? 2 : 1,
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 24px" : "12px 32px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    boxShadow: colors.buttonShadow,
+                    minWidth: isMobile ? "100%" : 150,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    order: isMobile ? 1 : 2,
+                  }}
+                >
+                  Assign
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
-      {/* Attendance Form Modal - Using responsive components */}
+      {/* Attendance Form Modal - Matching Attendance.jsx styling */}
       {showAttendanceForm && (
         <div
           style={{
@@ -1203,202 +2134,394 @@ const AdminOverview = () => {
             background: "rgba(0,0,0,0.5)",
             zIndex: 1000,
             display: "flex",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-end" : "center",
             justifyContent: "center",
-            padding: "16px",
+            backdropFilter: "blur(2px)",
+            padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
           }}
         >
-          <form
-            onSubmit={submitAttendanceForm}
+          <motion.div
+            initial={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            transition={{ type: "spring", damping: 25 }}
             style={{
-              background: "#fff",
-              padding: isSmallMobile ? "20px" : "24px",
-              borderRadius: "16px",
               width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              maxHeight: "90vh",
+              maxWidth: isMobile ? "100%" : 500,
+              maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
               overflowY: "auto",
+              padding: 0,
+              borderRadius: isMobile ? "16px 16px 0 0" : 16,
+              position: "relative",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              background: colors.card,
             }}
           >
-            <div
+            <form
+              onSubmit={submitAttendanceForm}
               style={{
+                padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "8px",
+                flexDirection: "column",
+                gap: isSmallMobile ? 16 : 20,
               }}
             >
-              <h2
-                style={{
-                  fontSize: isSmallMobile ? "18px" : "22px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Mark Attendance
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowAttendanceForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#888",
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: isMobile ? 4 : 8,
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Date *</label>
-                <input
-                  required
-                  type="date"
-                  value={attendanceForm.date}
-                  onChange={(e) =>
-                    setAttendanceForm((f) => ({ ...f, date: e.target.value }))
-                  }
+                <h2
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
-                  }}
-                  placeholder="dd-mm-yyyy"
-                />
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Class *</label>
-                <select
-                  required
-                  value={attendanceForm.class}
-                  onChange={(e) =>
-                    setAttendanceForm((f) => ({ ...f, class: e.target.value }))
-                  }
-                  style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                    fontWeight: 700,
+                    margin: 0,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
                   }}
                 >
-                  <option value="">Select Class</option>
-                  {classOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                  <FaCalendarCheck
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  Mark Attendance
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setShowAttendanceForm(false)}
+                  style={{
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: colors.text,
+                    fontSize: 20,
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </motion.button>
               </div>
-            </div>
-            {/* Student select and status */}
-            {attendanceForm.class && (
-              <div style={{ display: "flex", gap: "16px" }}>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: isSmallMobile ? 12 : 16,
+                }}
+              >
                 <div
                   style={{
-                    flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    gap: "6px",
+                    gap: isSmallMobile ? 6 : 10,
                   }}
                 >
-                  <label style={{ fontWeight: 500 }}>Student *</label>
-                  <select name="studentId" required style={{ width: "100%" }}>
-                    <option value="">Select Student</option>
-                    {studentsForAttendance.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {(s.firstName || "") + " " + (s.lastName || "")}
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaCalendarAlt
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Date *
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={attendanceForm.date}
+                    onChange={(e) =>
+                      setAttendanceForm((f) => ({ ...f, date: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaSchool
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Class *
+                  </label>
+                  <select
+                    required
+                    value={attendanceForm.class}
+                    onChange={(e) =>
+                      setAttendanceForm((f) => ({
+                        ...f,
+                        class: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Class</option>
+                    {classOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div
+
+                {attendanceForm.class && (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: isSmallMobile ? 6 : 10,
+                        gridColumn: isMobile ? "auto" : "span 2",
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontWeight: 500,
+                          color: colors.text,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: isSmallMobile ? 14 : 15,
+                        }}
+                      >
+                        <FaUserGraduate
+                          size={14}
+                          style={{ color: colors.accent || colors.highlight }}
+                        />
+                        Student *
+                      </label>
+                      <select
+                        name="studentId"
+                        required
+                        style={{
+                          padding: isSmallMobile ? 10 : 12,
+                          borderRadius: 8,
+                          border: `1px solid ${colors.border}`,
+                          background: colors.inputBg || colors.card,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                          width: "100%",
+                        }}
+                      >
+                        <option value="">Select Student</option>
+                        {studentsForAttendance.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {(s.firstName || "") + " " + (s.lastName || "")}
+                          </option>
+                        ))}
+                      </select>
+                      {studentsForAttendance.length === 0 && (
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: colors.textSecondary,
+                            marginTop: "8px",
+                            padding: "12px",
+                            background:
+                              theme === "dark"
+                                ? "rgba(59, 130, 246, 0.1)"
+                                : "rgba(79, 70, 229, 0.1)",
+                            borderRadius: 6,
+                          }}
+                        >
+                          No students found in this class
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: isSmallMobile ? 6 : 10,
+                        gridColumn: isMobile ? "auto" : "span 2",
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontWeight: 500,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                        }}
+                      >
+                        Status *
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 16,
+                          marginTop: 4,
+                        }}
+                      >
+                        {["present", "absent"].map((s) => (
+                          <label
+                            key={s}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              cursor: "pointer",
+                              padding: isSmallMobile ? "8px 12px" : "10px 16px",
+                              borderRadius: 8,
+                              border: `1px solid ${colors.border}`,
+                              background: "transparent",
+                              flex: 1,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="status"
+                              value={s}
+                              defaultChecked={s === "present"}
+                              style={{ marginRight: 8 }}
+                            />
+                            {s === "present" ? (
+                              <FaCheckCircle size={18} color={colors.success} />
+                            ) : (
+                              <FaTimesCircle size={18} color={colors.danger} />
+                            )}
+                            <span
+                              style={{
+                                textTransform: "capitalize",
+                                fontWeight: 500,
+                                color: colors.text,
+                              }}
+                            >
+                              {s}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: isSmallMobile ? 8 : 16,
+                  marginTop: isSmallMobile ? 8 : 16,
+                  justifyContent: "flex-end",
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={() => setShowAttendanceForm(false)}
                   style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
+                    background: "transparent",
+                    color: colors.accent || colors.highlight,
+                    border: `1px solid ${colors.accent || colors.highlight}`,
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 16px" : "12px 24px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    minWidth: isMobile ? "100%" : 100,
+                    order: isMobile ? 2 : 1,
                   }}
                 >
-                  <label style={{ fontWeight: 500 }}>Status *</label>
-                  <select name="status" required style={{ width: "100%" }}>
-                    <option value="present">Present</option>
-                    <option value="absent">Absent</option>
-                  </select>
-                </div>
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 16px" : "12px 32px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    boxShadow: colors.buttonShadow,
+                    minWidth: isMobile ? "100%" : 120,
+                    order: isMobile ? 1 : 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  Save Attendance
+                </motion.button>
               </div>
-            )}
-            <div style={{ color: "#64748b", fontSize: 15, marginTop: 2 }}>
-              Select a class to mark attendance
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "24px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowAttendanceForm(false)}
-                style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  background: "#111",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Save Attendance
-              </button>
-            </div>
-          </form>
+            </form>
+          </motion.div>
         </div>
       )}
-      {/* Test Result Form Modal - Using responsive components */}
+      {/* Test Result Form Modal - Update to match TestResults.jsx */}
       {showTestResultForm && (
         <div
           style={{
@@ -1407,73 +2530,143 @@ const AdminOverview = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.5)",
+            background: "rgba(0,0,0,0.6)",
             zIndex: 1000,
             display: "flex",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-end" : "center",
             justifyContent: "center",
-            padding: "16px",
+            backdropFilter: "blur(4px)",
+            padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
           }}
         >
-          <form
-            onSubmit={submitTestResultForm}
+          <motion.div
+            initial={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              scale: isMobile ? 1 : 0.9,
+              opacity: 0,
+              y: isMobile ? 100 : 0,
+            }}
+            transition={{ type: "spring", damping: 25 }}
             style={{
-              background: "#fff",
-              padding: isSmallMobile ? "20px" : "24px",
-              borderRadius: "16px",
               width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              maxHeight: "90vh",
-              overflowY: "auto",
+              maxWidth: isMobile ? "100%" : 580,
+              maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+              overflow: "auto",
+              padding: 0,
+              borderRadius: isMobile ? "20px 20px 0 0" : 20,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+              background: colors.card,
             }}
           >
-            <div
+            <form
+              onSubmit={submitTestResultForm}
               style={{
+                padding: isSmallMobile
+                  ? "20px 16px"
+                  : isMobile
+                  ? "24px 20px"
+                  : "32px",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "8px",
+                flexDirection: "column",
+                gap: isSmallMobile ? 16 : 18,
+                width: "90%",
               }}
             >
-              <h2
-                style={{
-                  fontSize: isSmallMobile ? "18px" : "22px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Add Test Result
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowTestResultForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#888",
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 4,
+                  borderBottom: `1px solid ${colors.border}`,
+                  paddingBottom: isSmallMobile ? 12 : 16,
+                  gap: 2,
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Student *</label>
+                <h2
+                  style={{
+                    fontSize: isSmallMobile ? 18 : isMobile ? 20 : 24,
+                    fontWeight: 700,
+                    margin: 0,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <FaFileAlt
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  {editId ? "Edit Test Result" : "Add Test Result"}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setShowTestResultForm(false)}
+                  style={{
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 36,
+                    height: 36,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: colors.text,
+                    fontSize: 20,
+                    marginLeft: "auto",
+                    flexShrink: 0,
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </motion.button>
+              </div>
+
+              {/* Student Selection Field */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: isSmallMobile ? 8 : 10,
+                  width: "100%",
+                }}
+              >
+                <label
+                  htmlFor="studentId"
+                  style={{
+                    fontWeight: 600,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 4,
+                    width: "100px",
+                  }}
+                >
+                  <FaUserGraduate
+                    size={14}
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  Student *
+                </label>
                 <select
+                  id="studentId"
                   required
                   value={testResultForm.studentId}
                   onChange={(e) =>
@@ -1483,10 +2676,21 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                    borderRadius: 10,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 15 : 16,
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    appearance: "none",
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
+                      theme === "dark" ? "%2394a3b8" : "%2364748b"
+                    }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 14px center",
+                    backgroundSize: "16px",
+                    paddingRight: "40px",
                   }}
                 >
                   <option value="">Select Student</option>
@@ -1497,84 +2701,178 @@ const AdminOverview = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Subject and Test Type Section */}
               <div
                 style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: isSmallMobile ? 28 : isMobile ? 28 : 45,
+                  justifyContent: "space-between",
+                  width: "98%",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Subject *</label>
-                <select
-                  required
-                  value={testResultForm.subject}
-                  onChange={(e) =>
-                    setTestResultForm((f) => ({
-                      ...f,
-                      subject: e.target.value,
-                    }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 8 : 10,
+                    maxWidth: "100%",
                   }}
                 >
-                  <option value="">Select Subject</option>
-                  {subjectOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Test Type *</label>
-                <select
-                  required
-                  value={testResultForm.testType}
-                  onChange={(e) =>
-                    setTestResultForm((f) => ({
-                      ...f,
-                      testType: e.target.value,
-                    }))
-                  }
+                  <label
+                    htmlFor="subject"
+                    style={{
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                      width: "fit-content",
+                    }}
+                  >
+                    <FaBook
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Subject *
+                  </label>
+                  <select
+                    id="subject"
+                    required
+                    value={testResultForm.subject}
+                    onChange={(e) =>
+                      setTestResultForm((f) => ({
+                        ...f,
+                        subject: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      width: "100%",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      appearance: "none",
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
+                        theme === "dark" ? "%2394a3b8" : "%2364748b"
+                      }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 14px center",
+                      backgroundSize: "16px",
+                      paddingRight: "40px",
+                    }}
+                  >
+                    <option value="">Select Subject</option>
+                    {subjectOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 8 : 10,
+                    width: "90%",
                   }}
                 >
-                  <option value="">Select Test Type</option>
-                  {testTypeOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                  <label
+                    htmlFor="testType"
+                    style={{
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                      width: "fit-content",
+                    }}
+                  >
+                    <FaCheckCircle
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Test Type *
+                  </label>
+                  <select
+                    id="testType"
+                    required
+                    value={testResultForm.testType}
+                    onChange={(e) =>
+                      setTestResultForm((f) => ({
+                        ...f,
+                        testType: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      width: "100%",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      appearance: "none",
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
+                        theme === "dark" ? "%2394a3b8" : "%2364748b"
+                      }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 14px center",
+                      backgroundSize: "16px",
+                      paddingRight: "40px",
+                    }}
+                  >
+                    <option value="">Select Test Type</option>
+                    {testTypeOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              {/* Test Date Field */}
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 8 : 10,
+                  width: "94%",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Test Date *</label>
+                <label
+                  htmlFor="testDate"
+                  style={{
+                    fontWeight: 600,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 4,
+                    width: "fit-content",
+                  }}
+                >
+                  <FaCalendarAlt
+                    size={14}
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  Test Date *
+                </label>
                 <input
+                  id="testDate"
                   required
                   type="date"
                   value={testResultForm.testDate}
@@ -1585,381 +2883,205 @@ const AdminOverview = () => {
                     }))
                   }
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
+                    padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                    borderRadius: 10,
+                    border: `1px solid ${colors.border}`,
+                    background: colors.inputBg || colors.card,
+                    color: colors.text,
+                    fontSize: isSmallMobile ? 15 : 16,
                     width: "100%",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                   }}
-                  placeholder="dd-mm-yyyy"
                 />
               </div>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
+
+              {/* Marks Section */}
               <div
                 style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: isSmallMobile ? 22 : isMobile ? 24 : 45,
+                  justifyContent: "space-between",
+                  width: "94%",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Marks Obtained *</label>
-                <input
-                  required
-                  type="number"
-                  value={testResultForm.marksObtained}
-                  onChange={(e) =>
-                    setTestResultForm((f) => ({
-                      ...f,
-                      marksObtained: e.target.value,
-                    }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 8 : 10,
+                    maxWidth: "100%",
                   }}
-                />
+                >
+                  <label
+                    htmlFor="marksObtained"
+                    style={{
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                      width: "fit-content",
+                    }}
+                  >
+                    <FaTrophy
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Marks Obtained *
+                  </label>
+                  <input
+                    id="marksObtained"
+                    required
+                    type="number"
+                    value={testResultForm.marksObtained}
+                    onChange={(e) =>
+                      setTestResultForm((f) => ({
+                        ...f,
+                        marksObtained: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      width: "100%",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    }}
+                    placeholder="e.g. 85"
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 8 : 10,
+                    maxWidth: "100%",
+                  }}
+                >
+                  <label
+                    htmlFor="totalMarks"
+                    style={{
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                      width: "fit-content",
+                    }}
+                  >
+                    <FaCertificate
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Total Marks *
+                  </label>
+                  <input
+                    id="totalMarks"
+                    required
+                    type="number"
+                    value={testResultForm.totalMarks}
+                    onChange={(e) =>
+                      setTestResultForm((f) => ({
+                        ...f,
+                        totalMarks: e.target.value,
+                      }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? "12px 14px" : "14px 16px",
+                      borderRadius: 10,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 15 : 16,
+                      width: "100%",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    }}
+                    placeholder="e.g. 100"
+                  />
+                </div>
               </div>
+
+              {/* Form Buttons */}
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 10 : 16,
+                  marginTop: isSmallMobile ? 8 : isMobile ? 12 : 16,
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  flexDirection: isMobile ? "column-reverse" : "row",
+                  borderTop: `1px solid ${colors.border}`,
+                  paddingTop: isSmallMobile ? 16 : 20,
+                  width: "90%",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Total Marks *</label>
-                <input
-                  required
-                  type="number"
-                  value={testResultForm.totalMarks}
-                  onChange={(e) =>
-                    setTestResultForm((f) => ({
-                      ...f,
-                      totalMarks: e.target.value,
-                    }))
-                  }
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="button"
+                  onClick={() => setShowTestResultForm(false)}
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.03)",
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 12,
+                    padding: isSmallMobile ? "12px 20px" : "14px 28px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 15 : 16,
+                    cursor: "pointer",
+                    minWidth: isMobile ? "100%" : 120,
+                    flex: isMobile ? "unset" : 1,
+                    maxWidth: isMobile ? "unset" : 180,
                   }}
-                />
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 12,
+                    padding: isSmallMobile ? "12px 20px" : "14px 28px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 15 : 16,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)",
+                    minWidth: isMobile ? "100%" : 140,
+                    flex: isMobile ? "unset" : 1,
+                    maxWidth: isMobile ? "unset" : 220,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
+                >
+                  <FaPlus size={16} /> Add Result
+                </motion.button>
               </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "24px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowTestResultForm(false)}
-                style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  background: "#111",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Add Result
-              </button>
-            </div>
-          </form>
+            </form>
+          </motion.div>
         </div>
       )}
-      {/* Notice Form Modal - Using responsive components */}
-      {showNoticeForm && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-          }}
-        >
-          <form
-            onSubmit={submitNoticeForm}
-            style={{
-              background: "#fff",
-              padding: isSmallMobile ? "20px" : "24px",
-              borderRadius: "16px",
-              width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "8px",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: isSmallMobile ? "18px" : "22px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Create Notice
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowNoticeForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#888",
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Notice Title *</label>
-              <input
-                required
-                value={noticeForm.title}
-                onChange={(e) =>
-                  setNoticeForm((f) => ({ ...f, title: e.target.value }))
-                }
-                style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  width: "100%",
-                }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Priority *</label>
-                <select
-                  required
-                  value={noticeForm.priority}
-                  onChange={(e) =>
-                    setNoticeForm((f) => ({ ...f, priority: e.target.value }))
-                  }
-                  style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
-                  }}
-                >
-                  <option value="">Select Priority</option>
-                  {priorityOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Target Audience *</label>
-                <select
-                  required
-                  value={noticeForm.audience}
-                  onChange={(e) =>
-                    setNoticeForm((f) => ({ ...f, audience: e.target.value }))
-                  }
-                  style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
-                  }}
-                >
-                  <option value="">Select Audience</option>
-                  {audienceOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Notice Content *</label>
-              <textarea
-                required
-                value={noticeForm.content}
-                onChange={(e) =>
-                  setNoticeForm((f) => ({ ...f, content: e.target.value }))
-                }
-                style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  minHeight: "64px",
-                  width: "100%",
-                }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Expiry Date</label>
-                <input
-                  type="date"
-                  value={noticeForm.expiryDate}
-                  onChange={(e) =>
-                    setNoticeForm((f) => ({ ...f, expiryDate: e.target.value }))
-                  }
-                  style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
-                  }}
-                  placeholder="dd-mm-yyyy"
-                />
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}>Status *</label>
-                <select
-                  required
-                  value={noticeForm.status}
-                  onChange={(e) =>
-                    setNoticeForm((f) => ({ ...f, status: e.target.value }))
-                  }
-                  style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
-                  }}
-                >
-                  {statusOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "24px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowNoticeForm(false)}
-                style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  background: "#111",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Create Notice
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-      {/* Fee Update Modal - Using responsive components */}
+      {/* // Update only the showFeeForm modal section to match FeeManagement.jsx
+      styling */}
       {showFeeForm && (
         <div
           style={{
@@ -1973,255 +3095,437 @@ const AdminOverview = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "16px",
+            backdropFilter: "blur(2px)",
+            padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
           }}
         >
-          <form
-            onSubmit={submitFeeForm}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25 }}
             style={{
-              background: "#fff",
-              padding: isSmallMobile ? "20px" : "24px",
-              borderRadius: "16px",
               width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              maxHeight: "90vh",
-              overflowY: "auto",
+              maxWidth: 580,
+              maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+              overflow: "auto",
+              padding: 0,
+              borderRadius: 16,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              background: colors.card,
             }}
           >
-            <div
+            <form
+              onSubmit={submitFeeForm}
               style={{
+                padding: isSmallMobile ? 16 : isMobile ? 20 : 32,
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "8px",
+                flexDirection: "column",
+                gap: isSmallMobile ? 16 : isMobile ? 20 : 24,
               }}
             >
-              <h2
-                style={{
-                  fontSize: isSmallMobile ? "18px" : "22px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Update Fee Record
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowFeeForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#888",
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Student *</label>
-                <select
-                  required
-                  name="studentId"
-                  value={feeForm.studentId}
-                  onChange={(e) =>
-                    setFeeForm((f) => ({ ...f, studentId: e.target.value }))
-                  }
+                <h2
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                    fontWeight: 700,
+                    margin: 0,
+                    color: colors.text,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
                   }}
                 >
-                  <option value="">Select Student</option>
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {(s.firstName || "") + " " + (s.lastName || "")}
-                    </option>
-                  ))}
-                </select>
+                  <FaCreditCard
+                    style={{ color: colors.accent || colors.highlight }}
+                  />
+                  {feeForm.id ? "Edit Fee Record" : "Add Fee Record"}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setShowFeeForm(false)}
+                  style={{
+                    background:
+                      theme === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: colors.text,
+                    fontSize: 20,
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </motion.button>
               </div>
+
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Fee Type *</label>
-                <select
-                  required
-                  name="feeType"
-                  value={feeForm.feeType}
-                  onChange={(e) =>
-                    setFeeForm((f) => ({ ...f, feeType: e.target.value }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
                   }}
                 >
-                  <option value="">Select Fee Type</option>
-                  {feeTypeOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaUserGraduate
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Student *
+                  </label>
+                  <select
+                    required
+                    value={feeForm.studentId}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, studentId: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Student</option>
+                    {students.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {(s.firstName || "") + " " + (s.lastName || "")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaMoneyBill
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Fee Type *
+                  </label>
+                  <select
+                    required
+                    value={feeForm.feeType}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, feeType: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Fee Type</option>
+                    {feeTypeOptions.map((ft) => (
+                      <option key={ft} value={ft}>
+                        {ft}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
+
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Amount *</label>
-                <input
-                  required
-                  name="amount"
-                  type="number"
-                  value={feeForm.amount}
-                  onChange={(e) =>
-                    setFeeForm((f) => ({ ...f, amount: e.target.value }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
                   }}
-                />
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    Amount (₹) *
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    value={feeForm.amount}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, amount: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                    placeholder="Enter fee amount"
+                  />
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaCalendarAlt
+                      size={14}
+                      style={{ color: colors.accent || colors.highlight }}
+                    />
+                    Due Date *
+                  </label>
+                  <input
+                    required
+                    type="date"
+                    value={feeForm.dueDate}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, dueDate: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
               </div>
+
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  gap: isSmallMobile ? 12 : 16,
+                  flexWrap: "wrap",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                <label style={{ fontWeight: 500 }}>Due Date *</label>
-                <input
-                  required
-                  name="dueDate"
-                  type="date"
-                  value={feeForm.dueDate}
-                  onChange={(e) =>
-                    setFeeForm((f) => ({ ...f, dueDate: e.target.value }))
-                  }
+                <div
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ddd",
-                    width: "100%",
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
                   }}
-                />
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    Status *
+                  </label>
+                  <select
+                    required
+                    value={feeForm.status}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, status: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  >
+                    <option value="">Select Status</option>
+                    {feeStatusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: isMobile ? "100%" : 200,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isSmallMobile ? 6 : 10,
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: 500,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: isSmallMobile ? 14 : 15,
+                    }}
+                  >
+                    <FaCreditCard
+                      size={14}
+                      style={{ color: colors.success || colors.highlight }}
+                    />
+                    Payment Date{" "}
+                    {feeForm.status === "pending" ? "(Optional)" : "*"}
+                  </label>
+                  <input
+                    type="date"
+                    required={
+                      feeForm.status === "paid" || feeForm.status === "partial"
+                    }
+                    value={feeForm.paymentDate}
+                    onChange={(e) =>
+                      setFeeForm((f) => ({ ...f, paymentDate: e.target.value }))
+                    }
+                    style={{
+                      padding: isSmallMobile ? 10 : 12,
+                      borderRadius: 8,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.inputBg || colors.card,
+                      color: colors.text,
+                      fontSize: isSmallMobile ? 14 : 15,
+                      width: "100%",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Status *</label>
-              <select
-                required
-                name="status"
-                value={feeForm.status}
-                onChange={(e) =>
-                  setFeeForm((f) => ({ ...f, status: e.target.value }))
-                }
+
+              <div
                 style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  width: "100%",
+                  display: "flex",
+                  gap: isSmallMobile ? 8 : 16,
+                  marginTop: isSmallMobile ? 4 : isMobile ? 8 : 16,
+                  justifyContent: "flex-end",
+                  flexDirection: isMobile ? "column" : "row",
                 }}
               >
-                <option value="">Select Status</option>
-                {feeStatusOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
-            >
-              <label style={{ fontWeight: 500 }}>Payment Date</label>
-              <input
-                name="paymentDate"
-                type="date"
-                value={feeForm.paymentDate}
-                onChange={(e) =>
-                  setFeeForm((f) => ({ ...f, paymentDate: e.target.value }))
-                }
-                style={{
-                  padding: "10px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  width: "100%",
-                }}
-                placeholder="dd-mm-yyyy"
-              />
-            </div>
-            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
-              <button
-                type="button"
-                onClick={() => setShowFeeForm(false)}
-                style={{
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "1px solid #4f46e5",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  background: "#111",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Update Fee Record
-              </button>
-            </div>
-          </form>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="button"
+                  onClick={() => setShowFeeForm(false)}
+                  style={{
+                    background: "transparent",
+                    color: colors.accent || colors.highlight,
+                    border: `1px solid ${colors.accent || colors.highlight}`,
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 20px" : "12px 24px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    minWidth: isMobile ? "100%" : 100,
+                    order: isMobile ? 2 : 1,
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={buttonVariants}
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #4f46e5, #3b82f6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 10,
+                    padding: isSmallMobile ? "10px 24px" : "12px 32px",
+                    fontWeight: 600,
+                    fontSize: isSmallMobile ? 14 : 15,
+                    cursor: "pointer",
+                    boxShadow:
+                      colors.buttonShadow ||
+                      "0 4px 12px rgba(79, 70, 229, 0.25)",
+                    minWidth: isMobile ? "100%" : 150,
+                    order: isMobile ? 1 : 2,
+                  }}
+                >
+                  {feeForm.id ? "Update Fee" : "Add Fee"}
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
       <motion.div
@@ -2253,7 +3557,6 @@ const AdminOverview = () => {
           activities, and update information in real-time.
         </p>
       </motion.div>
-
       {/* Dashboard Stats - Responsive grid */}
       <div
         style={{
@@ -2927,7 +4230,6 @@ const AdminOverview = () => {
           style={{
             display: "flex",
             justifyContent: "space-between",
-
             marginBottom: isMobile ? "16px" : "20px",
             flexDirection: isSmallMobile ? "column" : "row",
             alignItems: isSmallMobile ? "flex-start" : "center",
@@ -3023,185 +4325,316 @@ const AdminOverview = () => {
           </motion.button>
         </div>
 
-        {/* Recent Changes Table - Mobile optimized */}
-        <div
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: "16px",
-            overflow: "auto",
-            boxShadow: colors.shadow,
-            border: `1px solid ${colors.border}`,
-            maxWidth: "100%",
-          }}
-        >
-          <div style={{ minWidth: isSmallMobile ? "500px" : "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: isMobile ? "13px" : "14px",
-                color: colors.text,
-              }}
-            >
-              <thead
+        {/* Recent Changes - Responsive Table for larger screens, Cards for mobile */}
+        {isMobile ? (
+          // Card view for mobile devices
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
+            {recentChanges.map((change, idx) => (
+              <motion.div
+                key={change.timestamp + change.type + change.user + idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1, duration: 0.3 }}
+                whileHover={{
+                  y: -4,
+                  boxShadow: colors.shadowHover,
+                  transition: { duration: 0.2 },
+                }}
                 style={{
-                  backgroundColor:
-                    theme === "dark"
-                      ? "rgba(30, 41, 59, 0.5)"
-                      : "rgba(248, 250, 252, 0.8)",
-                  borderBottom: `1px solid ${colors.border}`,
+                  backgroundColor: colors.card,
+                  borderRadius: "12px",
+                  padding: "16px",
+                  boxShadow: colors.shadow,
+                  border: `1px solid ${colors.border}`,
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
                 }}
               >
-                <tr>
-                  <th
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <div
                     style={{
-                      padding: isMobile ? "12px 16px" : "16px 20px",
-                      textAlign: "left",
-                      fontSize: isMobile ? "12px" : "13px",
-                      fontWeight: 600,
-                      letterSpacing: "0.5px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      flex: 1,
                     }}
                   >
-                    Type
-                  </th>
-                  <th
-                    style={{
-                      padding: isMobile ? "12px 16px" : "16px 20px",
-                      textAlign: "left",
-                      fontSize: isMobile ? "12px" : "13px",
-                      fontWeight: 600,
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    User
-                  </th>
-                  <th
-                    style={{
-                      padding: isMobile ? "12px 16px" : "16px 20px",
-                      textAlign: "left",
-                      fontSize: isMobile ? "12px" : "13px",
-                      fontWeight: 600,
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    Action
-                  </th>
-                  <th
-                    style={{
-                      padding: isMobile ? "12px 16px" : "16px 20px",
-                      textAlign: "left",
-                      fontSize: isMobile ? "12px" : "13px",
-                      fontWeight: 600,
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentChanges.map((change, idx) => (
-                  <motion.tr
-                    key={change.timestamp + change.type + change.user + idx}
-                    variants={tableRowVariants}
-                    whileHover="hover"
-                    style={{
-                      borderBottom: `1px solid ${colors.border}`,
-                      transition: "background-color 0.2s ease",
-                    }}
-                  >
-                    <td
-                      style={{ padding: isMobile ? "12px 16px" : "16px 20px" }}
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "10px",
+                        backgroundColor: colors.iconBg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: colors.icon,
+                        flexShrink: 0,
+                      }}
                     >
+                      {change.type === "attendance" && (
+                        <FaCalendarCheck size={18} />
+                      )}
+                      {change.type === "homework" && <FaBook size={18} />}
+                      {change.type === "fee" && <FaCreditCard size={18} />}
+                      {change.type === "testResult" && <FaFileAlt size={18} />}
+                      {change.type === "notice" && <FaComments size={18} />}
+                      {change.type === "student" && <FaUser size={18} />}
+                    </div>
+                    <div>
                       <div
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: isMobile ? "8px" : "12px",
+                          fontWeight: 600,
+                          fontSize: "15px",
+                          color: colors.text,
+                          marginBottom: "4px",
+                          wordBreak: "break-word",
                         }}
                       >
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
+                        {change.user}
+                      </div>
+                      <div
+                        style={{
+                          color: colors.textSecondary,
+                          fontSize: "13px",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {change.type}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: "12px",
+                      whiteSpace: "nowrap",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    {typeof change.timestamp === "string" &&
+                    change.timestamp.includes(":")
+                      ? change.timestamp.split(" ")[1]
+                      : change.timestamp}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: colors.text,
+                    background:
+                      theme === "dark"
+                        ? "rgba(30, 41, 59, 0.5)"
+                        : "rgba(248, 250, 252, 0.8)",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    fontWeight: 500,
+                  }}
+                >
+                  {change.action}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          // Table view for larger screens
+          <div
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: "16px",
+              overflow: "auto",
+              boxShadow: colors.shadow,
+              border: `1px solid ${colors.border}`,
+              maxWidth: "100%",
+            }}
+          >
+            <div style={{ minWidth: isSmallMobile ? "500px" : "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: isMobile ? "13px" : "14px",
+                  color: colors.text,
+                }}
+              >
+                <thead
+                  style={{
+                    backgroundColor:
+                      theme === "dark"
+                        ? "rgba(30, 41, 59, 0.5)"
+                        : "rgba(248, 250, 252, 0.8)",
+                    borderBottom: `1px solid ${colors.border}`,
+                  }}
+                >
+                  <tr>
+                    <th
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        textAlign: "left",
+                        fontSize: isMobile ? "12px" : "13px",
+                        fontWeight: 600,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Type
+                    </th>
+                    <th
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        textAlign: "left",
+                        fontSize: isMobile ? "12px" : "13px",
+                        fontWeight: 600,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      User
+                    </th>
+                    <th
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        textAlign: "left",
+                        fontSize: isMobile ? "12px" : "13px",
+                        fontWeight: 600,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Action
+                    </th>
+                    <th
+                      style={{
+                        padding: isMobile ? "12px 16px" : "16px 20px",
+                        textAlign: "left",
+                        fontSize: isMobile ? "12px" : "13px",
+                        fontWeight: 600,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Time
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentChanges.map((change, idx) => (
+                    <motion.tr
+                      key={change.timestamp + change.type + change.user + idx}
+                      variants={tableRowVariants}
+                      whileHover="hover"
+                      style={{
+                        borderBottom: `1px solid ${colors.border}`,
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: isMobile ? "12px 16px" : "16px 20px",
+                        }}
+                      >
+                        <div
                           style={{
-                            width: isMobile ? "32px" : "40px",
-                            height: isMobile ? "32px" : "40px",
-                            borderRadius: "8px",
-                            backgroundColor: colors.iconBg,
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            color: colors.highlight,
+                            gap: isMobile ? "8px" : "12px",
                           }}
                         >
-                          {change.type === "attendance" && (
-                            <FaCalendarCheck size={isMobile ? 14 : 18} />
-                          )}
-                          {change.type === "homework" && (
-                            <FaBook size={isMobile ? 14 : 18} />
-                          )}
-                          {change.type === "fee" && (
-                            <FaCreditCard size={isMobile ? 14 : 18} />
-                          )}
-                          {change.type === "testResult" && (
-                            <FaFileAlt size={isMobile ? 14 : 18} />
-                          )}
-                          {change.type === "notice" && (
-                            <FaComments size={isMobile ? 14 : 18} />
-                          )}
-                        </motion.div>
-                        {!isSmallMobile && (
-                          <div
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
                             style={{
-                              textTransform: "capitalize",
-                              fontWeight: 500,
-                              letterSpacing: "0.3px",
+                              width: isMobile ? "32px" : "40px",
+                              height: isMobile ? "32px" : "40px",
+                              borderRadius: "8px",
+                              backgroundColor: colors.iconBg,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: colors.highlight,
                             }}
                           >
-                            {change.type}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: isMobile ? "12px 16px" : "16px 20px",
-                        fontWeight: 500,
-                        maxWidth: isSmallMobile ? "80px" : "auto",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {change.user}
-                    </td>
-                    <td
-                      style={{
-                        padding: isMobile ? "12px 16px" : "16px 20px",
-                        maxWidth: isSmallMobile ? "120px" : "auto",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {change.action}
-                    </td>
-                    <td
-                      style={{
-                        padding: isMobile ? "12px 16px" : "16px 20px",
-                        color: colors.textSecondary,
-                        fontWeight: 500,
-                        fontSize: isMobile ? "12px" : "13px",
-                      }}
-                    >
-                      {change.timestamp}
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+                            {change.type === "attendance" && (
+                              <FaCalendarCheck size={isMobile ? 14 : 18} />
+                            )}
+                            {change.type === "homework" && (
+                              <FaBook size={isMobile ? 14 : 18} />
+                            )}
+                            {change.type === "fee" && (
+                              <FaCreditCard size={isMobile ? 14 : 18} />
+                            )}
+                            {change.type === "testResult" && (
+                              <FaFileAlt size={isMobile ? 14 : 18} />
+                            )}
+                            {change.type === "notice" && (
+                              <FaComments size={isMobile ? 14 : 18} />
+                            )}
+                            {change.type === "student" && (
+                              <FaUser size={isMobile ? 14 : 18} />
+                            )}
+                          </motion.div>
+                          {!isSmallMobile && (
+                            <div
+                              style={{
+                                textTransform: "capitalize",
+                                fontWeight: 500,
+                                letterSpacing: "0.3px",
+                              }}
+                            >
+                              {change.type}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td
+                        style={{
+                          padding: isMobile ? "12px 16px" : "16px 20px",
+                          fontWeight: 500,
+                          maxWidth: isSmallMobile ? "80px" : "auto",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {change.user}
+                      </td>
+                      <td
+                        style={{
+                          padding: isMobile ? "12px 16px" : "16px 20px",
+                          maxWidth: isSmallMobile ? "120px" : "auto",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {change.action}
+                      </td>
+                      <td
+                        style={{
+                          padding: isMobile ? "12px 16px" : "16px 20px",
+                          color: colors.textSecondary,
+                          fontWeight: 500,
+                          fontSize: isMobile ? "12px" : "13px",
+                        }}
+                      >
+                        {change.timestamp}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
+      {/* // ...existing code... */}
     </div>
   );
 };

@@ -233,7 +233,7 @@ const Footer = () => {
             Contact
           </Link>
           <Link
-            to="/privacy"
+            to="/notfound"
             style={{
               color: colors.link,
               textDecoration: "none",

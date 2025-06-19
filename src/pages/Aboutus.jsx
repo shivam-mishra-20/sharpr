@@ -269,16 +269,19 @@ const AboutUs = () => {
         >
           <SectionTitle style={{ color: colors.text }}>Our Story</SectionTitle>
           <Description style={{ color: colors.textLight }}>
-            Founded in 2013, Sharpr began with a simple idea: to create
-            high-quality online courses that actually help people achieve their
-            career goals. What started as a small collection of tech courses has
-            grown into a comprehensive platform offering everything from
-            development and UX/UI design to marketing and project management.
-            <StoryBreak />
-            Today, we're proud to have helped over 120,000 students master new
-            skills, change careers, and increase their earning potential. Our
-            commitment to quality, practical learning, and student success
-            remains at the core of everything we do.
+            “Sharpr — The Root of Possibility” In an age of distractions and
+            surface-level learning, Sharpr plants the seed of deep curiosity,
+            nurturing it with clarity and guidance, until it grows into a
+            Kalpavriksha — the eternal tree of knowledge and dreams. The Logo’s
+            Story: The tree symbolizes every child’s potential — vivid,
+            branching, and limitless. The roots are not buried in confusion, but
+            in the solid foundation Sharpr provides. From this fertile learning
+            ground, the mind grows upward, branching into aspirations: science,
+            imagination, empathy, and excellence. The colors represent diversity
+            in learning and thinking. Each child’s path is unique, but all are
+            rooted in one truth — clarity sharpens the mind. The fusion of
+            nature (tree) and design (roots/digital precision) embodies the soul
+            of Sharpr: old wisdom, new tools.
           </Description>
         </motion.div>
       </Section>

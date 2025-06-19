@@ -2,33 +2,47 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaTrophy, FaMedal, FaStar, FaAward } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
+import styled from "styled-components";
 
-// Enhanced color system
-const getColors = (theme) => ({
-  primary: theme === "dark" ? "#60a5fa" : "#4f46e5",
-  primaryGradient:
-    theme === "dark"
-      ? "linear-gradient(135deg, #3b82f6, #60a5fa)"
-      : "linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%)",
-  background:
-    theme === "dark"
-      ? "linear-gradient(135deg, #111827 0%, #1f2937 100%)"
-      : "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
-  cardBg: theme === "dark" ? "#1f2937" : "#ffffff",
-  heading: theme === "dark" ? "#e5e7eb" : "#3730a3",
-  subheading: theme === "dark" ? "#9ca3af" : "#64748b",
-  text: theme === "dark" ? "#e5e7eb" : "#1e293b",
-  accent: theme === "dark" ? "#93c5fd" : "#f59e0b",
-  highlight: theme === "dark" ? "#818cf8" : "#8b5cf6",
-  statNumberColor: theme === "dark" ? "#60a5fa" : "#5a73fc",
-  muted: theme === "dark" ? "#374151" : "#f1f5f9",
-  cardShadow:
-    theme === "dark"
-      ? "0 10px 30px rgba(0, 0, 0, 0.3)"
-      : "0 10px 30px rgba(0, 0, 0, 0.05)",
-  cardBorder: theme === "dark" ? "#374151" : "rgba(90, 115, 252, 0.1)",
-  badgeColor: theme === "dark" ? "#111827" : "#f0f4ff",
-});
+// Theme-based colors
+const themeColors = {
+  light: {
+    background: "#f7f8fa",
+    card: "#ffffff",
+    text: "#333333",
+    textLight: "#444444",
+    border: "#ececec",
+    tagBg: "#111111",
+    tagText: "#ffffff",
+    badgeColor: "#f0f4ff",
+    heading: "#3730a3",
+    subheading: "#64748b",
+    highlight: "#8b5cf6",
+    buttonPrimary: "linear-gradient(90deg, #5a73fc 60%, #6bc5f8 100%)",
+    buttonPrimaryHover: "linear-gradient(90deg, #6bc5f8 0%, #5a73fc 100%)",
+    buttonText: "#ffffff",
+    cardShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
+    cardBorder: "rgba(90, 115, 252, 0.1)",
+  },
+  dark: {
+    background: "#1a1a2e",
+    card: "#2a2a40",
+    text: "#e5e7eb",
+    textLight: "#b0b0c0",
+    border: "#3a3a50",
+    tagBg: "#6bc5f8",
+    tagText: "#111111",
+    badgeColor: "#111827",
+    heading: "#e5e7eb",
+    subheading: "#9ca3af",
+    highlight: "#818cf8",
+    buttonPrimary: "linear-gradient(90deg, #5a73fc 60%, #6bc5f8 100%)",
+    buttonPrimaryHover: "linear-gradient(90deg, #6bc5f8 0%, #5a73fc 100%)",
+    buttonText: "#ffffff",
+    cardShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+    cardBorder: "#374151",
+  },
+};
 
 const results = [
   {
@@ -85,33 +99,12 @@ const Results = () => {
   const [activeResult, setActiveResult] = useState(null);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
-  const colors = getColors(theme);
+  const colors = themeColors[theme] || themeColors.light;
 
   const renderMobile = () => (
-    <section
-      style={{
-        background: colors.background,
-        padding: "28px 0",
-        position: "relative",
-        overflow: "hidden",
-      }}
-      aria-labelledby="results-heading"
-    >
+    <ResultsContainer $colors={colors}>
       {/* Decorative Elements */}
-      <motion.div
-        style={{
-          position: "absolute",
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          background:
-            theme === "dark"
-              ? "rgba(96, 165, 250, 0.06)"
-              : "rgba(79, 70, 229, 0.06)",
-          top: -100,
-          right: -100,
-          zIndex: 1,
-        }}
+      <DecorativeCircle
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.4, 0.3],
@@ -123,137 +116,62 @@ const Results = () => {
         }}
       />
 
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 500,
-          margin: "0 auto",
-          padding: "0 6px",
-          position: "relative",
-          zIndex: 2,
-          textAlign: "center",
-        }}
-      >
+      <ContentWrapper>
         <motion.h2
           id="results-heading"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          style={{
-            fontSize: "clamp(1.5rem, 5vw, 2rem)",
-            fontWeight: 800,
-            textAlign: "center",
-            marginBottom: 16,
-            color: colors.heading,
-            display: "inline-block",
-            position: "relative",
-          }}
         >
-          <span
-            style={{
-              position: "relative",
-              display: "inline-block",
-            }}
-          >
+          <TitleSpan $colors={colors}>
             Student Achievements
-            <motion.span
-              style={{
-                position: "absolute",
-                height: "4px",
-                background: colors.primaryGradient,
-                bottom: "-6px",
-                left: "25%",
-                right: "25%",
-                borderRadius: "4px",
-              }}
+            <UnderlineSpan
+              $colors={colors}
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.6 }}
             />
-          </span>
+          </TitleSpan>
         </motion.h2>
 
-        <motion.p
+        <SubHeading
+          $colors={colors}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          style={{
-            textAlign: "center",
-            color: colors.subheading,
-            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-            maxWidth: 700,
-            margin: "0 auto 30px",
-            lineHeight: 1.6,
-          }}
         >
           We celebrate our students who have achieved outstanding results
           through dedication and hard work. These accomplishments reflect our
           commitment to excellence in education.
-        </motion.p>
+        </SubHeading>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: "14px",
-            width: "100%",
-            alignItems: "stretch", // All cards same width
-            justifyItems: "center", // Center cards horizontally
-          }}
-        >
+        <MobileResultsGrid>
           {results.map((r, i) => (
-            <motion.div
+            <ResultCard
               key={i}
+              $colors={colors}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               whileHover={{
                 y: -8,
-                boxShadow:
-                  theme === "dark"
-                    ? "0 20px 40px rgba(0, 0, 0, 0.3)"
-                    : "0 20px 40px rgba(0, 0, 0, 0.1)",
+                boxShadow: colors.cardShadow,
                 transition: { duration: 0.3 },
               }}
               whileTap={{ scale: 0.98 }}
               onMouseEnter={() => setActiveResult(i)}
               onMouseLeave={() => setActiveResult(null)}
-              style={{
-                background: colors.cardBg,
-                borderRadius: 20,
-                boxShadow: colors.cardShadow,
-                padding:
-                  "clamp(0.8rem, 2vw, 1.2rem) clamp(0.6rem, 1.5vw, 1rem)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                position: "relative",
-                border: `1px solid ${colors.cardBorder}`,
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                width: "100%", // Make all cards take full width of grid cell
-                maxWidth: 340, // Limit max width for uniformity
-                minWidth: 0,
-                boxSizing: "border-box",
-                color: colors.text,
-              }}
               role="article"
               aria-label={`${r.name}'s achievement: ${r.achievement}`}
               tabIndex="0"
             >
-              <motion.div
+              <BadgeIcon
                 style={{
-                  position: "absolute",
-                  top: 20,
-                  right: 20,
-                  fontSize: 30,
                   color: r.badgeColor,
-                  opacity: 0.9,
-                  transform: "rotate(0deg)",
                 }}
                 animate={{
                   rotate: activeResult === i ? [0, 15, 0, -15, 0] : 0,
@@ -266,158 +184,71 @@ const Results = () => {
                 aria-hidden="true"
               >
                 {r.badge}
-              </motion.div>
+              </BadgeIcon>
 
-              <motion.div
-                style={{
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  background: colors.badgeColor,
-                  color: colors.text,
-                  padding: "4px 10px",
-                  fontSize: "0.75rem",
-                  borderRadius: 20,
-                  fontWeight: 500,
-                }}
+              <YearBadge
+                $colors={colors}
                 animate={{
                   scale: activeResult === i ? [1, 1.1, 1] : 1,
                 }}
                 transition={{ duration: 0.3 }}
               >
                 {r.year}
-              </motion.div>
+              </YearBadge>
 
-              <div
-                style={{
-                  width: 62,
-                  height: 62,
-                  borderRadius: "50%",
-                  padding: 3,
-                  background: `linear-gradient(135deg, ${r.badgeColor} 0%, ${colors.highlight} 100%)`,
-                  marginBottom: 16,
-                }}
-              >
-                <img
+              <AvatarWrapper $colors={colors} $badgeColor={r.badgeColor}>
+                <AvatarImage
                   src={r.avatar}
                   alt={r.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: `3px solid ${colors.cardBg}`,
-                  }}
+                  $colors={colors}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `https://ui-avatars.com/api/?name=${r.name}&background=random`;
                   }}
                 />
-              </div>
+              </AvatarWrapper>
 
-              <motion.h3
-                style={{
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  marginBottom: 6,
-                  color: colors.text,
-                  textAlign: "center",
-                }}
+              <StudentName
+                $colors={colors}
                 animate={{
                   color: activeResult === i ? r.badgeColor : colors.text,
                 }}
                 transition={{ duration: 0.3 }}
               >
                 {r.name}
-              </motion.h3>
+              </StudentName>
 
-              <div
-                style={{
-                  color: colors.highlight,
-                  fontWeight: 600,
-                  marginBottom: 10,
-                  fontSize: "0.85rem",
-                  textAlign: "center",
-                }}
-              >
+              <AchievementText $colors={colors}>
                 {r.achievement}
-              </div>
+              </AchievementText>
 
-              <motion.div
-                style={{
-                  background:
-                    theme === "dark"
-                      ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
-                      : "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
-                  color: colors.heading,
-                  fontWeight: 600,
-                  borderRadius: 12,
-                  padding: "6px 12px",
-                  fontSize: "0.9rem",
-                  marginTop: 6,
-                  boxShadow:
-                    theme === "dark"
-                      ? "0 2px 10px rgba(0, 0, 0, 0.2)"
-                      : "0 2px 10px rgba(0, 0, 0, 0.05)",
-                }}
+              <ScoreBadge
+                $colors={colors}
                 animate={{
                   scale: activeResult === i ? [1, 1.1, 1] : 1,
-                  backgroundColor:
-                    activeResult === i
-                      ? theme === "dark"
-                        ? "#374151"
-                        : "#f0f4ff"
-                      : theme === "dark"
-                      ? "#1f2937"
-                      : "#f8fafc",
                 }}
                 transition={{ duration: 0.5 }}
               >
                 {r.score}
-              </motion.div>
-            </motion.div>
+              </ScoreBadge>
+            </ResultCard>
           ))}
-        </div>
+        </MobileResultsGrid>
 
-        <motion.div
+        {/* <ButtonWrapper
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          style={{
-            textAlign: "center",
-            marginTop: 30,
-            width: "100%",
-          }}
         >
-          <motion.a
+          <ActionButton
             href="/results"
+            $colors={colors}
             whileHover={{
               scale: 1.05,
-              boxShadow:
-                theme === "dark"
-                  ? "0 10px 25px rgba(96, 165, 250, 0.3)"
-                  : "0 10px 25px rgba(79, 70, 229, 0.3)",
               backgroundColor: theme === "dark" ? "#3b82f6" : "#4338ca",
             }}
             whileTap={{ scale: 0.95 }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "10px 24px",
-              background: colors.primary,
-              color: "white",
-              fontWeight: 600,
-              borderRadius: 12,
-              textDecoration: "none",
-              fontSize: "0.95rem",
-              boxShadow:
-                theme === "dark"
-                  ? "0 4px 14px rgba(96, 165, 250, 0.2)"
-                  : "0 4px 14px rgba(79, 70, 229, 0.2)",
-              transition: "all 0.3s ease",
-            }}
           >
             View All Achievements
             <svg
@@ -435,39 +266,18 @@ const Results = () => {
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
-          </motion.a>
-        </motion.div>
-      </div>
-    </section>
+          </ActionButton>
+        </ButtonWrapper> */}
+      </ContentWrapper>
+    </ResultsContainer>
   );
 
   if (isMobile) return renderMobile();
 
   return (
-    <section
-      style={{
-        background: colors.background,
-        padding: "80px 0",
-        position: "relative",
-        overflow: "hidden",
-      }}
-      aria-labelledby="results-heading"
-    >
+    <ResultsContainer $colors={colors}>
       {/* Decorative Elements */}
-      <motion.div
-        style={{
-          position: "absolute",
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          background:
-            theme === "dark"
-              ? "rgba(96, 165, 250, 0.06)"
-              : "rgba(79, 70, 229, 0.06)",
-          top: -100,
-          right: -100,
-          zIndex: 1,
-        }}
+      <DecorativeCircle
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.4, 0.3],
@@ -479,130 +289,62 @@ const Results = () => {
         }}
       />
 
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0 24px",
-          position: "relative",
-          zIndex: 2,
-          textAlign: "center", // Center all content
-        }}
-      >
+      <ContentWrapper>
         <motion.h2
           id="results-heading"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          style={{
-            fontSize: "clamp(2rem, 5vw, 2.8rem)",
-            fontWeight: 800,
-            textAlign: "center",
-            marginBottom: 16,
-            color: colors.heading,
-            display: "inline-block",
-            position: "relative",
-          }}
         >
-          <span
-            style={{
-              position: "relative",
-              display: "inline-block",
-            }}
-          >
+          <TitleSpan $colors={colors}>
             Student Achievements
-            <motion.span
-              style={{
-                position: "absolute",
-                height: "6px",
-                background: colors.primaryGradient,
-                bottom: "-8px",
-                left: "25%",
-                right: "25%",
-                borderRadius: "4px",
-              }}
+            <UnderlineSpan
+              $colors={colors}
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.6 }}
             />
-          </span>
+          </TitleSpan>
         </motion.h2>
 
-        <motion.p
+        <SubHeading
+          $colors={colors}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          style={{
-            textAlign: "center",
-            color: colors.subheading,
-            fontSize: "clamp(1rem, 2vw, 1.2rem)",
-            maxWidth: 700,
-            margin: "0 auto 50px",
-            lineHeight: 1.6,
-          }}
         >
           We celebrate our students who have achieved outstanding results
           through dedication and hard work. These accomplishments reflect our
           commitment to excellence in education.
-        </motion.p>
+        </SubHeading>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "clamp(16px, 3vw, 30px)",
-            width: "100%", // Ensure the grid takes full width
-          }}
-        >
+        <ResultsGrid>
           {results.map((r, i) => (
-            <motion.div
+            <ResultCard
               key={i}
+              $colors={colors}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               whileHover={{
                 y: -8,
-                boxShadow:
-                  theme === "dark"
-                    ? "0 20px 40px rgba(0, 0, 0, 0.3)"
-                    : "0 20px 40px rgba(0, 0, 0, 0.1)",
+                boxShadow: colors.cardShadow,
                 transition: { duration: 0.3 },
               }}
               whileTap={{ scale: 0.98 }}
               onMouseEnter={() => setActiveResult(i)}
               onMouseLeave={() => setActiveResult(null)}
-              style={{
-                background: colors.cardBg,
-                borderRadius: 20,
-                boxShadow: colors.cardShadow,
-                padding:
-                  "clamp(1.2rem, 2vw, 2.2rem) clamp(0.9rem, 1.5vw, 1.8rem)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                position: "relative",
-                border: `1px solid ${colors.cardBorder}`,
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
               role="article"
               aria-label={`${r.name}'s achievement: ${r.achievement}`}
               tabIndex="0"
             >
-              <motion.div
+              <BadgeIcon
                 style={{
-                  position: "absolute",
-                  top: 20,
-                  right: 20,
-                  fontSize: 30,
                   color: r.badgeColor,
-                  opacity: 0.9,
-                  transform: "rotate(0deg)",
                 }}
                 animate={{
                   rotate: activeResult === i ? [0, 15, 0, -15, 0] : 0,
@@ -615,158 +357,71 @@ const Results = () => {
                 aria-hidden="true"
               >
                 {r.badge}
-              </motion.div>
+              </BadgeIcon>
 
-              <motion.div
-                style={{
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  background: colors.badgeColor,
-                  color: colors.text,
-                  padding: "4px 10px",
-                  fontSize: "0.75rem",
-                  borderRadius: 20,
-                  fontWeight: 500,
-                }}
+              <YearBadge
+                $colors={colors}
                 animate={{
                   scale: activeResult === i ? [1, 1.1, 1] : 1,
                 }}
                 transition={{ duration: 0.3 }}
               >
                 {r.year}
-              </motion.div>
+              </YearBadge>
 
-              <div
-                style={{
-                  width: 82,
-                  height: 82,
-                  borderRadius: "50%",
-                  padding: 3,
-                  background: `linear-gradient(135deg, ${r.badgeColor} 0%, ${colors.highlight} 100%)`,
-                  marginBottom: 22,
-                }}
-              >
-                <img
+              <AvatarWrapper $colors={colors} $badgeColor={r.badgeColor}>
+                <AvatarImage
                   src={r.avatar}
                   alt={r.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: `3px solid ${colors.cardBg}`,
-                  }}
+                  $colors={colors}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `https://ui-avatars.com/api/?name=${r.name}&background=random`;
                   }}
                 />
-              </div>
+              </AvatarWrapper>
 
-              <motion.h3
-                style={{
-                  fontWeight: 700,
-                  fontSize: "1.2rem",
-                  marginBottom: 8,
-                  color: colors.text,
-                  textAlign: "center",
-                }}
+              <StudentName
+                $colors={colors}
                 animate={{
                   color: activeResult === i ? r.badgeColor : colors.text,
                 }}
                 transition={{ duration: 0.3 }}
               >
                 {r.name}
-              </motion.h3>
+              </StudentName>
 
-              <div
-                style={{
-                  color: colors.highlight,
-                  fontWeight: 600,
-                  marginBottom: 12,
-                  fontSize: "0.95rem",
-                  textAlign: "center",
-                }}
-              >
+              <AchievementText $colors={colors}>
                 {r.achievement}
-              </div>
+              </AchievementText>
 
-              <motion.div
-                style={{
-                  background:
-                    theme === "dark"
-                      ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
-                      : "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
-                  color: colors.heading,
-                  fontWeight: 600,
-                  borderRadius: 12,
-                  padding: "8px 16px",
-                  fontSize: "1rem",
-                  marginTop: 8,
-                  boxShadow:
-                    theme === "dark"
-                      ? "0 2px 10px rgba(0, 0, 0, 0.2)"
-                      : "0 2px 10px rgba(0, 0, 0, 0.05)",
-                }}
+              <ScoreBadge
+                $colors={colors}
                 animate={{
                   scale: activeResult === i ? [1, 1.1, 1] : 1,
-                  backgroundColor:
-                    activeResult === i
-                      ? theme === "dark"
-                        ? "#374151"
-                        : "#f0f4ff"
-                      : theme === "dark"
-                      ? "#1f2937"
-                      : "#f8fafc",
                 }}
                 transition={{ duration: 0.5 }}
               >
                 {r.score}
-              </motion.div>
-            </motion.div>
+              </ScoreBadge>
+            </ResultCard>
           ))}
-        </div>
+        </ResultsGrid>
 
-        <motion.div
+        {/* <ButtonWrapper
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          style={{
-            textAlign: "center",
-            marginTop: 50,
-            width: "100%",
-          }}
         >
-          <motion.a
+          <ActionButton
             href="/results"
+            $colors={colors}
             whileHover={{
               scale: 1.05,
-              boxShadow:
-                theme === "dark"
-                  ? "0 10px 25px rgba(96, 165, 250, 0.3)"
-                  : "0 10px 25px rgba(79, 70, 229, 0.3)",
               backgroundColor: theme === "dark" ? "#3b82f6" : "#4338ca",
             }}
             whileTap={{ scale: 0.95 }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "12px 28px",
-              background: colors.primary,
-              color: "white",
-              fontWeight: 600,
-              borderRadius: 12,
-              textDecoration: "none",
-              fontSize: "1.05rem",
-              boxShadow:
-                theme === "dark"
-                  ? "0 4px 14px rgba(96, 165, 250, 0.2)"
-                  : "0 4px 14px rgba(79, 70, 229, 0.2)",
-              transition: "all 0.3s ease",
-            }}
           >
             View All Achievements
             <svg
@@ -784,11 +439,259 @@ const Results = () => {
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
-          </motion.a>
-        </motion.div>
-      </div>
-    </section>
+          </ActionButton>
+        </ButtonWrapper> */}
+      </ContentWrapper>
+    </ResultsContainer>
   );
 };
+
+const ResultsContainer = styled.section`
+  background: ${(props) => props.$colors.background};
+  min-height: 100vh;
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+
+  @media (max-width: 700px) {
+    padding: 28px 0;
+  }
+`;
+
+const DecorativeCircle = styled(motion.div)`
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(90, 115, 252, 0.06);
+  top: -100px;
+  right: -100px;
+  z-index: 1;
+`;
+
+const ContentWrapper = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+
+  @media (max-width: 700px) {
+    max-width: 500px;
+    padding: 0 6px;
+  }
+`;
+
+const TitleSpan = styled.span`
+  position: relative;
+  display: inline-block;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 800;
+  color: ${(props) => props.$colors.heading};
+  transition: color 0.3s ease;
+
+  @media (max-width: 700px) {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+`;
+
+const UnderlineSpan = styled(motion.span)`
+  position: absolute;
+  height: 6px;
+  background: ${(props) => props.$colors.buttonPrimary};
+  bottom: -8px;
+  left: 25%;
+  right: 25%;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+
+  @media (max-width: 700px) {
+    height: 4px;
+    bottom: -6px;
+  }
+`;
+
+const SubHeading = styled(motion.p)`
+  text-align: center;
+  color: ${(props) => props.$colors.subheading};
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  max-width: 700px;
+  margin: 0 auto 50px;
+  line-height: 1.6;
+  transition: color 0.3s ease;
+
+  @media (max-width: 700px) {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    margin: 0 auto 30px;
+  }
+`;
+
+const ResultsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(16px, 3vw, 30px);
+  width: 100%;
+`;
+
+const MobileResultsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  width: 100%;
+  align-items: stretch;
+  justify-items: center;
+`;
+
+const ResultCard = styled(motion.div)`
+  background: ${(props) => props.$colors.card};
+  border-radius: 20px;
+  box-shadow: ${(props) => props.$colors.cardShadow};
+  padding: clamp(1.2rem, 2vw, 2.2rem) clamp(0.9rem, 1.5vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border: 1px solid ${(props) => props.$colors.cardBorder};
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: ${(props) => props.$colors.text};
+
+  @media (max-width: 700px) {
+    padding: clamp(0.8rem, 2vw, 1.2rem) clamp(0.6rem, 1.5vw, 1rem);
+    width: 100%;
+    max-width: 340px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+`;
+
+const BadgeIcon = styled(motion.div)`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 30px;
+  opacity: 0.9;
+  transform: rotate(0deg);
+`;
+
+const YearBadge = styled(motion.div)`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: ${(props) => props.$colors.badgeColor};
+  color: ${(props) => props.$colors.text};
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: background 0.3s ease, color 0.3s ease;
+`;
+
+const AvatarWrapper = styled.div`
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    ${(props) => props.$badgeColor} 0%,
+    ${(props) => props.$colors.highlight} 100%
+  );
+  margin-bottom: 22px;
+
+  @media (max-width: 700px) {
+    width: 62px;
+    height: 62px;
+    margin-bottom: 16px;
+  }
+`;
+
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid ${(props) => props.$colors.card};
+  transition: border 0.3s ease;
+`;
+
+const StudentName = styled(motion.h3)`
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: ${(props) => props.$colors.text};
+  text-align: center;
+  transition: color 0.3s ease;
+
+  @media (max-width: 700px) {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+`;
+
+const AchievementText = styled.div`
+  color: ${(props) => props.$colors.highlight};
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  text-align: center;
+  transition: color 0.3s ease;
+
+  @media (max-width: 700px) {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+`;
+
+const ScoreBadge = styled(motion.div)`
+  background: ${(props) => props.$colors.background};
+  color: ${(props) => props.$colors.heading};
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  margin-top: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, color 0.3s ease;
+
+  @media (max-width: 700px) {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
+`;
+
+const ButtonWrapper = styled(motion.div)`
+  text-align: center;
+  margin-top: 50px;
+  width: 100%;
+
+  @media (max-width: 700px) {
+    margin-top: 30px;
+  }
+`;
+
+const ActionButton = styled(motion.a)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  background: ${(props) => props.$colors.buttonPrimary};
+  color: ${(props) => props.$colors.buttonText};
+  font-weight: 600;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 1.05rem;
+  box-shadow: 0 4px 14px rgba(90, 115, 252, 0.2);
+  transition: all 0.3s ease;
+
+  @media (max-width: 700px) {
+    padding: 10px 24px;
+    font-size: 0.95rem;
+  }
+`;
 
 export default Results;

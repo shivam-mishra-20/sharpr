@@ -312,8 +312,8 @@ const HeroSection = () => {
             }}
           >
             <img
-              src="https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=800&q=80"
-              alt="Children in classroom with teacher"
+              src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80"
+              alt="Students engaged in interactive learning with tablets and educational materials"
               style={{
                 width: "100%",
                 borderRadius: "20px",

@@ -90,7 +90,7 @@ function DesktopNav({ theme, toggleTheme, navItems }) {
         }}
       >
         <motion.img
-          src="/src/assets/logo-01.jpg"
+          src="/logo-01.jpg"
           alt="Sharpr Logo"
           whileHover={{ scale: 1.08, rotate: 5 }}
           style={{
@@ -233,7 +233,7 @@ function DesktopNav({ theme, toggleTheme, navItems }) {
       >
         <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         <motion.a
-          href="tel:+11234567890"
+          href="tel:9369428170"
           whileHover={{
             scale: 1.03,
             boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
@@ -264,7 +264,7 @@ function DesktopNav({ theme, toggleTheme, navItems }) {
           style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
         >
           <Link
-            to="/book-demo"
+            to="/contact"
             style={{
               display: "flex",
               alignItems: "center",
@@ -353,7 +353,7 @@ function MobileNav({
           }}
         >
           <img
-            src="/src/assets/logo-01.jpg"
+            src="/logo-01.jpg"
             alt="Sharpr Logo"
             style={{
               width: 45, // Reduced size
@@ -511,7 +511,7 @@ function MobileNav({
               }}
             >
               <Link
-                to="/book-demo"
+                to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 style={{
                   display: "flex",
@@ -537,7 +537,7 @@ function MobileNav({
                 Book Free Demo
               </Link>
               <a
-                href="tel:+11234567890"
+                href="tel:9369428170"
                 style={{
                   display: "flex",
                   alignItems: "center",

@@ -30,6 +30,7 @@ import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
+import NotFound from "./pages/404Notfound";
 
 // Theme-based colors
 const getThemeColors = (theme) => ({
@@ -60,6 +61,7 @@ const AnimatedRoutes = () => {
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/locations" element={<Locations />} />
         <Route path="/parent_dashboard" element={<ParentDashboard />} />
+        <Route path="/notfound" element={<NotFound />} />
         <Route path="/admin_dashboard/*" element={<AdminDashboard />}>
           <Route index element={<AdminOverview />} />
           <Route path="overview" element={<AdminOverview />} />

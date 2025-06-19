@@ -19,6 +19,8 @@ import programs from "./Programs"; // Assuming you have a Programs component
 import Programs from "./Programs";
 // import { Contact } from "lucide-react";
 import Contact from "./Contact"; // Assuming you have a Contact component
+import PricingOffer from "../components/PricingOffer";
+import NotFound from "./404Notfound";
 
 const Home = () => {
   useEffect(() => {
@@ -45,11 +47,13 @@ const Home = () => {
       <Programs />
 
       {/* ...existing or future home page content... */}
+      <PricingOffer />
 
       <Results />
       <Contact />
       <Testimonials />
       <Locations />
+
       <Footer />
     </>
   );

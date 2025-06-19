@@ -26,11 +26,38 @@ import {
   FaBars,
   FaEye,
   FaEyeSlash,
+  FaUserGraduate,
+  FaChalkboardTeacher,
 } from "react-icons/fa";
 
 const priorityOptions = ["High", "Medium", "Low"];
-const audienceOptions = ["All", "Students", "Parents", "Teachers"];
+// Updated audience options to include Class and Individual Student
+const audienceOptions = [
+  "All",
+  "Students",
+  "Parents",
+  "Teachers",
+  "Class",
+  "Individual Student",
+];
 const statusOptions = ["Active", "Inactive"];
+
+// Mock data for classes and students - replace with actual data from your application
+const classesList = [
+  "Class 1A",
+  "Class 2B",
+  "Class 3C",
+  "Class 4D",
+  "Class 5E",
+  "Class 6F",
+];
+const studentsList = [
+  { id: "st1", name: "Alex Johnson", class: "Class 1A" },
+  { id: "st2", name: "Sam Wilson", class: "Class 1A" },
+  { id: "st3", name: "Jamie Brown", class: "Class 2B" },
+  { id: "st4", name: "Taylor Davis", class: "Class 3C" },
+  { id: "st5", name: "Morgan Smith", class: "Class 4D" },
+];
 
 // Screen size hook for responsive design
 function useWindowSize() {
@@ -68,6 +95,9 @@ const NoticesDashboard = () => {
     content: "",
     expiryDate: "",
     status: "Active",
+    targetClass: "", // New field for class targeting
+    targetStudent: "", // New field for student targeting
+    targetStudentName: "", // To store the student's name for display
   });
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState({
@@ -108,15 +138,29 @@ const NoticesDashboard = () => {
   // Add or update notice
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prepare notice data based on audience selection
+    const noticeData = { ...form };
+
+    // Clean up unnecessary fields based on audience
+    if (form.audience !== "Class") {
+      delete noticeData.targetClass;
+    }
+
+    if (form.audience !== "Individual Student") {
+      delete noticeData.targetStudent;
+      delete noticeData.targetStudentName;
+    }
+
     try {
       if (editId) {
         await updateDoc(doc(db, "notices", editId), {
-          ...form,
+          ...noticeData,
           updatedAt: serverTimestamp(),
         });
       } else {
         await addDoc(collection(db, "notices"), {
-          ...form,
+          ...noticeData,
           createdAt: serverTimestamp(),
         });
       }
@@ -129,6 +173,9 @@ const NoticesDashboard = () => {
         content: "",
         expiryDate: "",
         status: "Active",
+        targetClass: "",
+        targetStudent: "",
+        targetStudentName: "",
       });
       fetchNotices();
     } catch (err) {
@@ -146,6 +193,9 @@ const NoticesDashboard = () => {
       content: notice.content || "",
       expiryDate: notice.expiryDate || "",
       status: notice.status || "Active",
+      targetClass: notice.targetClass || "",
+      targetStudent: notice.targetStudent || "",
+      targetStudentName: notice.targetStudentName || "",
     });
     setShowForm(true);
   };
@@ -161,11 +211,27 @@ const NoticesDashboard = () => {
     }
   };
 
+  // Handle student selection - update both ID and name
+  const handleStudentSelect = (e) => {
+    const studentId = e.target.value;
+    const selectedStudent = studentsList.find(
+      (student) => student.id === studentId
+    );
+    setForm((f) => ({
+      ...f,
+      targetStudent: studentId,
+      targetStudentName: selectedStudent ? selectedStudent.name : "",
+    }));
+  };
+
   // Filter and search
   const filteredNotices = notices.filter((n) => {
     const matchesSearch =
       n.title?.toLowerCase().includes(search.toLowerCase()) ||
-      n.content?.toLowerCase().includes(search.toLowerCase());
+      n.content?.toLowerCase().includes(search.toLowerCase()) ||
+      n.targetStudentName?.toLowerCase().includes(search.toLowerCase()) ||
+      n.targetClass?.toLowerCase().includes(search.toLowerCase());
+
     const matchesPriority = filter.priority
       ? n.priority === filter.priority
       : true;
@@ -246,6 +312,19 @@ const NoticesDashboard = () => {
     // You'll need to communicate this state to a parent component that manages the sidebar
   };
 
+  // Helper function to get display audience
+  const getDisplayAudience = (notice) => {
+    if (notice.audience === "Class" && notice.targetClass) {
+      return `Class: ${notice.targetClass}`;
+    } else if (
+      notice.audience === "Individual Student" &&
+      notice.targetStudentName
+    ) {
+      return `Student: ${notice.targetStudentName}`;
+    }
+    return notice.audience;
+  };
+
   // Render notice card for mobile view
   const renderNoticeCard = (notice, index) => {
     return (
@@ -324,7 +403,7 @@ const NoticesDashboard = () => {
                 }}
               >
                 <FaUsers size={10} />
-                {notice.audience}
+                {getDisplayAudience(notice)}
               </div>
               <div
                 style={{
@@ -532,8 +611,8 @@ const NoticesDashboard = () => {
               maxWidth: 800,
             }}
           >
-            Send, manage, and update notices for students, parents, and
-            teachers.
+            Send, manage, and update notices for students, parents, teachers,
+            specific classes, or individual students.
           </motion.p>
         </>
       )}
@@ -570,7 +649,9 @@ const NoticesDashboard = () => {
           <input
             type="text"
             placeholder={
-              isSmallMobile ? "Search..." : "Search by title or content"
+              isSmallMobile
+                ? "Search..."
+                : "Search by title, content, student, or class"
             }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -643,6 +724,9 @@ const NoticesDashboard = () => {
                   content: "",
                   expiryDate: "",
                   status: "Active",
+                  targetClass: "",
+                  targetStudent: "",
+                  targetStudentName: "",
                 });
               }}
               style={{
@@ -920,6 +1004,9 @@ const NoticesDashboard = () => {
                   content: "",
                   expiryDate: "",
                   status: "Active",
+                  targetClass: "",
+                  targetStudent: "",
+                  targetStudentName: "",
                 });
               }}
               style={{
@@ -1199,8 +1286,14 @@ const NoticesDashboard = () => {
                             fontSize: 13,
                           }}
                         >
-                          <FaUsers size={12} />
-                          {n.audience}
+                          {n.audience === "Class" ? (
+                            <FaChalkboardTeacher size={12} />
+                          ) : n.audience === "Individual Student" ? (
+                            <FaUserGraduate size={12} />
+                          ) : (
+                            <FaUsers size={12} />
+                          )}
+                          {getDisplayAudience(n)}
                         </div>
                       </td>
                       <td style={{ padding: 14 }}>
@@ -1371,7 +1464,7 @@ const NoticesDashboard = () => {
               transition={{ type: "spring", damping: 25 }}
               style={{
                 width: "100%",
-                maxWidth: isMobile ? "100%" : 540,
+                maxWidth: isMobile ? "100%" : 580,
                 maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
                 overflow: "auto",
                 padding: 0,
@@ -1561,7 +1654,14 @@ const NoticesDashboard = () => {
                       required
                       value={form.audience}
                       onChange={(e) =>
-                        setForm((f) => ({ ...f, audience: e.target.value }))
+                        setForm((f) => ({
+                          ...f,
+                          audience: e.target.value,
+                          // Reset targeting fields when audience changes
+                          targetClass: "",
+                          targetStudent: "",
+                          targetStudentName: "",
+                        }))
                       }
                       style={{
                         padding: isSmallMobile ? 10 : 12,
@@ -1582,6 +1682,105 @@ const NoticesDashboard = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Conditional fields for Class or Individual Student selection */}
+                {form.audience === "Class" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 6 : 10,
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
+                      <FaChalkboardTeacher
+                        size={14}
+                        style={{ color: colors.accent }}
+                      />
+                      Select Class *
+                    </label>
+                    <select
+                      required
+                      value={form.targetClass}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, targetClass: e.target.value }))
+                      }
+                      style={{
+                        padding: isSmallMobile ? 10 : 12,
+                        borderRadius: 8,
+                        border: `1px solid ${colors.border}`,
+                        background: colors.inputBg,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                        width: "100%",
+                      }}
+                    >
+                      <option value="">Select Class</option>
+                      {classesList.map((cls) => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {form.audience === "Individual Student" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 6 : 10,
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontWeight: 500,
+                        color: colors.text,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: isSmallMobile ? 14 : 15,
+                      }}
+                    >
+                      <FaUserGraduate
+                        size={14}
+                        style={{ color: colors.accent }}
+                      />
+                      Select Student *
+                    </label>
+                    <select
+                      required
+                      value={form.targetStudent}
+                      onChange={handleStudentSelect}
+                      style={{
+                        padding: isSmallMobile ? 10 : 12,
+                        borderRadius: 8,
+                        border: `1px solid ${colors.border}`,
+                        background: colors.inputBg,
+                        color: colors.text,
+                        fontSize: isSmallMobile ? 14 : 15,
+                        width: "100%",
+                      }}
+                    >
+                      <option value="">Select Student</option>
+                      {studentsList.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.name} ({student.class})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div
                   style={{
