@@ -10,12 +10,12 @@ import {
   FaUserFriends,
 } from "react-icons/fa";
 import Footer from "../components/Footer";
-import Testimonial from "../components/Testimonial";
+
 import HeroSection from "../components/HeroSection";
 import Results from "../components/Results";
 import Testimonials from "../components/Testimonials";
 import Locations from "../components/Locations";
-import programs from "./Programs"; // Assuming you have a Programs component
+
 import Programs from "./Programs";
 // import { Contact } from "lucide-react";
 import Contact from "./Contact"; // Assuming you have a Contact component
