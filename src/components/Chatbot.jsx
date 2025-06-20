@@ -346,7 +346,7 @@ const Chatbot = () => {
                         Email
                       </div>
                       <div style={{ fontWeight: "500" }}>
-                        contact@sharpr.edu
+                        thesharpr1@gmail.com
                       </div>
                     </div>
                   </div>
@@ -376,7 +376,9 @@ const Chatbot = () => {
                       >
                         Headquarters
                       </div>
-                      <div style={{ fontWeight: "500" }}>Bengaluru, India</div>
+                      <div style={{ fontWeight: "500" }}>
+                        Faridabad,Haryana, India
+                      </div>
                     </div>
                   </div>
                 </div>

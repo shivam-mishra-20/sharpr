@@ -68,13 +68,325 @@ function ContactMobile({
               soon as possible.
             </div>
 
-            {/* ...existing info items... */}
+            <div>
+              <div style={styles.infoItem}>
+                <svg
+                  style={styles.infoIcon}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                thesharpr1@gmail.com
+              </div>
+              <div style={styles.infoItem}>
+                <svg
+                  style={styles.infoIcon}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                  />
+                </svg>
+                +91 9369428170
+              </div>
+              <div style={styles.infoItem}>
+                <svg
+                  style={styles.infoIcon}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Address : 2536, Road 117 , Greenfield, sec 42 ,
+                <br />
+                Faridabad, Haryana
+              </div>
+            </div>
 
-            <div style={styles.social}>{/* ...existing social items... */}</div>
+            <div style={styles.social}>
+              {socials.map((s, i) => (
+                <a
+                  key={i}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    background: "rgba(255,255,255,0.05)",
+                    borderRadius: "50%",
+                    padding: "6px",
+                  }}
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
           </div>
         </motion.div>
 
-        {/* ...existing mobile right panel code... */}
+        {/* Add the Get in Touch card for mobile */}
+        <motion.div
+          style={{ ...styles.rightPanel, maxWidth: "100%" }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <div style={{ ...styles.mobileCard, padding: "30px 20px" }}>
+            <div style={styles.title}>Get in Touch</div>
+            <div style={styles.subtitle}>
+              We'd love to hear from you! Fill out the form and our team will
+              get back to you as soon as possible.
+            </div>
+
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              autoComplete="off"
+              noValidate
+              style={{
+                ...styles.mobileForm,
+                alignItems: "center", // Center the form elements
+              }}
+            >
+              <div
+                style={{
+                  ...styles.formGroup,
+                  maxWidth: "90%", // Limit width to prevent overflow
+                }}
+              >
+                <input
+                  ref={nameInputRef}
+                  style={{
+                    ...styles.input,
+                    ...(focus.name || fields.name ? styles.inputFocus : {}),
+                    ...(errors.name && touched.name ? styles.inputError : {}),
+                  }}
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={fields.name}
+                  onChange={handleChange}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  aria-invalid={errors.name ? "true" : "false"}
+                  aria-describedby="nameErrorMobile"
+                />
+                <label
+                  htmlFor="name"
+                  style={{
+                    ...styles.label,
+                    ...(focus.name || fields.name ? styles.labelActive : {}),
+                    ...(errors.name && touched.name ? styles.labelError : {}),
+                  }}
+                >
+                  Name
+                </label>
+                {errors.name && touched.name && (
+                  <div id="nameErrorMobile" style={styles.errorMessage}>
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {errors.name}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  ...styles.formGroup,
+                  maxWidth: "90%", // Limit width to prevent overflow
+                }}
+              >
+                <input
+                  style={{
+                    ...styles.input,
+                    ...(focus.email || fields.email ? styles.inputFocus : {}),
+                    ...(errors.email && touched.email ? styles.inputError : {}),
+                  }}
+                  type="email"
+                  id="email-mobile"
+                  name="email"
+                  value={fields.email}
+                  onChange={handleChange}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  aria-invalid={errors.email ? "true" : "false"}
+                  aria-describedby="emailErrorMobile"
+                />
+                <label
+                  htmlFor="email-mobile"
+                  style={{
+                    ...styles.label,
+                    ...(focus.email || fields.email ? styles.labelActive : {}),
+                    ...(errors.email && touched.email ? styles.labelError : {}),
+                  }}
+                >
+                  Email
+                </label>
+                {errors.email && touched.email && (
+                  <div id="emailErrorMobile" style={styles.errorMessage}>
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {errors.email}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  ...styles.formGroup,
+                  maxWidth: "90%", // Limit width to prevent overflow
+                }}
+              >
+                <textarea
+                  style={{
+                    ...styles.input,
+                    minHeight: "120px",
+                    resize: "vertical",
+                    ...(focus.message || fields.message
+                      ? styles.inputFocus
+                      : {}),
+                    ...(errors.message && touched.message
+                      ? styles.inputError
+                      : {}),
+                  }}
+                  id="message-mobile"
+                  name="message"
+                  value={fields.message}
+                  onChange={handleChange}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  aria-invalid={errors.message ? "true" : "false"}
+                  aria-describedby="messageErrorMobile"
+                />
+                <label
+                  htmlFor="message-mobile"
+                  style={{
+                    ...styles.label,
+                    ...(focus.message || fields.message
+                      ? styles.labelActive
+                      : {}),
+                    ...(errors.message && touched.message
+                      ? styles.labelError
+                      : {}),
+                  }}
+                >
+                  Message
+                </label>
+                {errors.message && touched.message && (
+                  <div id="messageErrorMobile" style={styles.errorMessage}>
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {errors.message}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                style={{ ...styles.mobileButton, maxWidth: "90%" }} // Also limit button width
+                disabled={isSubmitting || submitted}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span style={styles.loadingSpinner}></span>
+                    Sending...
+                  </>
+                ) : submitted ? (
+                  "Message Sent!"
+                ) : (
+                  "Send Message"
+                )}
+              </button>
+
+              {submitted && (
+                <motion.div
+                  style={styles.successMessage}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Thank you! We'll get back to you soon.
+                </motion.div>
+              )}
+            </form>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -186,7 +498,7 @@ const Contact = () => {
     formGroup: {
       position: "relative",
       marginBottom: "28px", // Increased for better spacing
-      width: "100%", // Full width for form groups
+      width: "100%", // Changed from 80% to 100% for container
     },
     input: {
       width: "100%",
@@ -483,7 +795,7 @@ const Contact = () => {
       },
       formGroup: {
         marginBottom: "20px",
-        width: "100%", // Use full width on very small devices
+        width: "100%", // Changed from 80% to 100% for proper mobile layout
       },
       input: {
         fontSize: "16px", // Prevents zoom on input focus on iOS
@@ -524,7 +836,7 @@ const Contact = () => {
         padding: "32px 24px", // Better padding for tablets
       },
       formGroup: {
-        width: "95%", // Slightly wider inputs on tablets
+        width: "100%", // Changed from 95% to 100% for tablets
       },
     },
   };
@@ -532,7 +844,7 @@ const Contact = () => {
   // Updated social media icons with better accessibility and modern design
   const socials = [
     {
-      href: "mailto:contact@yourdomain.com",
+      href: "mailto:thesharpr1@gmail.com",
       icon: (
         <svg
           aria-hidden="true"
@@ -788,7 +1100,7 @@ const Contact = () => {
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
-                contact@yourdomain.com
+                thesharpr1@gmail.com
               </motion.div>
               <motion.div
                 style={styles.infoItem}
@@ -838,9 +1150,9 @@ const Contact = () => {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                123 Tech Plaza, Innovation District
+                Address : 2536, Road 117 , Greenfield, sec 42 ,
                 <br />
-                Bengaluru, Karnataka 560001
+                Faridabad, Haryana
               </motion.div>
             </div>
 

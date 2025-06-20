@@ -15,7 +15,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, m } from "framer-motion";
 import { useTheme } from "../context/ThemeContext"; // Import the theme context hook
 
 const ADMIN_EMAIL = "Admin@sharpr.in";
@@ -240,6 +240,15 @@ const SignUp = () => {
   useEffect(() => {
     // Check if user is already authenticated
     const checkAuth = () => {
+      // Get URL parameters to check if we should force the login page
+      const urlParams = new URLSearchParams(window.location.search);
+      const forceLogin = urlParams.get("forceLogin") === "true";
+
+      // If we're forcing login, don't do the auth check
+      if (forceLogin) {
+        return () => {};
+      }
+
       const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
         if (currentUser) {
           try {
@@ -252,11 +261,15 @@ const SignUp = () => {
               sessionStorage.setItem("userRole", role);
               sessionStorage.setItem("lastAuthCheck", Date.now().toString());
 
-              // Redirect based on role
-              if (role === "admin") {
-                navigate("/admin_dashboard", { replace: true });
-              } else if (role === "parent") {
-                navigate("/parent_dashboard", { replace: true });
+              // Only redirect if we're on the signup page specifically
+              // This prevents unwanted redirects from other pages
+              if (window.location.pathname === "/signup") {
+                // Redirect based on role
+                if (role === "admin") {
+                  navigate("/admin_dashboard", { replace: true });
+                } else if (role === "parent") {
+                  navigate("/parent_dashboard", { replace: true });
+                }
               }
             }
           } catch (error) {
@@ -1511,35 +1524,19 @@ const SignUp = () => {
                             ease: "linear",
                           }}
                         />
-                        <span>Verifying...</span>
+                        <span>Signing In...</span>
                       </div>
                     ) : (
-                      "Access Admin Panel"
+                      "Sign in"
                     )}
                   </motion.button>
                 </motion.form>
               )}
             </AnimatePresence>
-
-            {/* Footer with animation - smaller on mobile */}
-            <motion.div
-              style={{
-                textAlign: "center",
-                marginTop: isMobile ? (isVerySmall ? 15 : 20) : 30,
-                fontSize: isMobile ? (isVerySmall ? 11 : 12) : 13,
-                color: currentTheme.textLight,
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
-              whileHover={{ opacity: 1, scale: 1.03 }}
-            >
-              Sharpr Education Platform &copy; {new Date().getFullYear()}
-            </motion.div>
           </div>
         </motion.div>
       </motion.div>
     </div>
   );
 };
-
 export default SignUp;

@@ -60,7 +60,8 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
-        <Route path="/" element={<RootRedirect />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/aboutus" element={<Aboutus />} />
         <Route path="/programs" element={<Programs />} />
         <Route path="/contact" element={<Contact />} />
@@ -97,10 +98,10 @@ const AnimatedRoutes = () => {
   );
 };
 
-// Add this component
+// Update this component
 const RootRedirect = () => {
   const [loading, setLoading] = useState(true);
-  const [redirectTo, setRedirectTo] = useState("/signup");
+  const [redirectTo, setRedirectTo] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -114,17 +115,19 @@ const RootRedirect = () => {
             } else if (role === "parent") {
               setRedirectTo("/parent_dashboard");
             } else {
-              setRedirectTo("/signup");
+              // Default to home page for unknown roles
+              setRedirectTo("/home");
             }
           } else {
-            setRedirectTo("/signup");
+            setRedirectTo("/home");
           }
         } catch (error) {
           console.error("Error checking user role:", error);
-          setRedirectTo("/signup");
+          setRedirectTo("/home");
         }
       } else {
-        setRedirectTo("/signup");
+        // User is not authenticated, go to home page
+        setRedirectTo("/home");
       }
       setLoading(false);
     });
@@ -156,7 +159,7 @@ const RootRedirect = () => {
     );
   }
 
-  return <Navigate to={redirectTo} replace />;
+  return redirectTo ? <Navigate to={redirectTo} replace /> : null;
 };
 
 function App() {
