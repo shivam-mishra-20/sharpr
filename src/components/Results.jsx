@@ -49,7 +49,8 @@ const results = [
     name: "Aarav Sharma",
     achievement: "Topper, Class 10 Board Exams",
     score: "98.6%",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    avatar:
+      "https://plus.unsplash.com/premium_photo-1682089892133-556bde898f2c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c3R1ZGVudCUyMGJveSUyMGluZGlhfGVufDB8fDB8fHww",
     badge: <FaTrophy />,
     badgeColor: "#f59e0b",
     year: "2023",
@@ -58,7 +59,8 @@ const results = [
     name: "Meera Patel",
     achievement: "Gold Medal, Math Olympiad",
     score: "National Rank 1",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    avatar:
+      "https://media.istockphoto.com/id/2159138781/photo/portrait-of-smiling-indian-girl-using-laptop-do-thumbs-up-career-opportunities-browsing.webp?a=1&b=1&s=612x612&w=0&k=20&c=RwUwcT2mkSupDy7aJrUm2Ka_X3-FsED_DVxImtbPhJs=",
     badge: <FaMedal />,
     badgeColor: "#eab308",
     year: "2023",
@@ -273,19 +275,19 @@ const Results = () => {
   );
 
   if (isMobile) return renderMobile();
-
   return (
     <ResultsContainer $colors={colors}>
       {/* Decorative Elements */}
       <DecorativeCircle
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.4, 0.3],
+          scale: [1, 1.1, 1],
+          opacity: [0.2, 0.3, 0.2],
         }}
         transition={{
-          duration: 10,
+          duration: 8,
           repeat: Infinity,
           ease: "easeInOut",
+          repeatType: "reverse",
         }}
       />
 

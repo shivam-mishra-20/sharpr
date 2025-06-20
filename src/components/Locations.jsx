@@ -30,7 +30,7 @@ const locations = {
     { id: 1, name: "Saket" },
     { id: 2, name: "Karol Bagh" },
     { id: 3, name: "Faridabad" },
-    { id: 4, name: "Jabalpur" },
+    { id: 4, name: "Noida" },
   ],
   comingSoon: [
     { id: 5, name: "Jaipur" },
