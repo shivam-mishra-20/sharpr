@@ -29,6 +29,12 @@ import {
   FaUserGraduate,
   FaChalkboardTeacher,
 } from "react-icons/fa";
+import {
+  resetForm,
+  handleError,
+  handleStudentSelect,
+} from "../../utils/formHelpers";
+import Modal from "../common/Modal";
 
 const priorityOptions = ["High", "Medium", "Low"];
 // Updated audience options to include Class and Individual Student
@@ -91,7 +97,7 @@ const NoticesDashboard = () => {
   const [form, setForm] = useState({
     title: "",
     priority: "",
-    audience: "",
+    audience: "Class", // Default audience
     content: "",
     expiryDate: "",
     status: "Active",
@@ -135,24 +141,41 @@ const NoticesDashboard = () => {
     fetchNotices();
   }, []);
 
+  // Create consistent initial form state
+  const initialForm = {
+    title: "",
+    message: "",
+    audience: "Class", // Default audience
+    targetClass: "",
+    targetStudent: "",
+    targetStudentName: "",
+    // other fields...
+  };
+
+  // Standardize student selection using helper
+  const handleStudentSelectForNotice = (e) => {
+    handleStudentSelect(e, studentsList, setForm);
+  };
+
   // Add or update notice
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Prepare notice data based on audience selection
-    const noticeData = { ...form };
-
-    // Clean up unnecessary fields based on audience
-    if (form.audience !== "Class") {
-      delete noticeData.targetClass;
-    }
-
-    if (form.audience !== "Individual Student") {
-      delete noticeData.targetStudent;
-      delete noticeData.targetStudentName;
-    }
-
     try {
+      const noticeData = { ...form };
+
+      // Clean up fields based on audience - consistent with Overview.jsx
+      if (form.audience === "Class") {
+        noticeData.targetStudent = "";
+        noticeData.targetStudentName = "";
+      } else if (form.audience === "Individual Student") {
+        noticeData.targetClass = "";
+      } else {
+        // For "All" audience
+        noticeData.targetClass = "";
+        noticeData.targetStudent = "";
+        noticeData.targetStudentName = "";
+      }
+
       if (editId) {
         await updateDoc(doc(db, "notices", editId), {
           ...noticeData,
@@ -166,20 +189,10 @@ const NoticesDashboard = () => {
       }
       setShowForm(false);
       setEditId(null);
-      setForm({
-        title: "",
-        priority: "",
-        audience: "",
-        content: "",
-        expiryDate: "",
-        status: "Active",
-        targetClass: "",
-        targetStudent: "",
-        targetStudentName: "",
-      });
+      setForm(initialForm);
       fetchNotices();
     } catch (err) {
-      alert("Failed to save notice: " + err.message);
+      handleError(err, setError);
     }
   };
 
@@ -717,17 +730,7 @@ const NoticesDashboard = () => {
               onClick={() => {
                 setShowForm(true);
                 setEditId(null);
-                setForm({
-                  title: "",
-                  priority: "",
-                  audience: "",
-                  content: "",
-                  expiryDate: "",
-                  status: "Active",
-                  targetClass: "",
-                  targetStudent: "",
-                  targetStudentName: "",
-                });
+                setForm(initialForm);
               }}
               style={{
                 padding: "10px 12px",
@@ -997,17 +1000,7 @@ const NoticesDashboard = () => {
               onClick={() => {
                 setShowForm(true);
                 setEditId(null);
-                setForm({
-                  title: "",
-                  priority: "",
-                  audience: "",
-                  content: "",
-                  expiryDate: "",
-                  status: "Active",
-                  targetClass: "",
-                  targetStudent: "",
-                  targetStudentName: "",
-                });
+                setForm(initialForm);
               }}
               style={{
                 marginLeft: "auto",
@@ -1761,7 +1754,7 @@ const NoticesDashboard = () => {
                     <select
                       required
                       value={form.targetStudent}
-                      onChange={handleStudentSelect}
+                      onChange={handleStudentSelectForNotice}
                       style={{
                         padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,

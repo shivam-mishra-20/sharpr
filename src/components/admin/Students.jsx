@@ -10,8 +10,17 @@ import {
   doc,
   setDoc,
   serverTimestamp,
+  getDoc,
+  query,
+  where,
 } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  deleteUser,
+  getAuth,
+} from "firebase/auth";
+
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
@@ -32,6 +41,8 @@ import {
   FaHome,
   FaBirthdayCake,
   FaUserFriends,
+  FaBook, // Add this for course icon
+  FaPlus, // Add this for adding courses
 } from "react-icons/fa";
 
 const classOptions = [
@@ -90,6 +101,18 @@ const AdminStudents = () => {
   const [error, setError] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [showCourseForm, setShowCourseForm] = useState(false);
+  const [courseForm, setCourseForm] = useState({
+    name: "",
+    description: "",
+    category: "",
+    duration: "",
+  });
+  const [editCourseId, setEditCourseId] = useState(null);
+  const [showAssignCourseModal, setShowAssignCourseModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentCourses, setStudentCourses] = useState([]);
 
   // Get window size for responsive design
   const { width } = useWindowSize();
@@ -169,8 +192,91 @@ const AdminStudents = () => {
     setLoading(false);
   };
 
+  // Fetch courses
+  const fetchCourses = async () => {
+    try {
+      const snap = await getDocs(collection(db, "courses"));
+      setCourses(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      setError("Failed to fetch courses: " + err.message);
+    }
+  };
+
+  // Fetch student courses
+  const fetchStudentCourses = async (studentId) => {
+    if (!studentId) return;
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, "courseEnrollments"),
+          where("studentId", "==", studentId)
+        )
+      );
+      setStudentCourses(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      setError("Failed to fetch student courses");
+    }
+  };
+
+  // Fetch all students with their courses
+  const fetchStudentsWithCourses = async () => {
+    setLoading(true);
+    try {
+      // First get all students
+      const studentsSnapshot = await getDocs(collection(db, "students"));
+      const studentsData = studentsSnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      // Then get all course enrollments
+      const enrollmentsSnapshot = await getDocs(
+        collection(db, "courseEnrollments")
+      );
+      const enrollments = enrollmentsSnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      // Get all courses for lookup
+      const coursesSnapshot = await getDocs(collection(db, "courses"));
+      const coursesLookup = {};
+      coursesSnapshot.docs.forEach((doc) => {
+        coursesLookup[doc.id] = doc.data();
+      });
+
+      // Map enrollments to students
+      const studentsWithCourses = studentsData.map((student) => {
+        // Find enrollments for this student
+        const studentEnrollments = enrollments.filter(
+          (e) => e.studentId === student.id
+        );
+
+        // Map enrollments to course data
+        const courses = studentEnrollments.map((enrollment) => ({
+          enrollmentId: enrollment.id,
+          courseId: enrollment.courseId,
+          name: coursesLookup[enrollment.courseId]?.name || "Unknown Course",
+          category: coursesLookup[enrollment.courseId]?.category || "",
+        }));
+
+        return {
+          ...student,
+          courses,
+        };
+      });
+
+      setStudents(studentsWithCourses);
+    } catch (err) {
+      console.error("Error fetching students with courses:", err);
+      setError("Failed to fetch student data: " + err.message);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    fetchStudents();
+    fetchStudentsWithCourses();
+    fetchCourses();
   }, []);
 
   // Add or update student
@@ -186,12 +292,17 @@ const AdminStudents = () => {
       } else {
         let userUid = null;
         if (form.password && form.email) {
+          // Store the current user before creating new auth
+          const currentUser = auth.currentUser;
+
+          // Create the new user account
           const userCredential = await createUserWithEmailAndPassword(
             auth,
             form.email,
             form.password
           );
           userUid = userCredential.user.uid;
+
           // Create parent user doc with UID as doc ID
           await setDoc(doc(db, "users", userUid), {
             uid: userUid,
@@ -200,6 +311,7 @@ const AdminStudents = () => {
             role: "parent",
             createdAt: serverTimestamp(),
           });
+
           // Create student doc with UID as doc ID
           const { password, ...formData } = form;
           await setDoc(doc(db, "students", userUid), {
@@ -207,6 +319,13 @@ const AdminStudents = () => {
             authUid: userUid,
             createdAt: serverTimestamp(),
           });
+
+          // Immediately sign back in with the admin account if there was one
+          if (currentUser) {
+            // Re-authenticate as the original admin user
+            // Note: You'll need to implement a function to sign back in with admin credentials
+            await signBackInAsAdmin(currentUser.email);
+          }
         } else {
           // If no password, fallback to addDoc (not recommended for parent login)
           const { password, ...formData } = form;
@@ -223,6 +342,84 @@ const AdminStudents = () => {
       fetchStudents();
     } catch (err) {
       setError("Failed to save student: " + err.message);
+    }
+  };
+
+  // Add or update course
+  const handleCourseSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editCourseId) {
+        await updateDoc(doc(db, "courses", editCourseId), {
+          ...courseForm,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, "courses"), {
+          ...courseForm,
+          createdAt: serverTimestamp(),
+        });
+      }
+      setShowCourseForm(false);
+      setCourseForm({ name: "", description: "", category: "", duration: "" });
+      setEditCourseId(null);
+      fetchCourses();
+    } catch (err) {
+      setError("Failed to save course: " + err.message);
+    }
+  };
+
+  // Enroll student in course
+  const handleEnrollStudent = async (studentId, courseId) => {
+    try {
+      await addDoc(collection(db, "courseEnrollments"), {
+        studentId,
+        courseId,
+        enrolledAt: serverTimestamp(),
+      });
+      // Refresh courses for this student
+      fetchStudentCourses(studentId);
+      // Also refresh the full student list after a short delay
+      setTimeout(() => {
+        fetchStudentsWithCourses();
+      }, 500);
+    } catch (err) {
+      setError("Failed to enroll student in course: " + err.message);
+    }
+  };
+
+  // Remove student from course
+  const handleRemoveStudent = async (enrollmentId, studentId) => {
+    if (
+      !window.confirm(
+        "Remove this student from the course? This will delete the enrollment record."
+      )
+    )
+      return;
+    try {
+      await deleteDoc(doc(db, "courseEnrollments", enrollmentId));
+      // Refresh courses for this student
+      fetchStudentCourses(studentId);
+      // Also refresh the full student list
+      fetchStudentsWithCourses();
+    } catch (err) {
+      setError("Failed to remove student from course: " + err.message);
+    }
+  };
+
+  // Add this new helper function to handle admin re-authentication
+  const signBackInAsAdmin = async (adminEmail) => {
+    try {
+      // You need to get these admin credentials securely - this is just a placeholder
+      // Consider using a more secure approach in production
+      const adminPassword = sessionStorage.getItem("adminPassword");
+
+      if (adminEmail && adminPassword) {
+        await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      }
+    } catch (error) {
+      console.error("Error signing back in as admin:", error);
+      // Add more error handling if needed
     }
   };
 
@@ -243,14 +440,110 @@ const AdminStudents = () => {
     setShowForm(true);
   };
 
+  // Edit course
+  const handleCourseEdit = (course) => {
+    setCourseForm({
+      name: course.name || "",
+      description: course.description || "",
+      category: course.category || "",
+      duration: course.duration || "",
+    });
+    setEditCourseId(course.id);
+    setShowCourseForm(true);
+  };
+
   // Delete student
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this student?")) return;
+    if (
+      !window.confirm(
+        "Delete this student? This will remove all associated data and login credentials."
+      )
+    )
+      return;
     try {
+      setLoading(true);
+
+      // First, get the student data to check if they have auth credentials
+      const studentDoc = await getDoc(doc(db, "students", id));
+      const studentData = studentDoc.data();
+
+      if (studentData && studentData.authUid) {
+        // If there's an authUid, we need to delete the auth account
+        const adminUser = auth.currentUser; // Store current admin user
+
+        // Also delete the user document in the users collection
+        try {
+          await deleteDoc(doc(db, "users", studentData.authUid));
+        } catch (error) {
+          console.error("Error deleting user document:", error);
+        }
+
+        // For authentication deletion, we need Firebase admin SDK capabilities
+        // As an alternative, we'll delete the student doc and mark the auth account for deletion
+        await addDoc(collection(db, "deletedUsers"), {
+          uid: studentData.authUid,
+          email: studentData.email,
+          deletedAt: serverTimestamp(),
+        });
+      }
+
+      // Delete the student document
       await deleteDoc(doc(db, "students", id));
+
+      // Delete any associated data like assignments, grades, etc.
+      // You may need to add more collection deletions based on your data structure
+      const assignmentsQuery = query(
+        collection(db, "assignments"),
+        where("studentId", "==", id)
+      );
+      const assignmentSnapshot = await getDocs(assignmentsQuery);
+
+      // Delete each assignment document
+      const assignmentPromises = assignmentSnapshot.docs.map((doc) =>
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(assignmentPromises);
+
+      setLoading(false);
       fetchStudents();
+
+      // Show success message
+      setError(null);
     } catch (err) {
-      setError("Failed to delete student");
+      console.error("Delete error:", err);
+      setError("Failed to delete student: " + err.message);
+      setLoading(false);
+    }
+  };
+
+  // Delete course
+  const handleCourseDelete = async (id) => {
+    if (!window.confirm("Delete this course? This cannot be undone.")) return;
+    try {
+      setLoading(true);
+
+      // First, remove course from all students who have it
+      const studentCoursesRef = collection(db, "studentCourses");
+      const q = query(studentCoursesRef, where("courseId", "==", id));
+      const querySnapshot = await getDocs(q);
+
+      const deletePromises = querySnapshot.docs.map((doc) =>
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deletePromises);
+
+      // Then delete the actual course document
+      await deleteDoc(doc(db, "courses", id));
+
+      setLoading(false);
+      fetchCourses();
+
+      // Show success message
+      setError(null);
+    } catch (err) {
+      console.error("Delete course error:", err);
+      setError("Failed to delete course: " + err.message);
+      setLoading(false);
     }
   };
 
@@ -292,6 +585,39 @@ const AdminStudents = () => {
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
     // You'll need to communicate this state to a parent component
+  };
+
+  // Open assign course modal
+  const openAssignCourse = (student) => {
+    setSelectedStudent(student);
+    setShowAssignCourseModal(true);
+    // If student already has course data, use it
+    if (student.courses) {
+      setStudentCourses(
+        student.courses.map((course) => ({
+          id: course.enrollmentId,
+          courseId: course.courseId,
+          studentId: student.id,
+        }))
+      );
+    } else {
+      // Otherwise, fetch courses as before
+      fetchStudentCourses(student.id);
+    }
+  };
+
+  // Toggle course assignment
+  const toggleCourseAssignment = (courseId) => {
+    if (studentCourses.some((enrollment) => enrollment.courseId === courseId)) {
+      // Find the enrollment to remove
+      const enrollment = studentCourses.find(
+        (enrollment) => enrollment.courseId === courseId
+      );
+      handleRemoveStudent(enrollment.id, selectedStudent.id);
+    } else {
+      // Add new course enrollment
+      handleEnrollStudent(selectedStudent.id, courseId);
+    }
   };
 
   // Render student card for mobile view
@@ -440,6 +766,26 @@ const AdminStudents = () => {
           >
             <FaTrashAlt size={12} /> Delete
           </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => openAssignCourse(student)}
+            style={{
+              background: colors.success,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FaBook size={12} /> Courses
+          </motion.button>
         </div>
       </motion.div>
     );
@@ -587,7 +933,53 @@ const AdminStudents = () => {
             </motion.button>
           )}
         </div>
+        {/* Filter and Export Buttons - Desktop */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 16 }}>
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                background: showFilters ? colors.accentLight : colors.card,
+                color: showFilters ? colors.accent : colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: "12px 20px",
+                fontSize: 15,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <FaFilter size={14} /> {showFilters ? "Hide Filters" : "Filters"}
+            </motion.button>
 
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={handleExport}
+              style={{
+                background: theme === "dark" ? "#334155" : "#f1f5f9",
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 10,
+                padding: "12px 20px",
+                fontSize: 15,
+                fontWeight: 500,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <FaFileExport size={14} /> Export
+            </motion.button>
+          </div>
+        )}
         {/* Mobile Controls Row */}
         {isMobile && (
           <div style={{ display: "flex", width: "100%", gap: 8 }}>
@@ -641,96 +1033,37 @@ const AdminStudents = () => {
             </motion.button>
           </div>
         )}
-
-        {/* Mobile Filters - Collapsible */}
-        {isMobile && showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            style={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              marginTop: 4,
-              marginBottom: 4,
-            }}
-          >
-            <select
-              value={filterClass}
-              onChange={(e) => setFilterClass(e.target.value)}
+        {/* Mobile Controls Row - Add Courses Button */}
+        {isMobile && (
+          <div style={{ display: "flex", width: "100%", gap: 8, marginTop: 8 }}>
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => setShowCourseForm(true)}
               style={{
-                padding: isSmallMobile ? "8px 12px" : "10px 12px",
-                borderRadius: 8,
-                border: `1px solid ${colors.border}`,
-                background: colors.card,
-                color: colors.text,
-                fontSize: 14,
-                width: "100%",
-              }}
-            >
-              <option value="">All Classes</option>
-              {classOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                onClick={handleExport}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: colors.card,
-                  color: colors.accent,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 10,
-                  padding: "10px 12px",
-                  fontWeight: 500,
-                  fontSize: 14,
-                  cursor: "pointer",
-                  gap: 8,
-                  flex: 1,
-                }}
-              >
-                <FaFileExport size={14} /> Export Data
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Desktop Controls */}
-        {!isMobile && (
-          <>
-            <select
-              value={filterClass}
-              onChange={(e) => setFilterClass(e.target.value)}
-              style={{
-                padding: 12,
+                padding: "10px 12px",
                 borderRadius: 10,
-                border: `1px solid ${colors.border}`,
-                background: colors.card,
-                color: colors.text,
-                minWidth: 140,
-                fontSize: 14,
+                border: "none",
+                background: "linear-gradient(90deg, #10b981, #059669)",
+                color: "#fff",
+                fontWeight: 600,
                 cursor: "pointer",
+                boxShadow: colors.buttonShadow,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flex: 1,
               }}
             >
-              <option value="">All Classes</option>
-              {classOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-
+              <FaBook size={14} /> Manage Courses
+            </motion.button>
+          </div>
+        )}
+        {/* // Desktop Controls */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 16 }}>
             <motion.button
               variants={buttonVariants}
               whileHover="hover"
@@ -757,29 +1090,32 @@ const AdminStudents = () => {
             >
               <FaUserPlus size={14} /> Add Student
             </motion.button>
-
-            <motion.button
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-              onClick={handleExport}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                background: colors.card,
-                color: colors.accent,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 10,
-                padding: "12px 20px",
-                fontWeight: 600,
-                fontSize: 15,
-                cursor: "pointer",
-                gap: 10,
-              }}
-            >
-              <FaFileExport size={14} /> Export
-            </motion.button>
-          </>
+          </div>
+        )}
+        {/* Desktop Controls - Add Courses Button */}
+        {!isMobile && (
+          <motion.button
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            onClick={() => setShowCourseForm(true)}
+            style={{
+              background: "linear-gradient(90deg, #10b981, #059669)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "12px 20px",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              boxShadow: colors.buttonShadow,
+            }}
+          >
+            <FaBook size={14} /> Manage Courses
+          </motion.button>
         )}
       </motion.div>
 
@@ -974,13 +1310,24 @@ const AdminStudents = () => {
                   >
                     Actions
                   </th>
+                  <th
+                    style={{
+                      padding: 16,
+                      textAlign: "left",
+                      color: colors.text,
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Courses
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       style={{ textAlign: "center", padding: 32 }}
                     >
                       <motion.div
@@ -1000,7 +1347,7 @@ const AdminStudents = () => {
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       style={{
                         textAlign: "center",
                         padding: 32,
@@ -1121,6 +1468,85 @@ const AdminStudents = () => {
                         >
                           <FaTrashAlt size={12} /> Delete
                         </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => openAssignCourse(s)}
+                          style={{
+                            background: colors.success,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "6px 12px",
+                            marginRight: 8,
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            fontSize: 13,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <FaBook size={12} /> Courses
+                        </motion.button>
+                      </td>
+                      <td style={{ padding: 14, color: colors.text }}>
+                        {s.courses && s.courses.length > 0 ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 6,
+                            }}
+                          >
+                            {s.courses.map((course) => (
+                              <div
+                                key={course.enrollmentId}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  background: colors.accentLight,
+                                  color: colors.accent,
+                                  padding: "4px 8px",
+                                  borderRadius: 6,
+                                  fontSize: 13,
+                                  gap: 6,
+                                }}
+                              >
+                                <span>{course.name}</span>
+                                <motion.button
+                                  whileHover={{ scale: 1.2 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() =>
+                                    handleRemoveStudent(
+                                      course.enrollmentId,
+                                      s.id
+                                    )
+                                  }
+                                  style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    padding: 2,
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    color: colors.danger,
+                                  }}
+                                >
+                                  <FaTimes size={12} />
+                                </motion.button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span
+                            style={{
+                              color: colors.textSecondary,
+                              fontSize: 13,
+                            }}
+                          >
+                            No courses assigned
+                          </span>
+                        )}
                       </td>
                     </motion.tr>
                   ))
@@ -1652,6 +2078,671 @@ const AdminStudents = () => {
                   </motion.button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Course Management Modal */}
+      <AnimatePresence>
+        {showCourseForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              style={{
+                width: "100%",
+                maxWidth: 800,
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+                overflow: "auto",
+                padding: 0,
+                borderRadius: 16,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                background: colors.card,
+              }}
+            >
+              <div style={{ padding: isSmallMobile ? 16 : isMobile ? 20 : 32 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                      fontWeight: 700,
+                      margin: 0,
+                      color: colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <FaBook style={{ color: colors.success }} />
+                    {editCourseId ? "Edit Course" : "Course Management"}
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => {
+                      setShowCourseForm(false);
+                      setEditCourseId(null);
+                      setCourseForm({
+                        name: "",
+                        description: "",
+                        category: "",
+                        duration: "",
+                      });
+                    }}
+                    style={{
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      color: colors.text,
+                      fontSize: 20,
+                    }}
+                    aria-label="Close"
+                  >
+                    ×
+                  </motion.button>
+                </div>
+
+                {/* Course Form */}
+                <div>
+                  <form
+                    onSubmit={handleCourseSubmit}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 16 : isMobile ? 20 : 20,
+                      marginBottom: 24,
+                      padding: 16,
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(0,0,0,0.02)",
+                      borderRadius: 12,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: isSmallMobile ? 6 : 10,
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontWeight: 500,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                        }}
+                      >
+                        Course Name *
+                      </label>
+                      <input
+                        required
+                        value={courseForm.name}
+                        onChange={(e) =>
+                          setCourseForm((f) => ({ ...f, name: e.target.value }))
+                        }
+                        style={{
+                          padding: isSmallMobile ? 10 : 12,
+                          borderRadius: 8,
+                          border: `1px solid ${colors.border}`,
+                          background: colors.inputBg,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: isSmallMobile ? 12 : 16,
+                        flexWrap: "wrap",
+                        flexDirection: isMobile ? "column" : "row",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: isMobile ? "100%" : 200,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: isSmallMobile ? 6 : 10,
+                        }}
+                      >
+                        <label
+                          style={{
+                            fontWeight: 500,
+                            color: colors.text,
+                            fontSize: isSmallMobile ? 14 : 15,
+                          }}
+                        >
+                          Category
+                        </label>
+                        <input
+                          value={courseForm.category}
+                          onChange={(e) =>
+                            setCourseForm((f) => ({
+                              ...f,
+                              category: e.target.value,
+                            }))
+                          }
+                          style={{
+                            padding: isSmallMobile ? 10 : 12,
+                            borderRadius: 8,
+                            border: `1px solid ${colors.border}`,
+                            background: colors.inputBg,
+                            color: colors.text,
+                            fontSize: isSmallMobile ? 14 : 15,
+                          }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          flex: 1,
+                          minWidth: isMobile ? "100%" : 200,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: isSmallMobile ? 6 : 10,
+                        }}
+                      >
+                        <label
+                          style={{
+                            fontWeight: 500,
+                            color: colors.text,
+                            fontSize: isSmallMobile ? 14 : 15,
+                          }}
+                        >
+                          Duration
+                        </label>
+                        <input
+                          value={courseForm.duration}
+                          onChange={(e) =>
+                            setCourseForm((f) => ({
+                              ...f,
+                              duration: e.target.value,
+                            }))
+                          }
+                          style={{
+                            padding: isSmallMobile ? 10 : 12,
+                            borderRadius: 8,
+                            border: `1px solid ${colors.border}`,
+                            background: colors.inputBg,
+                            color: colors.text,
+                            fontSize: isSmallMobile ? 14 : 15,
+                          }}
+                          placeholder="e.g. 8 weeks, 3 months"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: isSmallMobile ? 6 : 10,
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontWeight: 500,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                        }}
+                      >
+                        Description
+                      </label>
+                      <textarea
+                        value={courseForm.description}
+                        onChange={(e) =>
+                          setCourseForm((f) => ({
+                            ...f,
+                            description: e.target.value,
+                          }))
+                        }
+                        style={{
+                          padding: isSmallMobile ? 10 : 12,
+                          borderRadius: 8,
+                          border: `1px solid ${colors.border}`,
+                          background: colors.inputBg,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                          minHeight: isSmallMobile ? 80 : 100,
+                          resize: "vertical",
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: isSmallMobile ? 8 : 16,
+                        justifyContent: "flex-end",
+                        flexDirection: isMobile ? "column" : "row",
+                      }}
+                    >
+                      <motion.button
+                        whileHover="hover"
+                        whileTap="tap"
+                        variants={buttonVariants}
+                        type="submit"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #10b981, #059669)",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: 10,
+                          padding: isSmallMobile ? "10px 24px" : "12px 32px",
+                          fontWeight: 600,
+                          fontSize: isSmallMobile ? 14 : 15,
+                          cursor: "pointer",
+                          boxShadow: colors.buttonShadow,
+                          order: isMobile ? 1 : 2,
+                        }}
+                      >
+                        {editCourseId ? "Update Course" : "Add Course"}
+                      </motion.button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Course List */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>
+                      Available Courses
+                    </h3>
+                    <motion.button
+                      whileHover="hover"
+                      whileTap="tap"
+                      variants={buttonVariants}
+                      onClick={() => {
+                        setEditCourseId(null);
+                        setCourseForm({
+                          name: "",
+                          description: "",
+                          category: "",
+                          duration: "",
+                        });
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        background: colors.accentLight,
+                        color: colors.accent,
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "8px 12px",
+                        fontWeight: 500,
+                        fontSize: 14,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <FaPlus size={12} /> New Course
+                    </motion.button>
+                  </div>
+
+                  {courses.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 24,
+                        textAlign: "center",
+                        borderRadius: 12,
+                        background:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.02)",
+                        border: `1px solid ${colors.border}`,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      No courses available. Create your first course.
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        maxHeight: 400,
+                        overflow: "auto",
+                        borderRadius: 12,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {courses.map((course) => (
+                        <motion.div
+                          key={course.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          style={{
+                            padding: 16,
+                            borderBottom: `1px solid ${colors.border}`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            background:
+                              theme === "dark"
+                                ? "rgba(255,255,255,0.02)"
+                                : "white",
+                          }}
+                        >
+                          <div>
+                            <h4
+                              style={{
+                                margin: 0,
+                                fontSize: 16,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {course.name}
+                            </h4>
+                            <p
+                              style={{
+                                margin: "4px 0 0 0",
+                                fontSize: 14,
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {course.category}
+                              {course.duration ? ` • ${course.duration}` : ""}
+                            </p>
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleCourseEdit(course)}
+                              style={{
+                                background: colors.warning,
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 6,
+                                padding: "6px 12px",
+                                cursor: "pointer",
+                                fontSize: 13,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <FaPen size={11} /> Edit
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleCourseDelete(course.id)}
+                              style={{
+                                background: colors.danger,
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 6,
+                                padding: "6px 12px",
+                                cursor: "pointer",
+                                fontSize: 13,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <FaTrashAlt size={11} /> Delete
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Assign Courses Modal */}
+      <AnimatePresence>
+        {showAssignCourseModal && selectedStudent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              style={{
+                width: "100%",
+                maxWidth: 600,
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+                overflow: "auto",
+                padding: 0,
+                borderRadius: 16,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                background: colors.card,
+              }}
+            >
+              <div style={{ padding: isSmallMobile ? 16 : isMobile ? 20 : 32 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                      fontWeight: 700,
+                      margin: 0,
+                      color: colors.text,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <FaBook style={{ color: colors.success }} />
+                      Manage Student Courses
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {selectedStudent.firstName} {selectedStudent.lastName}
+                    </span>
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => {
+                      setShowAssignCourseModal(false);
+                      setSelectedStudent(null);
+                      setStudentCourses([]);
+                    }}
+                    style={{
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      color: colors.text,
+                      fontSize: 20,
+                    }}
+                    aria-label="Close"
+                  >
+                    ×
+                  </motion.button>
+                </div>
+
+                {/* Course Assignment List */}
+                <div>
+                  {courses.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 24,
+                        textAlign: "center",
+                        borderRadius: 12,
+                        background:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.02)",
+                        border: `1px solid ${colors.border}`,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      No courses available. Please create courses first.
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        maxHeight: 400,
+                        overflow: "auto",
+                        borderRadius: 12,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {courses.map((course) => (
+                        <motion.div
+                          key={course.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          style={{
+                            padding: 16,
+                            borderBottom: `1px solid ${colors.border}`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            background: studentCourses.includes(course.id)
+                              ? theme === "dark"
+                                ? "rgba(16, 185, 129, 0.1)"
+                                : "rgba(16, 185, 129, 0.05)"
+                              : theme === "dark"
+                              ? "rgba(255,255,255,0.02)"
+                              : "white",
+                          }}
+                        >
+                          <div>
+                            <h4
+                              style={{
+                                margin: 0,
+                                fontSize: 16,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {course.name}
+                            </h4>
+                            <p
+                              style={{
+                                margin: "4px 0 0 0",
+                                fontSize: 14,
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {course.category}
+                              {course.duration ? ` • ${course.duration}` : ""}
+                            </p>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => toggleCourseAssignment(course.id)}
+                            style={{
+                              background: studentCourses.includes(course.id)
+                                ? colors.danger
+                                : colors.success,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "8px 16px",
+                              cursor: "pointer",
+                              fontSize: 13,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {studentCourses.includes(course.id)
+                              ? "Remove"
+                              : "Assign"}
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

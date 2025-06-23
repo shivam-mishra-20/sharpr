@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
+import { db } from "../firebase"; // Adjust the import based on your project structure
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const getThemeColors = (theme) => ({
   primary: theme === "dark" ? "#6366f1" : "#4f46e5",
@@ -1009,16 +1011,28 @@ const Contact = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Save to Firestore
+      await addDoc(collection(db, "inquiries"), {
+        name: fields.name,
+        email: fields.email,
+        message: fields.message,
+        status: "new", // Default status (new, responded, resolved)
+        createdAt: serverTimestamp(),
+      });
 
-    setIsSubmitting(false);
-    setSubmitted(true);
-    setFields({ name: "", email: "", message: "" });
-    setTouched({});
+      setIsSubmitting(false);
+      setSubmitted(true);
+      setFields({ name: "", email: "", message: "" });
+      setTouched({});
 
-    // Reset success message after 5 seconds
-    setTimeout(() => setSubmitted(false), 5000);
+      // Reset success message after 5 seconds
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      console.error("Error submitting inquiry:", error);
+      setIsSubmitting(false);
+      // You may want to show an error message to the user
+    }
   };
 
   if (isMobile)

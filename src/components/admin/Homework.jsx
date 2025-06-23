@@ -25,6 +25,12 @@ import {
   FaCalendar,
   FaChalkboardTeacher,
 } from "react-icons/fa";
+import {
+  resetForm,
+  formatDate,
+  handleError,
+  getTodayFormatted,
+} from "../../utils/formHelpers";
 
 const classOptions = [
   "Class 1",
@@ -48,13 +54,12 @@ const subjectOptions = [
   "Other",
 ];
 
+// Update the initial form with proper date handling
 const initialForm = {
   title: "",
-  subject: "",
-  class: "",
   description: "",
-  assignedDate: "",
-  dueDate: "",
+  dueDate: getTodayFormatted(), // Consistent date initialization
+  // other fields...
 };
 
 // Screen size hook for responsive design
