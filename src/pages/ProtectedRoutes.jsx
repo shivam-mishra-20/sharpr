@@ -21,50 +21,23 @@ const ProtectedRoutes = ({ allowedRoles }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
-          // Check timestamp of last login from sessionStorage
-          const lastAuthCheck = sessionStorage.getItem("lastAuthCheck");
-          const now = Date.now();
-
-          // Force recheck if more than 1 minute has passed since last check
-          if (!lastAuthCheck || now - parseInt(lastAuthCheck, 10) > 60000) {
-            // Verify role in Firestore
-            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              setUserRole(userData.role);
-              setUser(currentUser);
-              // Update timestamp
-              sessionStorage.setItem("lastAuthCheck", now.toString());
-            } else {
-              // No user document found, sign out
-              await auth.signOut();
-              sessionStorage.removeItem("lastAuthCheck");
-              setUser(null);
-              setUserRole(null);
-            }
+          // Always verify role in Firestore for protected routes
+          // Don't rely on session storage for critical auth checks
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUserRole(userData.role);
+            setUser(currentUser);
+            // Update timestamp
+            sessionStorage.setItem("lastAuthCheck", Date.now().toString());
+            sessionStorage.setItem("userRole", userData.role);
           } else {
-            // Use cached role if recent check
-            const cachedRole = sessionStorage.getItem("userRole");
-            if (cachedRole) {
-              setUserRole(cachedRole);
-              setUser(currentUser);
-            } else {
-              // Fallback to Firestore check if no cached role
-              const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setUserRole(userData.role);
-                setUser(currentUser);
-                sessionStorage.setItem("userRole", userData.role);
-                sessionStorage.setItem("lastAuthCheck", now.toString());
-              } else {
-                await auth.signOut();
-                sessionStorage.removeItem("lastAuthCheck");
-                sessionStorage.removeItem("userRole");
-                setUser(null);
-                setUserRole(null);
-              }
-            }
+            // No user document found, sign out
+            await auth.signOut();
+            sessionStorage.removeItem("lastAuthCheck");
+            sessionStorage.removeItem("userRole");
+            setUser(null);
+            setUserRole(null);
           }
         } catch (error) {
           console.error("Error fetching user role:", error);
@@ -123,7 +96,7 @@ const ProtectedRoutes = ({ allowedRoles }) => {
   if (!user) {
     return (
       <Navigate
-        to="/signup"
+        to="/signup?forceLogin=true"
         replace
         state={{ from: window.location.pathname }}
       />
@@ -132,7 +105,7 @@ const ProtectedRoutes = ({ allowedRoles }) => {
 
   // Check if user has allowed role
   if (!allowedRoles.includes(userRole)) {
-    // User doesn't have required role - redirect to unauthorized or home
+    // User doesn't have required role - redirect to unauthorized
     return <Navigate to="/unauthorized" replace />;
   }
 

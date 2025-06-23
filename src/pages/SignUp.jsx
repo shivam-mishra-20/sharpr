@@ -236,7 +236,7 @@ const SignUp = () => {
   // Use destructuring for cleaner code
   const { isMobile, isVerySmall } = screenSize;
 
-  // Update your useEffect for auth checking
+  // Update useEffect for auth checking
   useEffect(() => {
     // Check if user is already authenticated
     const checkAuth = () => {
@@ -244,9 +244,18 @@ const SignUp = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const forceLogin = urlParams.get("forceLogin") === "true";
 
-      // If we're forcing login, don't do the auth check
+      // If we're forcing login, clear any existing auth state
       if (forceLogin) {
-        return () => {};
+        // Try to sign out if forceLogin is true
+        (async () => {
+          try {
+            await signOut(auth);
+            sessionStorage.clear();
+          } catch (error) {
+            console.error("Error signing out:", error);
+          }
+        })();
+        return () => {}; // Return empty cleanup function
       }
 
       const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {

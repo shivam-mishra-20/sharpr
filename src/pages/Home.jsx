@@ -21,6 +21,7 @@ import Programs from "./Programs";
 import Contact from "./Contact"; // Assuming you have a Contact component
 import PricingOffer from "../components/PricingOffer";
 import NotFound from "./404Notfound";
+import ChatBot from "../components/ChatBot";
 
 const Home = () => {
   useEffect(() => {
@@ -55,6 +56,7 @@ const Home = () => {
       <Locations />
 
       <Footer />
+      <ChatBot />
     </>
   );
 };

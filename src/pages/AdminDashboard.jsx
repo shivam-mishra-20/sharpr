@@ -153,21 +153,20 @@ const AdminDashboard = () => {
       setUserName("Admin");
       setMobileSidebarOpen(false);
 
-      // Clear session storage items
-      sessionStorage.removeItem("lastAuthCheck");
-      sessionStorage.removeItem("userRole");
-      localStorage.removeItem("auth"); // If you use localStorage for any auth data
+      // Clear ALL session and local storage
+      sessionStorage.clear();
+      localStorage.clear();
 
       // Sign out from Firebase
       await auth.signOut();
 
-      // Clear browser history and navigate to signup
-      window.history.replaceState(null, "", "/signup");
-      navigate("/signup", { replace: true });
+      // Force clear browser history and navigate to signup
+      window.history.replaceState(null, "", "/signup?forceLogin=true");
+      navigate("/signup?forceLogin=true", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
       // Force navigation even if there's an error
-      navigate("/signup", { replace: true });
+      navigate("/signup?forceLogin=true", { replace: true });
     }
   };
 
