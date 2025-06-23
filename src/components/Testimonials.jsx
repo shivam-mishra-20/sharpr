@@ -45,7 +45,7 @@ const testimonials = [
     quote:
       "Sharpr's personalized approach helped my son gain confidence in Math and Science. The teachers are truly dedicated and always available to address my concerns. I've seen remarkable progress in just a few months.",
     rating: 5,
-    location: "Bengaluru",
+    location: "Delhi",
   },
   {
     id: 2,
@@ -61,13 +61,13 @@ const testimonials = [
   {
     id: 3,
     name: "Anjali Singh",
-    role: "Srudent",
+    role: "Student",
     image:
       "https://plus.unsplash.com/premium_photo-1682089897177-4dbc85aa672f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHN0dWRlbnQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D",
     quote:
       "Excellent results! My daughter topped her class after joining Sharpr. The structured curriculum and regular assessments kept her motivated throughout the academic year. Highly recommended for serious students.",
     rating: 5,
-    location: "Mumbai",
+    location: "Delhi",
   },
   {
     id: 4,
@@ -76,9 +76,9 @@ const testimonials = [
     image:
       "https://images.unsplash.com/photo-1623053434406-befaaad987d0?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     quote:
-      "The teachers explain concepts so clearly that I can understand even difficult topics. I love the regular tests and personalized feedback that helps me identify my weak areas and improve continuously.",
+      "The teachers explain concepts so clearly that my child can understand even difficult topics. I love the regular tests and personalized feedback that helps my child identify his weak areas and improve continuously.",
     rating: 4,
-    location: "Hyderabad",
+    location: "Delhi",
   },
 ];
 

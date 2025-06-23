@@ -29,6 +29,7 @@ import {
   FaTag,
   FaExclamationTriangle,
   FaUsers,
+  FaChalkboardTeacher,
   FaComment,
 } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
@@ -133,14 +134,7 @@ const AdminOverview = () => {
 
   const priorityOptions = ["High", "Medium", "Low"];
   // 2. Update the audienceOptions to match Notices.jsx
-  const audienceOptions = [
-    "All",
-    "Students",
-    "Parents",
-    "Teachers",
-    "Class",
-    "Individual Student",
-  ];
+  const audienceOptions = ["All", "Students", "Class", "Individual Student"];
   const statusOptions = ["Active", "Inactive"];
 
   // Theme colors (same as AdminDashboard)

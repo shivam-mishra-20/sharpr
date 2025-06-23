@@ -16,6 +16,7 @@ import {
   FaTimes,
   FaChevronRight,
 } from "react-icons/fa";
+import Chatbot from "../components/Chatbot";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
@@ -134,7 +135,28 @@ const ParentDashboard = () => {
         );
         const studentSnap = await getDocs(q);
         if (studentSnap.empty) {
-          setError("No student record found for this parent.");
+          // Instead of showing an error, set up empty student data
+          setStudent({
+            id: null,
+            firstName: "Not",
+            lastName: "Available",
+            class: "Not Assigned",
+            authUid: user.uid,
+            // Add more properties to match the structure expected by the UI
+            fullName: "Not Available", // Add this for consistent display
+            email: parent?.email || user.email || "Not Available",
+            enrollmentDate: "N/A",
+            status: "Active",
+          });
+
+          // Set empty arrays for related data
+          setHomework([]);
+          setAttendance([]);
+          setFees([]);
+          setTestResults([]);
+          setNotices([]);
+          setRecentUpdates([]);
+
           setLoading(false);
           return;
         }
@@ -145,7 +167,7 @@ const ParentDashboard = () => {
         setStudent(studentData);
 
         // Fetch related data for this student
-        const [homeworkSnap, attendanceSnap, feesSnap, testSnap, noticeSnap] =
+        const [homeworkSnap, attendanceSnap, feesSnap, testSnap] =
           await Promise.all([
             getDocs(
               query(
@@ -171,15 +193,64 @@ const ParentDashboard = () => {
                 where("studentId", "==", studentData.id)
               )
             ),
-            getDocs(collection(db, "notices")),
           ]);
+
+        // Process the data
         setHomework(homeworkSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
         setAttendance(
           attendanceSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
         );
         setFees(feesSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
         setTestResults(testSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-        setNotices(noticeSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+
+        // Fetch notices with proper filtering:
+        // 1. Notices for all students/parents
+        // 2. Notices specific to student's class
+        // 3. Notices targeting this specific student
+        const noticeQueries = [
+          query(collection(db, "notices"), where("audience", "==", "All")),
+          query(collection(db, "notices"), where("audience", "==", "Parents")),
+          query(collection(db, "notices"), where("audience", "==", "Students")),
+          query(
+            collection(db, "notices"),
+            where("targetClass", "==", studentData.class)
+          ),
+          query(
+            collection(db, "notices"),
+            where("targetStudentId", "==", studentData.id)
+          ),
+        ];
+
+        // Execute all notice queries in parallel
+        const noticeResults = await Promise.all(
+          noticeQueries.map((q) => getDocs(q))
+        );
+
+        // Combine all notice results, removing duplicates by ID
+        const noticesMap = new Map();
+        noticeResults.forEach((snapshot) => {
+          snapshot.docs.forEach((doc) => {
+            if (!noticesMap.has(doc.id)) {
+              noticesMap.set(doc.id, { id: doc.id, ...doc.data() });
+            }
+          });
+        });
+
+        // Process notices - ensure they have all required fields
+        const processedNotices = Array.from(noticesMap.values()).map((data) => {
+          return {
+            id: data.id,
+            ...data,
+            title: data.title || "Untitled Notice",
+            content: data.content || "",
+            priority: data.priority || "Medium",
+            audience: data.audience || "All",
+            targetClass: data.targetClass || "All",
+            targetStudentId: data.targetStudentId || null,
+            createdAt: data.createdAt || new Date(),
+          };
+        });
+        setNotices(processedNotices);
 
         // Recent updates (last 5, sorted by date)
         const updates = [];
@@ -217,23 +288,23 @@ const ParentDashboard = () => {
             }`,
           });
         }
-        for (const n of noticeSnap.docs) {
-          if (
-            n.data().audience === "All" ||
-            n.data().audience === "Parents" ||
-            n.data().audience === "Students"
-          ) {
-            updates.push({
-              type: "notice",
-              title: n.data().title,
-              date: n.data().createdAt?.toDate?.().toLocaleString?.() || "",
-              desc: n.data().content,
-            });
-          }
+        // Recent updates - add notices
+        for (const n of processedNotices) {
+          updates.push({
+            type: "notice",
+            title: n.title || "Untitled Notice",
+            date: n.createdAt?.toDate?.()
+              ? n.createdAt.toDate().toLocaleString()
+              : typeof n.createdAt === "string"
+              ? n.createdAt
+              : "",
+            desc: n.content || "No details available",
+          });
         }
         updates.sort((a, b) => (b.date > a.date ? 1 : -1));
         setRecentUpdates(updates.slice(0, 5));
       } catch (err) {
+        console.error("Failed to load dashboard:", err);
         setError("Failed to load dashboard.");
       }
       setLoading(false);
@@ -458,8 +529,8 @@ const ParentDashboard = () => {
             {/* Student Info */}
             <MobileStatsCard
               title="Student"
-              value={`${student.firstName || ""} ${student.lastName || ""}`}
-              description={student.class}
+              value={parent?.name}
+              description={student?.class || "Not Assigned"}
               icon={<FaUser size={20} />}
             />
 
@@ -748,7 +819,7 @@ const ParentDashboard = () => {
                 >
                   {Math.round(
                     testResults.reduce(
-                      (sum, t) => sum + (t.marksObtained / t.totalMarks) * 100,
+                      (sum, t) => sum + t.marksObtained / t.totalMarks + 100,
                       0
                     ) / testResults.length
                   )}
@@ -882,117 +953,165 @@ const ParentDashboard = () => {
 
       case "notices":
         return (
-          <>
-            {notices
-              .filter(
-                (n) =>
-                  n.audience === "All" ||
-                  n.audience === "Parents" ||
-                  n.audience === "Students"
-              )
-              .sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(0);
-                const dateB = b.createdAt?.toDate?.() || new Date(0);
-                return dateB - dateA;
-              })
-              .map((notice, index) => (
-                <motion.div
-                  key={notice.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+          <div
+            style={{
+              background: colors.card,
+              borderRadius: "16px",
+              boxShadow: colors.shadow,
+              border: `1px solid ${colors.border}`,
+              marginBottom: "40px",
+              overflow: "hidden",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: 600,
+                color: colors.text,
+                padding: "20px 24px",
+              }}
+            >
+              Notices
+            </h2>
+            <div style={{ padding: "0 24px 20px" }}>
+              {notices.length === 0 ? (
+                <div
                   style={{
-                    marginBottom: 16,
-                    padding: 16,
-                    borderRadius: 8,
-                    background: colors.card,
-                    boxShadow: colors.shadow,
-                    borderLeft: `4px solid ${
-                      notice.priority === "High"
-                        ? colors.danger
-                        : notice.priority === "Medium"
-                        ? colors.warning
-                        : colors.success
-                    }`,
+                    textAlign: "center",
+                    padding: "24px",
+                    color: colors.textSecondary,
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <h3
+                  No notices found.
+                </div>
+              ) : (
+                notices
+                  .sort((a, b) => {
+                    const dateA = a.createdAt?.toDate?.() || new Date(0);
+                    const dateB = b.createdAt?.toDate?.() || new Date(0);
+                    return dateB - dateA;
+                  })
+                  .map((notice) => (
+                    <div
+                      key={notice.id}
                       style={{
-                        fontSize: 16,
-                        margin: 0,
-                        color: colors.text,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {notice.title}
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: "2px 6px",
-                        borderRadius: 12,
-                        background:
-                          notice.priority === "High"
-                            ? "rgba(239, 68, 68, 0.1)"
-                            : notice.priority === "Medium"
-                            ? "rgba(245, 158, 11, 0.1)"
-                            : "rgba(16, 185, 129, 0.1)",
-                        color:
+                        marginBottom: 16,
+                        padding: 16,
+                        borderRadius: 8,
+                        background: "#f8fafc",
+                        borderLeft: `4px solid ${
                           notice.priority === "High"
                             ? colors.danger
                             : notice.priority === "Medium"
                             ? colors.warning
-                            : colors.success,
+                            : colors.success
+                        }`,
                       }}
                     >
-                      {notice.priority}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      margin: "8px 0",
-                      color: colors.text,
-                      fontSize: "14px",
-                    }}
-                  >
-                    {notice.content}
-                  </p>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: colors.textSecondary,
-                      marginTop: 8,
-                    }}
-                  >
-                    Posted:{" "}
-                    {notice.createdAt?.toDate?.().toLocaleString?.() || ""}
-                  </div>
-                </motion.div>
-              ))}
-            {notices.filter(
-              (n) =>
-                n.audience === "All" ||
-                n.audience === "Parents" ||
-                n.audience === "Students"
-            ).length === 0 && (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: 24,
-                  color: colors.textSecondary,
-                }}
-              >
-                No notices found.
-              </div>
-            )}
-          </>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <h3
+                          style={{
+                            fontSize: 18,
+                            margin: 0,
+                            color: colors.text,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {notice.title}
+                        </h3>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            alignItems: "center",
+                          }}
+                        >
+                          {notice.targetStudentId && (
+                            <span
+                              style={{
+                                fontSize: 12,
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                background: "rgba(79, 70, 229, 0.1)",
+                                color: colors.highlight,
+                              }}
+                            >
+                              Personal
+                            </span>
+                          )}
+                          {notice.targetClass &&
+                            notice.targetClass !== "All" && (
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  background: "rgba(16, 185, 129, 0.1)",
+                                  color: colors.success,
+                                }}
+                              >
+                                Class {notice.targetClass}
+                              </span>
+                            )}
+                          <span
+                            style={{
+                              fontSize: 12,
+                              padding: "2px 8px",
+                              borderRadius: 12,
+                              background:
+                                notice.priority === "High"
+                                  ? "rgba(239, 68, 68, 0.1)"
+                                  : notice.priority === "Medium"
+                                  ? "rgba(245, 158, 11, 0.1)"
+                                  : "rgba(16, 185, 129, 0.1)",
+                              color:
+                                notice.priority === "High"
+                                  ? colors.danger
+                                  : notice.priority === "Medium"
+                                  ? colors.warning
+                                  : colors.success,
+                            }}
+                          >
+                            {notice.priority}
+                          </span>
+                        </div>
+                      </div>
+                      <p style={{ margin: "8px 0", color: colors.text }}>
+                        {notice.content}
+                      </p>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span>
+                          Posted:{" "}
+                          {notice.createdAt?.toDate?.().toLocaleString?.() ||
+                            ""}
+                        </span>
+                        <span>
+                          For:{" "}
+                          {notice.targetStudentId
+                            ? "You specifically"
+                            : notice.targetClass && notice.targetClass !== "All"
+                            ? `Class ${notice.targetClass}`
+                            : notice.audience}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
         );
 
       default:
@@ -1045,11 +1164,12 @@ const ParentDashboard = () => {
                       marginBottom: "10px",
                       fontWeight: 500,
                       color: colors.textSecondary,
-                      letterSpacing: "0.3px",
+                      letterSpacing: 1,
                     }}
                   >
                     Student Name
                   </div>
+
                   <div
                     style={{
                       fontSize: "28px",
@@ -1057,7 +1177,7 @@ const ParentDashboard = () => {
                       color: colors.text,
                     }}
                   >
-                    {(student.firstName || "") + " " + (student.lastName || "")}
+                    {parent?.name}
                   </div>
                   <div
                     style={{
@@ -1880,113 +2000,144 @@ const ParentDashboard = () => {
                 padding: "20px 24px",
               }}
             >
-              School Notices
+              Notices
             </h2>
             <div style={{ padding: "0 24px 20px" }}>
-              {notices
-                .filter(
-                  (n) =>
-                    n.audience === "All" ||
-                    n.audience === "Parents" ||
-                    n.audience === "Students"
-                )
-                .sort((a, b) => {
-                  const dateA = a.createdAt?.toDate?.() || new Date(0);
-                  const dateB = b.createdAt?.toDate?.() || new Date(0);
-                  return dateB - dateA;
-                })
-                .map((notice) => (
-                  <div
-                    key={notice.id}
-                    style={{
-                      marginBottom: 16,
-                      padding: 16,
-                      borderRadius: 8,
-                      background: "#f8fafc",
-                      borderLeft: `4px solid ${
-                        notice.priority === "High"
-                          ? colors.danger
-                          : notice.priority === "Medium"
-                          ? colors.warning
-                          : colors.success
-                      }`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <h3
-                        style={{
-                          fontSize: 18,
-                          margin: 0,
-                          color: colors.text,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {notice.title}
-                      </h3>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          padding: "2px 8px",
-                          borderRadius: 12,
-                          background:
-                            notice.priority === "High"
-                              ? "rgba(239, 68, 68, 0.1)"
-                              : notice.priority === "Medium"
-                              ? "rgba(245, 158, 11, 0.1)"
-                              : "rgba(16, 185, 129, 0.1)",
-                          color:
-                            notice.priority === "High"
-                              ? colors.danger
-                              : notice.priority === "Medium"
-                              ? colors.warning
-                              : colors.success,
-                        }}
-                      >
-                        {notice.priority}
-                      </span>
-                    </div>
-                    <p style={{ margin: "8px 0", color: colors.text }}>
-                      {notice.content}
-                    </p>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span>
-                        Posted:{" "}
-                        {notice.createdAt?.toDate?.().toLocaleString?.() || ""}
-                      </span>
-                      {notice.expiryDate && (
-                        <span>Expires: {notice.expiryDate}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              {notices.filter(
-                (n) =>
-                  n.audience === "All" ||
-                  n.audience === "Parents" ||
-                  n.audience === "Students"
-              ).length === 0 && (
+              {notices.length === 0 ? (
                 <div
                   style={{
                     textAlign: "center",
-                    padding: 24,
+                    padding: "24px",
                     color: colors.textSecondary,
                   }}
                 >
                   No notices found.
                 </div>
+              ) : (
+                notices
+                  .sort((a, b) => {
+                    const dateA = a.createdAt?.toDate?.() || new Date(0);
+                    const dateB = b.createdAt?.toDate?.() || new Date(0);
+                    return dateB - dateA;
+                  })
+                  .map((notice) => (
+                    <div
+                      key={notice.id}
+                      style={{
+                        marginBottom: 16,
+                        padding: 16,
+                        borderRadius: 8,
+                        background: "#f8fafc",
+                        borderLeft: `4px solid ${
+                          notice.priority === "High"
+                            ? colors.danger
+                            : notice.priority === "Medium"
+                            ? colors.warning
+                            : colors.success
+                        }`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <h3
+                          style={{
+                            fontSize: 18,
+                            margin: 0,
+                            color: colors.text,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {notice.title}
+                        </h3>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            alignItems: "center",
+                          }}
+                        >
+                          {notice.targetStudentId && (
+                            <span
+                              style={{
+                                fontSize: 12,
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                background: "rgba(79, 70, 229, 0.1)",
+                                color: colors.highlight,
+                              }}
+                            >
+                              Personal
+                            </span>
+                          )}
+                          {notice.targetClass &&
+                            notice.targetClass !== "All" && (
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  background: "rgba(16, 185, 129, 0.1)",
+                                  color: colors.success,
+                                }}
+                              >
+                                Class {notice.targetClass}
+                              </span>
+                            )}
+                          <span
+                            style={{
+                              fontSize: 12,
+                              padding: "2px 8px",
+                              borderRadius: 12,
+                              background:
+                                notice.priority === "High"
+                                  ? "rgba(239, 68, 68, 0.1)"
+                                  : notice.priority === "Medium"
+                                  ? "rgba(245, 158, 11, 0.1)"
+                                  : "rgba(16, 185, 129, 0.1)",
+                              color:
+                                notice.priority === "High"
+                                  ? colors.danger
+                                  : notice.priority === "Medium"
+                                  ? colors.warning
+                                  : colors.success,
+                            }}
+                          >
+                            {notice.priority}
+                          </span>
+                        </div>
+                      </div>
+                      <p style={{ margin: "8px 0", color: colors.text }}>
+                        {notice.content}
+                      </p>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span>
+                          Posted:{" "}
+                          {notice.createdAt?.toDate?.().toLocaleString?.() ||
+                            ""}
+                        </span>
+                        <span>
+                          For:{" "}
+                          {notice.targetStudentId
+                            ? "You specifically"
+                            : notice.targetClass && notice.targetClass !== "All"
+                            ? `Class ${notice.targetClass}`
+                            : notice.audience}
+                        </span>
+                      </div>
+                    </div>
+                  ))
               )}
             </div>
           </div>
@@ -2213,7 +2364,7 @@ const ParentDashboard = () => {
               {activeSection === "homework" && "Homework Assignments"}
               {activeSection === "testResults" && "Test Results"}
               {activeSection === "fees" && "Fee Management"}
-              {activeSection === "notices" && "School Notices"}
+              {activeSection === "notices" && "Notices"}
             </h1>
             <p
               style={{
@@ -2236,6 +2387,7 @@ const ParentDashboard = () => {
           {isMobile ? renderMobileContent() : renderContent()}
         </main>
       </div>
+      <Chatbot />
     </div>
   );
 };

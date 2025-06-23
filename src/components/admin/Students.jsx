@@ -936,7 +936,7 @@ const AdminStudents = () => {
         {/* Filter and Export Buttons - Desktop */}
         {!isMobile && (
           <div style={{ display: "flex", gap: 16 }}>
-            <motion.button
+            {/* <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
@@ -955,7 +955,7 @@ const AdminStudents = () => {
               }}
             >
               <FaFilter size={14} /> {showFilters ? "Hide Filters" : "Filters"}
-            </motion.button>
+            </motion.button> */}
 
             <motion.button
               variants={buttonVariants}
@@ -983,7 +983,7 @@ const AdminStudents = () => {
         {/* Mobile Controls Row */}
         {isMobile && (
           <div style={{ display: "flex", width: "100%", gap: 8 }}>
-            <motion.button
+            {/* <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
@@ -1002,7 +1002,7 @@ const AdminStudents = () => {
               }}
             >
               <FaFilter size={14} /> {showFilters ? "Hide Filters" : "Filters"}
-            </motion.button>
+            </motion.button> */}
 
             <motion.button
               variants={buttonVariants}
@@ -1215,108 +1215,154 @@ const AdminStudents = () => {
             style={{
               overflowX: "auto",
               width: "100%",
-              WebkitOverflowScrolling: "touch", // For smooth scrolling on iOS
-              msOverflowStyle: "-ms-autohiding-scrollbar", // Better experience on Edge
+              WebkitOverflowScrolling: "touch",
+              msOverflowStyle: "-ms-autohiding-scrollbar",
+              position: "relative", // For sticky header
             }}
           >
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead style={{ background: colors.tableHeader }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                tableLayout: "fixed", // Helps with column sizing
+              }}
+            >
+              <thead
+                style={{
+                  background: colors.tableHeader,
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  boxShadow: `0 1px 0 ${colors.border}`,
+                }}
+              >
                 <tr>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      width: "15%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     Name
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "10%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     Class
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "10%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     DOB
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "15%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     Email
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "12%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     Parent Name
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "12%",
+                      borderBottom: `2px solid ${colors.accent}`,
                     }}
                   >
                     Parent Contact
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      width: "12%",
+                      borderBottom: `2px solid ${colors.accent}`,
+                      maxWidth: "150px",
                     }}
                   >
                     Address
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "center",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      borderBottom: `2px solid ${colors.accent}`,
+                      width: "15%",
                     }}
                   >
                     Actions
                   </th>
                   <th
                     style={{
-                      padding: 16,
+                      padding: "16px 12px",
                       textAlign: "left",
                       color: colors.text,
                       fontSize: 14,
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      borderBottom: `2px solid ${colors.accent}`,
+                      width: "15%",
                     }}
                   >
                     Courses
@@ -1328,7 +1374,11 @@ const AdminStudents = () => {
                   <tr>
                     <td
                       colSpan={9}
-                      style={{ textAlign: "center", padding: 32 }}
+                      style={{
+                        textAlign: "center",
+                        padding: 32,
+                        height: "200px",
+                      }}
                     >
                       <motion.div
                         animate={{ rotate: 360 }}
@@ -1337,11 +1387,14 @@ const AdminStudents = () => {
                           duration: 1,
                           ease: "linear",
                         }}
-                        style={{ display: "inline-block", marginRight: 10 }}
+                        style={{
+                          display: "inline-block",
+                          marginRight: 10,
+                        }}
                       >
-                        <FaUserGraduate size={16} color={colors.accent} />
+                        <FaUserGraduate size={20} color={colors.accent} />
                       </motion.div>
-                      Loading students...
+                      <p style={{ fontWeight: 500 }}>Loading students...</p>
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
@@ -1352,10 +1405,16 @@ const AdminStudents = () => {
                         textAlign: "center",
                         padding: 32,
                         color: colors.textSecondary,
+                        height: "200px",
                       }}
                     >
-                      No students found. Create your first student using the
-                      "Add Student" button.
+                      <div style={{ fontSize: 16 }}>
+                        <p style={{ fontWeight: 500 }}>No students found.</p>
+                        <p style={{ fontSize: 14 }}>
+                          Create your first student using the "Add Student"
+                          button.
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -1364,13 +1423,14 @@ const AdminStudents = () => {
                       key={s.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      transition={{ duration: 0.3, delay: index * 0.03 }}
                       style={{
                         borderTop: `1px solid ${colors.tableBorder}`,
                         background:
                           index % 2 === 0
                             ? colors.tableRow
                             : colors.tableRowAlt,
+                        transition: "background-color 0.2s ease",
                       }}
                       whileHover={{
                         backgroundColor:
@@ -1381,116 +1441,230 @@ const AdminStudents = () => {
                     >
                       <td
                         style={{
-                          padding: 14,
+                          padding: "14px 12px",
                           fontWeight: 500,
                           color: colors.text,
+                          verticalAlign: "middle",
+                          lineHeight: 1.4,
                         }}
                       >
-                        {(s.firstName || "") + " " + (s.lastName || "")}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: "50%",
+                              background: colors.accentLight,
+                              color: colors.accent,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 600,
+                              fontSize: 14,
+                            }}
+                          >
+                            {s.firstName?.charAt(0)}
+                            {s.lastName?.charAt(0)}
+                          </div>
+                          <span>
+                            {(s.firstName || "") + " " + (s.lastName || "")}
+                          </span>
+                        </div>
                       </td>
-                      <td style={{ padding: 14, color: colors.text }}>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                        }}
+                      >
                         <span
                           style={{
                             background: colors.accentLight,
                             color: colors.accent,
-                            padding: "4px 8px",
+                            padding: "5px 10px",
                             borderRadius: 6,
                             fontSize: 13,
                             fontWeight: 500,
+                            display: "inline-block",
                           }}
                         >
                           {s.class}
                         </span>
                       </td>
-                      <td style={{ padding: 14, color: colors.text }}>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                        }}
+                      >
                         {s.dob}
-                      </td>
-                      <td style={{ padding: 14, color: colors.text }}>
-                        {s.email}
-                      </td>
-                      <td style={{ padding: 14, color: colors.text }}>
-                        {s.parentName}
-                      </td>
-                      <td style={{ padding: 14, color: colors.text }}>
-                        {s.parentContact}
                       </td>
                       <td
                         style={{
-                          padding: 14,
+                          padding: "14px 12px",
                           color: colors.text,
-                          maxWidth: 200,
+                          verticalAlign: "middle",
+                          maxWidth: "180px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {s.address}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <FaEnvelope
+                            size={12}
+                            style={{
+                              color: colors.textSecondary,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span title={s.email}>{s.email}</span>
+                        </div>
                       </td>
-                      <td style={{ padding: 14, textAlign: "center" }}>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleEdit(s)}
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                          maxWidth: "150px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <span title={s.parentName}>{s.parentName}</span>
+                      </td>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                          maxWidth: "150px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <span title={s.parentContact}>{s.parentContact}</span>
+                      </td>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                          maxWidth: "150px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <span title={s.address}>{s.address}</span>
+                      </td>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          textAlign: "center",
+                          verticalAlign: "middle",
+                        }}
+                      >
+                        <div
                           style={{
-                            background: colors.warning,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "6px 12px",
-                            marginRight: 8,
-                            cursor: "pointer",
-                            fontWeight: 500,
-                            fontSize: 13,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
+                            display: "flex",
+                            gap: 8,
+                            justifyContent: "center",
+                            flexWrap: "wrap",
                           }}
                         >
-                          <FaPen size={12} /> Edit
-                        </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleEdit(s)}
+                            style={{
+                              background: colors.warning,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              fontWeight: 500,
+                              fontSize: 13,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              transition: "all 0.2s ease",
+                              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <FaPen size={12} /> Edit
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(s.id)}
+                            style={{
+                              background: colors.danger,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              fontWeight: 500,
+                              fontSize: 13,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              transition: "all 0.2s ease",
+                              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            <FaTrashAlt size={12} /> Delete
+                          </motion.button>
+                        </div>
                         <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(s.id)}
-                          style={{
-                            background: colors.danger,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "6px 12px",
-                            cursor: "pointer",
-                            fontWeight: 500,
-                            fontSize: 13,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
-                          }}
-                        >
-                          <FaTrashAlt size={12} /> Delete
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => openAssignCourse(s)}
                           style={{
                             background: colors.success,
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
-                            padding: "6px 12px",
-                            marginRight: 8,
+                            padding: "8px 12px",
+                            marginTop: 8,
                             cursor: "pointer",
                             fontWeight: 500,
                             fontSize: 13,
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 5,
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                           }}
                         >
                           <FaBook size={12} /> Courses
                         </motion.button>
                       </td>
-                      <td style={{ padding: 14, color: colors.text }}>
+                      <td
+                        style={{
+                          padding: "14px 12px",
+                          color: colors.text,
+                          verticalAlign: "middle",
+                        }}
+                      >
                         {s.courses && s.courses.length > 0 ? (
                           <div
                             style={{
@@ -1499,30 +1673,49 @@ const AdminStudents = () => {
                               gap: 6,
                             }}
                           >
-                            {s.courses.map((course) => (
+                            {s.courses.map((course, i) => (
                               <div
                                 key={course.enrollmentId}
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  background: colors.accentLight,
+                                  background: `${colors.accentLight}`,
                                   color: colors.accent,
-                                  padding: "4px 8px",
-                                  borderRadius: 6,
+                                  padding: "4px 10px",
+                                  borderRadius: 20,
                                   fontSize: 13,
                                   gap: 6,
+                                  border: `1px solid ${
+                                    theme === "dark"
+                                      ? "rgba(59, 130, 246, 0.2)"
+                                      : "rgba(79, 70, 229, 0.2)"
+                                  }`,
+                                  maxWidth: "100%",
+                                  marginBottom:
+                                    i < s.courses.length - 1 ? 4 : 0,
                                 }}
                               >
-                                <span>{course.name}</span>
+                                <span
+                                  style={{
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "calc(100% - 20px)",
+                                  }}
+                                  title={course.name}
+                                >
+                                  {course.name}
+                                </span>
                                 <motion.button
                                   whileHover={{ scale: 1.2 }}
                                   whileTap={{ scale: 0.9 }}
-                                  onClick={() =>
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     handleRemoveStudent(
                                       course.enrollmentId,
                                       s.id
-                                    )
-                                  }
+                                    );
+                                  }}
                                   style={{
                                     background: "transparent",
                                     border: "none",
@@ -1530,6 +1723,7 @@ const AdminStudents = () => {
                                     cursor: "pointer",
                                     display: "flex",
                                     color: colors.danger,
+                                    flexShrink: 0,
                                   }}
                                 >
                                   <FaTimes size={12} />
@@ -1542,6 +1736,7 @@ const AdminStudents = () => {
                             style={{
                               color: colors.textSecondary,
                               fontSize: 13,
+                              fontStyle: "italic",
                             }}
                           >
                             No courses assigned
@@ -1554,6 +1749,29 @@ const AdminStudents = () => {
               </tbody>
             </table>
           </div>
+
+          {filtered.length > 0 && !loading && (
+            <div
+              style={{
+                padding: "12px 20px",
+                borderTop: `1px solid ${colors.border}`,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: colors.tableHeader,
+              }}
+            >
+              <span
+                style={{
+                  color: colors.textSecondary,
+                  fontSize: 14,
+                }}
+              >
+                Showing {filtered.length}{" "}
+                {filtered.length === 1 ? "student" : "students"}
+              </span>
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -2686,13 +2904,229 @@ const AdminStudents = () => {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            background: studentCourses.includes(course.id)
-                              ? theme === "dark"
-                                ? "rgba(16, 185, 129, 0.1)"
-                                : "rgba(16, 185, 129, 0.05)"
-                              : theme === "dark"
-                              ? "rgba(255,255,255,0.02)"
-                              : "white",
+                            background:
+                              theme === "dark"
+                                ? "rgba(255,255,255,0.02)"
+                                : "white",
+                          }}
+                        >
+                          <div>
+                            <h4
+                              style={{
+                                margin: 0,
+                                fontSize: 16,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {course.name}
+                            </h4>
+                            <p
+                              style={{
+                                margin: "4px 0 0 0",
+                                fontSize: 14,
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {course.category}
+                              {course.duration ? ` • ${course.duration}` : ""}
+                            </p>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleCourseEdit(course)}
+                            style={{
+                              background: colors.warning,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "6px 12px",
+                              cursor: "pointer",
+                              fontSize: 13,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <FaPen size={11} /> Edit
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleCourseDelete(course.id)}
+                            style={{
+                              background: colors.danger,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "6px 12px",
+                              cursor: "pointer",
+                              fontSize: 13,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <FaTrashAlt size={11} /> Delete
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Assign Courses Modal */}
+      <AnimatePresence>
+        {showAssignCourseModal && selectedStudent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(2px)",
+              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              style={{
+                width: "100%",
+                maxWidth: 600,
+                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
+                overflow: "auto",
+                padding: 0,
+                borderRadius: 16,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                background: colors.card,
+              }}
+            >
+              <div style={{ padding: isSmallMobile ? 16 : isMobile ? 20 : 32 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
+                      fontWeight: 700,
+                      margin: 0,
+                      color: colors.text,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <FaBook style={{ color: colors.success }} />
+                      Manage Student Courses
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {selectedStudent.firstName} {selectedStudent.lastName}
+                    </span>
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => {
+                      setShowAssignCourseModal(false);
+                      setSelectedStudent(null);
+                      setStudentCourses([]);
+                    }}
+                    style={{
+                      background:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      color: colors.text,
+                      fontSize: 20,
+                    }}
+                    aria-label="Close"
+                  >
+                    ×
+                  </motion.button>
+                </div>
+
+                {/* Course Assignment List */}
+                <div>
+                  {courses.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 24,
+                        textAlign: "center",
+                        borderRadius: 12,
+                        background:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.02)",
+                        border: `1px solid ${colors.border}`,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      No courses available. Please create courses first.
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        maxHeight: 400,
+                        overflow: "auto",
+                        borderRadius: 12,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {courses.map((course) => (
+                        <motion.div
+                          key={course.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          style={{
+                            padding: 16,
+                            borderBottom: `1px solid ${colors.border}`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            background:
+                              theme === "dark"
+                                ? "rgba(255,255,255,0.02)"
+                                : "white",
                           }}
                         >
                           <div>

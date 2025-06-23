@@ -97,7 +97,7 @@ const programs = [
 ];
 
 const BROCHURE_URL =
-  "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+  "https://drive.google.com/file/d/11uiPtDW0dy6qmgPxeG0YSnQYxSlaKKPA/view?usp=sharing";
 
 function useIsMobile(breakpoint = 700) {
   const [isMobile, setIsMobile] = React.useState(

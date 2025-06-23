@@ -130,7 +130,7 @@ function DesktopNav({ theme, toggleTheme, navItems }) {
               lineHeight: 1.2,
             }}
           >
-            Sharper Minds. Stronger Futures.
+            Sharper Minds. Stronger Future.
           </span>
         </div>
       </Link>

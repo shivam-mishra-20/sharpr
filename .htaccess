@@ -1,11 +1,6 @@
 <IfModule mod_rewrite.c>
-
-    RewriteEngine On
-    RewriteBase /
-    RewriteRule ^index\.html$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-l
-    RewriteRule . /index.html [L]
-  
-  </IfModule>
+  RewriteEngine On RewriteBase / # Only redirect requests that are not real
+  files or folders RewriteCond %{REQUEST_FILENAME} !-f RewriteCond
+  %{REQUEST_FILENAME} !-d # Send all other requests to index.html RewriteRule ^
+  index.html [L]
+</IfModule>

@@ -206,7 +206,7 @@ const Chatbot = () => {
   // Animation variants - Adjusted for mobile
   const chatbotVariants = {
     closed: {
-      width: "60px",
+      width: "140px",
       height: "60px",
       borderRadius: "30px",
     },
@@ -473,7 +473,7 @@ const Chatbot = () => {
           overflowX: "auto",
           gap: "10px",
           padding: "4px 0",
-          scrollbarWidth: "none", // Firefox
+          // scrollbarWidth: "none", // Firefox
           maxWidth: "100%",
         }}
         className="horizontal-questions"
@@ -516,9 +516,10 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Add CSS for typing indicator animation and responsiveness */}
-      <style>
-        {`
+      <div>
+        {/* Add CSS for typing indicator animation and responsiveness */}
+        <style>
+          {`
           .typing-indicator {
             display: flex;
             align-items: center;
@@ -586,174 +587,184 @@ const Chatbot = () => {
             }
           }
         `}
-      </style>
+        </style>
 
-      <motion.div
-        initial="closed"
-        animate={isOpen ? "open" : "closed"}
-        variants={chatbotVariants}
-        style={{
-          position: "fixed",
-          bottom: isMobile ? "16px" : "24px",
-          right: isMobile ? "16px" : "24px",
-          background: colors.background,
-          boxShadow: colors.shadow,
-          zIndex: 1000,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          border: `1px solid ${colors.border}`,
-          maxWidth: isMobile ? "90vw" : "380px",
-          maxHeight: isMobile ? "80vh" : "520px",
-        }}
-      >
-        {isOpen ? (
-          <>
-            {/* Chatbot header */}
-            <div
-              style={{
-                padding: "16px",
-                background: theme === "dark" ? "#333333" : "#333333",
-                color: "#ffffff",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
+        <motion.div
+          initial="closed"
+          animate={isOpen ? "open" : "closed"}
+          variants={chatbotVariants}
+          style={{
+            position: "fixed",
+            bottom: isMobile ? "16px" : "24px",
+            right: isMobile ? "16px" : "24px",
+            background: colors.background,
+            boxShadow: colors.shadow,
+            zIndex: 1000,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            border: `1px solid ${colors.border}`,
+            maxWidth: isMobile ? "90vw" : "380px",
+            maxHeight: isMobile ? "80vh" : "520px",
+          }}
+        >
+          {isOpen ? (
+            <>
+              {/* Chatbot header */}
               <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                style={{
+                  padding: "16px",
+                  background: theme === "dark" ? "#333333" : "#333333",
+                  color: "#ffffff",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
                 <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  <div
+                    style={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FaRobot size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "16px" }}>
+                      Sharpr Assistant
+                    </div>
+                    <div style={{ fontSize: "12px", opacity: 0.9 }}>
+                      Online | Typically replies instantly
+                    </div>
+                  </div>
+                </div>
+                <motion.button
+                  variants={iconVariants}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleChat}
                   style={{
-                    background: "rgba(255, 255, 255, 0.2)",
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
+                    background: "none",
+                    border: "none",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                    width: "30px",
+                    height: "30px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    borderRadius: "50%",
                   }}
                 >
-                  <FaRobot size={18} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: "16px" }}>
-                    Sharpr Assistant
-                  </div>
-                  <div style={{ fontSize: "12px", opacity: 0.9 }}>
-                    Online | Typically replies instantly
-                  </div>
-                </div>
+                  <FaTimes size={18} />
+                </motion.button>
               </div>
-              <motion.button
-                variants={iconVariants}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleChat}
+
+              {/* Chat messages - Increased space by making it flex: 1 */}
+              <div
                 style={{
-                  background: "none",
-                  border: "none",
-                  color: "#ffffff",
-                  cursor: "pointer",
-                  width: "30px",
-                  height: "30px",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "50%",
-                }}
-              >
-                <FaTimes size={18} />
-              </motion.button>
-            </div>
-
-            {/* Chat messages - Increased space by making it flex: 1 */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                overflowY: "hidden",
-              }}
-            >
-              {renderChatMessages()}
-            </div>
-
-            {/* Custom question input */}
-            <form
-              onSubmit={handleCustomQuestionSubmit}
-              style={{
-                display: "flex",
-                padding: "12px 16px",
-                borderTop: `1px solid ${colors.border}`,
-                background: theme === "dark" ? "#1a1a1a" : "#f8f8f8",
-              }}
-            >
-              <input
-                type="text"
-                value={customQuestion}
-                onChange={(e) => setCustomQuestion(e.target.value)}
-                placeholder="Type your question here..."
-                style={{
+                  flexDirection: "column",
                   flex: 1,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "24px",
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  outline: "none",
-                  background: colors.background,
-                  color: colors.text,
+                  overflowY: "hidden",
                 }}
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                style={{
-                  background: colors.primary,
-                  color: theme === "dark" ? "#000000" : "#ffffff",
-                  border: "none",
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  marginLeft: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-                disabled={!customQuestion.trim()}
               >
-                <FaPaperPlane size={14} />
-              </motion.button>
-            </form>
+                {renderChatMessages()}
+              </div>
 
-            {/* Questions section - Now horizontally scrollable */}
-            {renderQuestions()}
-          </>
-        ) : (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={toggleChat}
-            style={{
-              background: theme === "dark" ? "#333333" : "#333333",
-              color: "#ffffff",
-              border: "none",
-              width: "100%",
-              height: "100%",
-              borderRadius: "30px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 0,
-            }}
-          >
-            <FaRobot size={24} />
-          </motion.button>
-        )}
-      </motion.div>
+              {/* Custom question input */}
+              <form
+                onSubmit={handleCustomQuestionSubmit}
+                style={{
+                  display: "flex",
+                  padding: "12px 16px",
+                  borderTop: `1px solid ${colors.border}`,
+                  background: theme === "dark" ? "#1a1a1a" : "#f8f8f8",
+                }}
+              >
+                <input
+                  type="text"
+                  value={customQuestion}
+                  onChange={(e) => setCustomQuestion(e.target.value)}
+                  placeholder="Type your question here..."
+                  style={{
+                    flex: 1,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: "24px",
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    outline: "none",
+                    background: colors.background,
+                    color: colors.text,
+                  }}
+                />
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  style={{
+                    background: colors.primary,
+                    color: theme === "dark" ? "#000000" : "#ffffff",
+                    border: "none",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    marginLeft: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                  disabled={!customQuestion.trim()}
+                >
+                  <FaPaperPlane size={14} />
+                </motion.button>
+              </form>
+
+              {/* Questions section - Now horizontally scrollable */}
+              {renderQuestions()}
+            </>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleChat}
+              style={{
+                background: theme === "dark" ? "#333333" : "#333333",
+                color: "#ffffff",
+                border: "none",
+                width: "100%",
+                height: "100%",
+                borderRadius: "10px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center", // center both icon and text
+                gap: "10px", // space between icon and text
+                padding: "5px",
+              }}
+            >
+              <FaRobot size={24} />
+              <span
+                styles={{
+                  fontSize: "20px",
+                  fontWeight: "500",
+                }}
+              >
+                Ask Me
+              </span>
+            </motion.button>
+          )}
+        </motion.div>
+      </div>
     </>
   );
 };

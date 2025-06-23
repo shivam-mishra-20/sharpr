@@ -30,7 +30,7 @@ import AdminHelp from "./components/admin/Help";
 import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
-import Chatbot from "./components/Chatbot";
+
 import NotFound from "./pages/404Notfound";
 import AdminInquiry from "./components/admin/Inquiry";
 import { auth, db } from "./firebase";
@@ -237,7 +237,6 @@ function App() {
         </footer>
 
         {/* Add the Chatbot component */}
-        <Chatbot />
       </div>
     </Router>
   );

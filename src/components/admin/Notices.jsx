@@ -38,32 +38,25 @@ import Modal from "../common/Modal";
 
 const priorityOptions = ["High", "Medium", "Low"];
 // Updated audience options to include Class and Individual Student
-const audienceOptions = [
-  "All",
-  "Students",
-  "Parents",
-  "Teachers",
-  "Class",
-  "Individual Student",
-];
+const audienceOptions = ["All Students", "Class", "Individual Student"];
 const statusOptions = ["Active", "Inactive"];
 
 // Mock data for classes and students - replace with actual data from your application
 const classesList = [
-  "Class 1A",
-  "Class 2B",
-  "Class 3C",
-  "Class 4D",
-  "Class 5E",
-  "Class 6F",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
 ];
-const studentsList = [
-  { id: "st1", name: "Alex Johnson", class: "Class 1A" },
-  { id: "st2", name: "Sam Wilson", class: "Class 1A" },
-  { id: "st3", name: "Jamie Brown", class: "Class 2B" },
-  { id: "st4", name: "Taylor Davis", class: "Class 3C" },
-  { id: "st5", name: "Morgan Smith", class: "Class 4D" },
-];
+// const studentsList = [
+//   { id: "st1", name: "Alex Johnson", class: "Class 1A" },
+//   { id: "st2", name: "Sam Wilson", class: "Class 1A" },
+//   { id: "st3", name: "Jamie Brown", class: "Class 2B" },
+//   { id: "st4", name: "Taylor Davis", class: "Class 3C" },
+//   { id: "st5", name: "Morgan Smith", class: "Class 4D" },
+// ];
 
 // Screen size hook for responsive design
 function useWindowSize() {
@@ -91,6 +84,7 @@ function useWindowSize() {
 
 const NoticesDashboard = () => {
   const [notices, setNotices] = useState([]);
+  const [students, setStudents] = useState([]); // Add state for students
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -137,8 +131,25 @@ const NoticesDashboard = () => {
     }
   };
 
+  // Fetch students from Firestore
+  const fetchStudents = async () => {
+    try {
+      const studentsSnapshot = await getDocs(collection(db, "students"));
+      const studentsData = studentsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        name: doc.data().firstName + " " + doc.data().lastName,
+        class: doc.data().class || "Unknown Class",
+      }));
+      setStudents(studentsData);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
   useEffect(() => {
     fetchNotices();
+    fetchStudents(); // Fetch students when component mounts
   }, []);
 
   // Create consistent initial form state
@@ -227,7 +238,7 @@ const NoticesDashboard = () => {
   // Handle student selection - update both ID and name
   const handleStudentSelect = (e) => {
     const studentId = e.target.value;
-    const selectedStudent = studentsList.find(
+    const selectedStudent = students.find(
       (student) => student.id === studentId
     );
     setForm((f) => ({
@@ -1754,7 +1765,7 @@ const NoticesDashboard = () => {
                     <select
                       required
                       value={form.targetStudent}
-                      onChange={handleStudentSelectForNotice}
+                      onChange={handleStudentSelect}
                       style={{
                         padding: isSmallMobile ? 10 : 12,
                         borderRadius: 8,
@@ -1766,7 +1777,7 @@ const NoticesDashboard = () => {
                       }}
                     >
                       <option value="">Select Student</option>
-                      {studentsList.map((student) => (
+                      {students.map((student) => (
                         <option key={student.id} value={student.id}>
                           {student.name} ({student.class})
                         </option>
