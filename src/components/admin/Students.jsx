@@ -64,7 +64,8 @@ const initialForm = {
   parentName: "",
   parentContact: "",
   address: "",
-  password: "", // Add password field
+  password: "",
+  changePassword: false, // Add this new field
 };
 
 // Screen size hook for responsive design
@@ -280,18 +281,46 @@ const AdminStudents = () => {
     fetchCourses();
   }, []);
 
-  // Replace the existing handleUserCreation function with this:
+  // Replace the existing handleSubmit function with this updated version
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editId) {
-        // Don't update password on edit
-        const { password, ...formData } = form;
-        await updateDoc(doc(db, "students", editId), {
-          ...formData,
+        // Create a copy of form data for updates
+        const updateData = {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          class: form.class,
+          dob: form.dob,
+          email: form.email,
+          parentName: form.parentName,
+          parentContact: form.parentContact,
+          address: form.address || "",
           updatedAt: serverTimestamp(),
-        });
+        };
+
+        // Handle password update if requested
+        if (form.changePassword && form.password) {
+          // Hash the new password
+          const salt = bcryptjs.genSaltSync(12);
+          const hashedPassword = bcryptjs.hashSync(form.password, salt);
+          updateData.password = hashedPassword;
+
+          // Also update the password in the users collection if it exists
+          const userRef = doc(db, "users", editId);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            await updateDoc(userRef, {
+              password: hashedPassword,
+              updatedAt: serverTimestamp(),
+            });
+          }
+        }
+
+        // Update the student document
+        await updateDoc(doc(db, "students", editId), updateData);
       } else {
+        // New student creation (existing code)
         // Hash the password using bcryptjs
         const salt = bcryptjs.genSaltSync(12);
         const hashedPassword = bcryptjs.hashSync(form.password, salt);
@@ -336,14 +365,12 @@ const AdminStudents = () => {
           parentName: form.parentName,
           parentContact: form.parentContact,
         });
-
-        // Reset form
-        setForm(initialForm);
       }
 
       // Close the form and refresh the list
       setShowForm(false);
       setEditId(null);
+      setForm(initialForm);
       fetchStudentsWithCourses(); // Refresh the student list
     } catch (err) {
       console.error("Error saving student:", err);
@@ -441,6 +468,7 @@ const AdminStudents = () => {
       parentContact: student.parentContact || "",
       address: student.address || "",
       password: "", // Don't prefill password on edit
+      changePassword: false, // Reset password change flag
     });
     setEditId(student.id);
     setShowForm(true);
@@ -462,62 +490,120 @@ const AdminStudents = () => {
   const handleDelete = async (id) => {
     if (
       !window.confirm(
-        "Delete this student? This will remove all associated data and login credentials."
+        "Delete this student? This will permanently remove all associated data including fees, attendance records, test results, and course enrollments."
       )
-    )
+    ) {
       return;
-    try {
-      setLoading(true);
+    }
 
-      // First, get the student data to check if they have auth credentials
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Step 1: Get the student data first (for reference and auth checking)
       const studentDoc = await getDoc(doc(db, "students", id));
       const studentData = studentDoc.data();
 
-      if (studentData && studentData.authUid) {
-        // If there's an authUid, we need to delete the auth account
-        const adminUser = auth.currentUser; // Store current admin user
+      if (!studentData) {
+        throw new Error("Student not found");
+      }
 
-        // Also delete the user document in the users collection
+      // Step 2: Start a batch of delete operations for all related collections
+      const batch = [];
+
+      // Delete fees records
+      const feesQuery = query(
+        collection(db, "fees"),
+        where("studentId", "==", id)
+      );
+      const feesSnapshot = await getDocs(feesQuery);
+      feesSnapshot.docs.forEach((doc) => {
+        batch.push(deleteDoc(doc.ref));
+      });
+
+      // Delete attendance records
+      const attendanceQuery = query(
+        collection(db, "attendance"),
+        where("studentId", "==", id)
+      );
+      const attendanceSnapshot = await getDocs(attendanceQuery);
+      attendanceSnapshot.docs.forEach((doc) => {
+        batch.push(deleteDoc(doc.ref));
+      });
+
+      // Delete test results
+      const testResultsQuery = query(
+        collection(db, "testResults"),
+        where("studentId", "==", id)
+      );
+      const testResultsSnapshot = await getDocs(testResultsQuery);
+      testResultsSnapshot.docs.forEach((doc) => {
+        batch.push(deleteDoc(doc.ref));
+      });
+
+      // Delete course enrollments
+      const enrollmentsQuery = query(
+        collection(db, "courseEnrollments"),
+        where("studentId", "==", id)
+      );
+      const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+      enrollmentsSnapshot.docs.forEach((doc) => {
+        batch.push(deleteDoc(doc.ref));
+      });
+
+      // Delete notices targeted to this student
+      const noticesQuery = query(
+        collection(db, "notices"),
+        where("targetStudent", "==", id)
+      );
+      const noticesSnapshot = await getDocs(noticesQuery);
+      noticesSnapshot.docs.forEach((doc) => {
+        batch.push(deleteDoc(doc.ref));
+      });
+
+      // Step 3: Handle authentication data if exists
+      if (studentData.authUid) {
+        // Store the admin user details for signing back in later
+        const adminUser = auth.currentUser;
+        const adminEmail = adminUser?.email;
+        const adminPassword = sessionStorage.getItem("adminPassword");
+
+        // Delete user document in the users collection
         try {
           await deleteDoc(doc(db, "users", studentData.authUid));
         } catch (error) {
           console.error("Error deleting user document:", error);
         }
 
-        // For authentication deletion, we need Firebase admin SDK capabilities
-        // As an alternative, we'll delete the student doc and mark the auth account for deletion
+        // Mark auth account for deletion (would need Firebase Admin SDK for direct deletion)
         await addDoc(collection(db, "deletedUsers"), {
           uid: studentData.authUid,
           email: studentData.email,
           deletedAt: serverTimestamp(),
         });
+
+        // You could alternatively use Firebase Auth directly if your authentication allows:
+        // try {
+        //   await deleteUser(auth.currentUser);
+        //   await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+        // } catch(authError) {
+        //   console.error("Error with auth operation:", authError);
+        // }
       }
 
-      // Delete the student document
+      // Step 4: Execute all deletion operations
+      await Promise.all(batch);
+
+      // Step 5: Finally delete the student document itself
       await deleteDoc(doc(db, "students", id));
 
-      // Delete any associated data like assignments, grades, etc.
-      // You may need to add more collection deletions based on your data structure
-      const assignmentsQuery = query(
-        collection(db, "assignments"),
-        where("studentId", "==", id)
-      );
-      const assignmentSnapshot = await getDocs(assignmentsQuery);
-
-      // Delete each assignment document
-      const assignmentPromises = assignmentSnapshot.docs.map((doc) =>
-        deleteDoc(doc.ref)
-      );
-      await Promise.all(assignmentPromises);
-
-      setLoading(false);
-      fetchStudents();
-
-      // Show success message
-      setError(null);
+      // Step 6: Update UI and display success
+      setStudents(students.filter((s) => s.id !== id));
+      console.log("Student and all related data deleted successfully");
     } catch (err) {
       console.error("Delete error:", err);
-      setError("Failed to delete student: " + err.message);
+      setError(`Failed to delete student: ${err.message}`);
+    } finally {
       setLoading(false);
     }
   };
@@ -2131,6 +2217,80 @@ const AdminStudents = () => {
                   </div>
                 )}
 
+                {/* In the edit form section, add this new password change field */}
+                {editId && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isSmallMobile ? 6 : 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        id="changePassword"
+                        checked={form.changePassword}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            changePassword: e.target.checked,
+                          }))
+                        }
+                        style={{ cursor: "pointer" }}
+                      />
+                      <label
+                        htmlFor="changePassword"
+                        style={{
+                          fontWeight: 500,
+                          color: colors.text,
+                          fontSize: isSmallMobile ? 14 : 15,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Change Password
+                      </label>
+                    </div>
+
+                    {form.changePassword && (
+                      <>
+                        <input
+                          type="password"
+                          value={form.password || ""}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, password: e.target.value }))
+                          }
+                          style={{
+                            padding: isSmallMobile ? 10 : 12,
+                            borderRadius: 8,
+                            border: `1px solid ${colors.border}`,
+                            background: colors.inputBg,
+                            color: colors.text,
+                            fontSize: isSmallMobile ? 14 : 15,
+                          }}
+                          placeholder="New password"
+                          autoComplete="new-password"
+                        />
+                        <span
+                          style={{
+                            fontSize: isSmallMobile ? 11 : 12,
+                            color: colors.textSecondary,
+                          }}
+                        >
+                          Enter a new password for this account.
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <div
                   style={{
                     display: "flex",
@@ -2756,225 +2916,6 @@ const AdminStudents = () => {
                               <FaTrashAlt size={11} /> Delete
                             </motion.button>
                           </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Assign Courses Modal */}
-      <AnimatePresence>
-        {showAssignCourseModal && selectedStudent && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              background: "rgba(0,0,0,0.5)",
-              zIndex: 1000,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backdropFilter: "blur(2px)",
-              padding: isSmallMobile ? 12 : isMobile ? 16 : 0,
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }}
-              style={{
-                width: "100%",
-                maxWidth: 600,
-                maxHeight: isSmallMobile ? "92vh" : isMobile ? "85vh" : "90vh",
-                overflow: "auto",
-                padding: 0,
-                borderRadius: 16,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                background: colors.card,
-              }}
-            >
-              <div style={{ padding: isSmallMobile ? 16 : isMobile ? 20 : 32 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 24,
-                  }}
-                >
-                  <h2
-                    style={{
-                      fontSize: isSmallMobile ? 16 : isMobile ? 18 : 22,
-                      fontWeight: 700,
-                      margin: 0,
-                      color: colors.text,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 6,
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 10 }}
-                    >
-                      <FaBook style={{ color: colors.success }} />
-                      Manage Student Courses
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      {selectedStudent.firstName} {selectedStudent.lastName}
-                    </span>
-                  </h2>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    type="button"
-                    onClick={() => {
-                      setShowAssignCourseModal(false);
-                      setSelectedStudent(null);
-                      setStudentCourses([]);
-                    }}
-                    style={{
-                      background:
-                        theme === "dark"
-                          ? "rgba(255,255,255,0.1)"
-                          : "rgba(0,0,0,0.05)",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: 32,
-                      height: 32,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      color: colors.text,
-                      fontSize: 20,
-                    }}
-                    aria-label="Close"
-                  >
-                    ×
-                  </motion.button>
-                </div>
-
-                {/* Course Assignment List */}
-                <div>
-                  {courses.length === 0 ? (
-                    <div
-                      style={{
-                        padding: 24,
-                        textAlign: "center",
-                        borderRadius: 12,
-                        background:
-                          theme === "dark"
-                            ? "rgba(255,255,255,0.05)"
-                            : "rgba(0,0,0,0.02)",
-                        border: `1px solid ${colors.border}`,
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      No courses available. Please create courses first.
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        maxHeight: 400,
-                        overflow: "auto",
-                        borderRadius: 12,
-                        border: `1px solid ${colors.border}`,
-                      }}
-                    >
-                      {courses.map((course) => (
-                        <motion.div
-                          key={course.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          style={{
-                            padding: 16,
-                            borderBottom: `1px solid ${colors.border}`,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            background:
-                              theme === "dark"
-                                ? "rgba(255,255,255,0.02)"
-                                : "white",
-                          }}
-                        >
-                          <div>
-                            <h4
-                              style={{
-                                margin: 0,
-                                fontSize: 16,
-                                fontWeight: 600,
-                              }}
-                            >
-                              {course.name}
-                            </h4>
-                            <p
-                              style={{
-                                margin: "4px 0 0 0",
-                                fontSize: 14,
-                                color: colors.textSecondary,
-                              }}
-                            >
-                              {course.category}
-                              {course.duration ? ` • ${course.duration}` : ""}
-                            </p>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleCourseEdit(course)}
-                            style={{
-                              background: colors.warning,
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: 6,
-                              padding: "6px 12px",
-                              cursor: "pointer",
-                              fontSize: 13,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <FaPen size={11} /> Edit
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleCourseDelete(course.id)}
-                            style={{
-                              background: colors.danger,
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: 6,
-                              padding: "6px 12px",
-                              cursor: "pointer",
-                              fontSize: 13,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <FaTrashAlt size={11} /> Delete
-                          </motion.button>
                         </motion.div>
                       ))}
                     </div>

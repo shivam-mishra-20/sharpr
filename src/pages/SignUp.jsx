@@ -147,37 +147,43 @@ const SignUp = () => {
         admin.password
       );
 
-      // Check if credentials match our admin constants
-      if (admin.email === ADMIN_EMAIL && admin.password === ADMIN_PASSWORD) {
-        // Store admin role in Firestore if it doesn't exist
+      // Check if email is the admin email (don't check password as it might have changed)
+      if (admin.email === ADMIN_EMAIL) {
+        // Get user data to confirm role
         const userDocRef = doc(db, "users", userCredential.user.uid);
         const docSnap = await getDoc(userDocRef);
 
-        if (!docSnap.exists()) {
-          // Create the admin user document in Firestore
-          await setDoc(userDocRef, {
-            uid: userCredential.user.uid,
-            email: userCredential.user.email,
-            role: "admin",
-            createdAt: serverTimestamp(),
-          });
-        } else if (docSnap.data().role !== "admin") {
-          // Update role to admin if not already set
-          await updateDoc(userDocRef, {
-            role: "admin",
-          });
-        }
+        // Verify this is actually an admin account
+        if (docSnap.exists() && docSnap.data().role === "admin") {
+          setSuccess("Admin login successful! Redirecting to dashboard...");
+          setTimeout(() => {
+            navigate("/admin_dashboard");
+          }, 1500);
+        } else {
+          // Create or update admin role if not set
+          await setDoc(
+            userDocRef,
+            {
+              uid: userCredential.user.uid,
+              email: userCredential.user.email,
+              role: "admin",
+              createdAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
 
-        setSuccess("Admin login successful! Redirecting to dashboard...");
-        setTimeout(() => {
-          navigate("/admin_dashboard");
-        }, 1500);
+          setSuccess("Admin login successful! Redirecting to dashboard...");
+          setTimeout(() => {
+            navigate("/admin_dashboard");
+          }, 1500);
+        }
       } else {
-        // If credentials don't match our constants, sign out
-        await signOut(auth); // Now signOut is properly imported
+        // If email doesn't match admin email
+        await signOut(auth);
         setError("Invalid admin credentials.");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("Invalid admin credentials or authentication failed.");
     } finally {
       setLoading(false);
@@ -345,6 +351,11 @@ const SignUp = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [navigate]);
+
+  const [showPassword, setShowPassword] = useState({
+    login: false,
+    admin: false,
+  });
 
   return (
     <div
@@ -1038,9 +1049,14 @@ const SignUp = () => {
                     <motion.div
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
                     >
                       <motion.input
-                        type="password"
+                        type={showPassword.login ? "text" : "password"}
                         name="password"
                         value={login.password}
                         onChange={(e) => handleChange(e, "login")}
@@ -1054,6 +1070,7 @@ const SignUp = () => {
                               ? "8px 12px"
                               : "10px 14px"
                             : "12px 16px",
+                          paddingRight: "40px", // Make room for the eye icon
                           fontSize: isMobile
                             ? isVerySmall
                               ? "13px"
@@ -1069,6 +1086,70 @@ const SignUp = () => {
                         }}
                         autoComplete="current-password"
                       />
+                      <motion.button
+                        type="button"
+                        onClick={() =>
+                          setShowPassword({
+                            ...showPassword,
+                            login: !showPassword.login,
+                          })
+                        }
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        style={{
+                          position: "absolute",
+                          right: "12px",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: currentTheme.textLight,
+                          padding: "0",
+                        }}
+                        aria-label={
+                          showPassword.login ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword.login ? (
+                          <svg
+                            width="20"
+                            height="20"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7A9.97 9.97 0 014.02 8.971m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="20"
+                            height="20"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        )}
+                      </motion.button>
                     </motion.div>
                   </div>
 
@@ -1486,9 +1567,14 @@ const SignUp = () => {
                     <motion.div
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
                     >
                       <motion.input
-                        type="password"
+                        type={showPassword.admin ? "text" : "password"}
                         name="password"
                         value={admin.password}
                         onChange={(e) => handleChange(e, "admin")}
@@ -1502,6 +1588,7 @@ const SignUp = () => {
                               ? "8px 12px"
                               : "10px 14px"
                             : "12px 16px",
+                          paddingRight: "40px", // Make room for the eye icon
                           fontSize: isMobile
                             ? isVerySmall
                               ? "13px"
@@ -1517,6 +1604,70 @@ const SignUp = () => {
                         }}
                         autoComplete="current-password"
                       />
+                      <motion.button
+                        type="button"
+                        onClick={() =>
+                          setShowPassword({
+                            ...showPassword,
+                            admin: !showPassword.admin,
+                          })
+                        }
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        style={{
+                          position: "absolute",
+                          right: "12px",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: currentTheme.textLight,
+                          padding: "0",
+                        }}
+                        aria-label={
+                          showPassword.admin ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword.admin ? (
+                          <svg
+                            width="20"
+                            height="20"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7A9.97 9.97 0 014.02 8.971m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="20"
+                            height="20"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        )}
+                      </motion.button>
                     </motion.div>
                   </div>
 

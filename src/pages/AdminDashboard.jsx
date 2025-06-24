@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Add useRef
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   FaUserTie,
@@ -16,12 +16,20 @@ import {
   FaBars,
   FaTimes,
   FaChevronLeft,
+  FaChevronDown,
   FaChevronRight,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useTheme } from "../context/ThemeContext";
+import {
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  sendPasswordResetEmail, // Add this import
+  onAuthStateChanged,
+} from "firebase/auth";
 
 const sidebarLinks = [
   {
@@ -56,6 +64,21 @@ const AdminDashboard = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const [sessionExpiryTime, setSessionExpiryTime] = useState(null);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
@@ -146,6 +169,20 @@ const AdminDashboard = () => {
     setMobileSidebarOpen(false);
   }, [location]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Update handleLogout function
   const handleLogout = async () => {
     try {
@@ -168,6 +205,175 @@ const AdminDashboard = () => {
       // Force navigation even if there's an error
       navigate("/signup?forceLogin=true", { replace: true });
     }
+  };
+
+  // Password change handler
+  const handlePasswordChange = async () => {
+    setPasswordError("");
+    setPasswordSuccess(false);
+    setIsSubmitting(true);
+
+    // Validation
+    if (!currentPassword) {
+      setPasswordError("Please enter your current password");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords don't match");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+
+      // First, reauthenticate with current credentials
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+
+      await reauthenticateWithCredential(user, credential);
+
+      // Then update password
+      await updatePassword(user, newPassword);
+
+      // Clear form and show success message
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess(true);
+
+      // Close modal after delay
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Error updating password:", error);
+      if (error.code === "auth/wrong-password") {
+        setPasswordError("Current password is incorrect");
+      } else if (error.code === "auth/too-many-requests") {
+        setPasswordError("Too many failed attempts. Please try again later");
+      } else if (error.code === "auth/requires-recent-login") {
+        setPasswordError(
+          "For security reasons, please sign out and sign in again before changing your password"
+        );
+      } else {
+        setPasswordError("Failed to update password: " + error.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Session expiration management
+  useEffect(() => {
+    // Set session timeout to 60 minutes (adjust as needed)
+    const SESSION_TIMEOUT = 60 * 60 * 1000;
+
+    // Check for existing session expiry time in localStorage
+    const savedExpiryTime = localStorage.getItem("sessionExpiryTime");
+    const expiryTime = savedExpiryTime
+      ? parseInt(savedExpiryTime)
+      : Date.now() + SESSION_TIMEOUT;
+
+    setSessionExpiryTime(expiryTime);
+
+    // Save to localStorage
+    if (!savedExpiryTime) {
+      localStorage.setItem("sessionExpiryTime", expiryTime.toString());
+    }
+
+    // Set up interval to check session expiration every minute
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      if (now >= expiryTime) {
+        setIsSessionExpired(true);
+        clearInterval(intervalId);
+      }
+    }, 60000); // Check every minute
+
+    // User activity listeners to reset session timer
+    const resetSessionTimer = () => {
+      const newExpiryTime = Date.now() + SESSION_TIMEOUT;
+      setSessionExpiryTime(newExpiryTime);
+      localStorage.setItem("sessionExpiryTime", newExpiryTime.toString());
+      setIsSessionExpired(false);
+    };
+
+    // Reset timer on user activity
+    window.addEventListener("click", resetSessionTimer);
+    window.addEventListener("keypress", resetSessionTimer);
+    window.addEventListener("scroll", resetSessionTimer);
+    window.addEventListener("mousemove", resetSessionTimer);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("click", resetSessionTimer);
+      window.removeEventListener("keypress", resetSessionTimer);
+      window.removeEventListener("scroll", resetSessionTimer);
+      window.removeEventListener("mousemove", resetSessionTimer);
+    };
+  }, []);
+
+  // Monitor auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user && !isSubmitting) {
+        // User is signed out, redirect to login
+        handleLogout();
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Handle forgot password
+  const handleForgotPassword = async () => {
+    setResetEmailError("");
+    setResetEmailSent(false);
+
+    if (!resetEmail || !resetEmail.includes("@")) {
+      setResetEmailError("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetEmailSent(true);
+
+      // Clear form after short delay
+      setTimeout(() => {
+        setShowForgotPasswordModal(false);
+        setResetEmailSent(false);
+        setResetEmail("");
+      }, 3000);
+    } catch (error) {
+      console.error("Error sending reset email:", error);
+      if (error.code === "auth/user-not-found") {
+        setResetEmailError("No account found with this email");
+      } else {
+        setResetEmailError("Failed to send reset email: " + error.message);
+      }
+    }
+  };
+
+  // Handle session expiry
+  const handleSessionExpiry = () => {
+    setIsSessionExpired(false);
+    handleLogout();
   };
 
   // Animation variants
@@ -249,6 +455,492 @@ const AdminDashboard = () => {
 
   // Define the main navbar height
   const mainNavbarHeight = 70; // Height of the main Sharpr navbar at the top
+
+  // Add this function right before your return statement
+
+  const renderPasswordModal = () => {
+    // Mobile-optimized password modal
+    if (isMobile) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: "fixed",
+            top: "20%",
+            left: "4%",
+            transform: "translate(-50%, -50%)",
+            width: "92%",
+            maxWidth: "400px", // Add max width for consistent appearance
+            backgroundColor: colors.sidebar.background,
+            borderRadius: "12px",
+            zIndex: 1002,
+            boxShadow: "0 10px 35px rgba(0,0,0,0.25)",
+            overflow: "hidden",
+            maxHeight: "90vh",
+            overflowY: "auto",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px 20px",
+              borderBottom: `1px solid ${colors.sidebar.border}`,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "sticky",
+              top: 0,
+              backgroundColor: colors.sidebar.background,
+              zIndex: 5,
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                color: colors.sidebar.text,
+                fontSize: "17px",
+                fontWeight: 600,
+              }}
+            >
+              Change Password
+            </h3>
+            <button
+              onClick={() => setShowPasswordModal(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: colors.sidebar.text,
+                fontSize: "18px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "8px",
+                marginRight: "-8px",
+              }}
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <div style={{ padding: "16px 20px" }}>
+            {passwordSuccess ? (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "rgba(39, 174, 96, 0.1)",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  color: "#27ae60",
+                  fontSize: "14px",
+                  textAlign: "center",
+                }}
+              >
+                Password updated successfully!
+              </div>
+            ) : (
+              <>
+                {passwordError && (
+                  <div
+                    style={{
+                      position: "fixed",
+                      top: "20%",
+                      left: "4%",
+                      padding: "10px",
+                      backgroundColor: "rgba(235, 87, 87, 0.1)",
+                      borderRadius: "8px",
+                      marginBottom: "16px",
+                      color: "#eb5757",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {passwordError}
+                  </div>
+                )}
+
+                <div style={{ marginBottom: "14px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      color: colors.sidebar.text,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      border: `1px solid ${colors.sidebar.border}`,
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                      color: colors.sidebar.text,
+                      outline: "none",
+                    }}
+                    placeholder="Enter current password"
+                  />
+                </div>
+
+                <div style={{ marginBottom: "14px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      color: colors.sidebar.text,
+                      fontWeight: 500,
+                    }}
+                  >
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      border: `1px solid ${colors.sidebar.border}`,
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                      color: colors.sidebar.text,
+                      outline: "none",
+                    }}
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div style={{ marginBottom: "20px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      color: colors.sidebar.text,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      border: `1px solid ${colors.sidebar.border}`,
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                      color: colors.sidebar.text,
+                      outline: "none",
+                    }}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={isSubmitting}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "none",
+                    borderRadius: "8px",
+                    background: colors.button.primary,
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    cursor: isSubmitting ? "not-allowed" : "pointer",
+                    opacity: isSubmitting ? 0.7 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    marginBottom: "14px",
+                  }}
+                >
+                  {isSubmitting ? "Updating..." : "Update Password"}
+                </button>
+
+                <div style={{ textAlign: "center" }}>
+                  <button
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setShowForgotPasswordModal(true);
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: colors.button.primary,
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      padding: "8px",
+                    }}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
+      );
+    }
+
+    // Desktop password modal with improved centering
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "400px",
+          backgroundColor: colors.sidebar.background,
+          borderRadius: "12px",
+          zIndex: 1002,
+          boxShadow: "0 10px 35px rgba(0,0,0,0.25)",
+          overflow: "hidden",
+          margin: 0, // Remove any margins that might affect centering
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 24px",
+            borderBottom: `1px solid ${colors.sidebar.border}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <h3
+            style={{
+              margin: 0,
+              color: colors.sidebar.text,
+              fontSize: "18px",
+              fontWeight: 600,
+            }}
+          >
+            Change Password
+          </h3>
+          <button
+            onClick={() => setShowPasswordModal(false)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: colors.sidebar.text,
+              fontSize: "20px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+            }}
+          >
+            <FaTimes />
+          </button>
+        </div>
+        <div style={{ padding: "20px 24px" }}>
+          {passwordSuccess ? (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "rgba(39, 174, 96, 0.1)",
+                borderRadius: "8px",
+                marginBottom: "20px",
+                color: "#27ae60",
+                fontSize: "14px",
+                textAlign: "center",
+              }}
+            >
+              Password updated successfully!
+            </div>
+          ) : (
+            <>
+              {passwordError && (
+                <div
+                  style={{
+                    padding: "12px",
+                    backgroundColor: "rgba(235, 87, 87, 0.1)",
+                    borderRadius: "8px",
+                    marginBottom: "20px",
+                    color: "#eb5757",
+                    fontSize: "14px",
+                  }}
+                >
+                  {passwordError}
+                </div>
+              )}
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontSize: "14px",
+                    color: colors.sidebar.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: `1px solid ${colors.sidebar.border}`,
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                    color: colors.sidebar.text,
+                    outline: "none",
+                  }}
+                  placeholder="Enter current password"
+                />
+              </div>
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontSize: "14px",
+                    color: colors.sidebar.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: `1px solid ${colors.sidebar.border}`,
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                    color: colors.sidebar.text,
+                    outline: "none",
+                  }}
+                  placeholder="Enter new password"
+                />
+              </div>
+              <div style={{ marginBottom: "24px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontSize: "14px",
+                    color: colors.sidebar.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: `1px solid ${colors.sidebar.border}`,
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    backgroundColor: theme === "dark" ? "#1f2937" : "#fff",
+                    color: colors.sidebar.text,
+                    outline: "none",
+                  }}
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  onClick={() => setShowPasswordModal(false)}
+                  style={{
+                    padding: "10px 16px",
+                    border: `1px solid ${colors.sidebar.border}`,
+                    borderRadius: "8px",
+                    background: "transparent",
+                    color: colors.sidebar.text,
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={isSubmitting}
+                  style={{
+                    padding: "10px 20px",
+                    border: "none",
+                    borderRadius: "8px",
+                    background: colors.button.primary,
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    cursor: isSubmitting ? "not-allowed" : "pointer",
+                    opacity: isSubmitting ? 0.7 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  {isSubmitting ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+              <div style={{ marginTop: "12px", textAlign: "center" }}>
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setShowForgotPasswordModal(true);
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: colors.button.primary,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div
@@ -677,7 +1369,7 @@ const AdminDashboard = () => {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          minHeight: "100vh",
+          minHeight: 0,
           marginLeft: isMobile ? 0 : sidebarWidth,
           marginTop: "60px", // This is for the admin topbar, not the main navbar
           transition: "all 0.3s ease",
@@ -730,61 +1422,474 @@ const AdminDashboard = () => {
               )?.label || "Overview"}
             </span>
           </motion.div>
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeAnimation}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              background:
-                theme === "dark"
-                  ? "rgba(45, 55, 72, 0.8)"
-                  : "rgba(241, 245, 249, 0.8)",
-              padding: isMobile ? "4px 8px" : "6px 12px",
-              borderRadius: "24px",
-              transition: "background 0.3s ease",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-            }}
-          >
-            <div
+
+          {/* Modified user profile section with dropdown */}
+          <div ref={dropdownRef} style={{ position: "relative" }}>
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeAnimation}
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
               style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: colors.button.primary,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                gap: 12,
+                background:
+                  theme === "dark"
+                    ? "rgba(45, 55, 72, 0.8)"
+                    : "rgba(241, 245, 249, 0.8)",
+                padding: isMobile ? "4px 8px" : "6px 12px",
+                borderRadius: "24px",
+                transition: "background 0.3s ease",
+                backdropFilter: "blur(4px)",
+                WebkitBackdropFilter: "blur(4px)",
+                cursor: "pointer",
+                boxShadow: showProfileDropdown
+                  ? `0 0 0 2px ${colors.button.primary}`
+                  : "none",
               }}
             >
-              <FaUserTie style={{ fontSize: 16 }} />
-            </div>
-            {(!isMobile || windowWidth > 480) && (
-              <span
+              <div
                 style={{
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: colors.topbar.text,
-                  transition: "color 0.3s ease",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  background: colors.button.primary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
               >
-                {userName}
-              </span>
-            )}
-          </motion.div>
+                <FaUserTie style={{ fontSize: 16 }} />
+              </div>
+              {(!isMobile || windowWidth > 480) && (
+                <>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 14,
+                      color: colors.topbar.text,
+                      transition: "color 0.3s ease",
+                    }}
+                  >
+                    {userName}
+                  </span>
+                  <motion.div
+                    animate={{
+                      rotate: showProfileDropdown ? 180 : 0,
+                    }}
+                    transition={{ duration: 0.2 }}
+                    style={{ fontSize: 12 }}
+                  >
+                    <FaChevronDown />
+                  </motion.div>
+                </>
+              )}
+            </motion.div>
+
+            {/* Dropdown menu */}
+            <AnimatePresence>
+              {showProfileDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    right: 0,
+                    width: "180px",
+                    backgroundColor: colors.sidebar.background,
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                    zIndex: 100,
+                    overflow: "hidden",
+                    border: `1px solid ${colors.sidebar.border}`,
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      setShowPasswordModal(true);
+                    }}
+                    style={{
+                      padding: "12px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      transition: "background 0.2s ease",
+                      cursor: "pointer",
+                      color: colors.sidebar.text,
+                      borderBottom: `1px solid ${colors.sidebar.border}`,
+                      background: theme === "dark" ? "#1a202c" : "#fff",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = colors.sidebar.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        theme === "dark" ? "#1a202c" : "#fff";
+                    }}
+                  >
+                    <FaCog size={14} />
+                    <span style={{ fontSize: "14px" }}>Change Password</span>
+                  </div>
+
+                  <div
+                    onClick={handleLogout}
+                    style={{
+                      padding: "12px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      transition: "background 0.2s ease",
+                      cursor: "pointer",
+                      color: colors.sidebar.text,
+                      background: theme === "dark" ? "#1a202c" : "#fff",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = colors.sidebar.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        theme === "dark" ? "#1a202c" : "#fff";
+                    }}
+                  >
+                    <FaSignOutAlt size={14} />
+                    <span style={{ fontSize: "14px" }}>Sign Out</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </header>
 
-        {/* Routed Content - Add top margin to accommodate fixed topbar + main navbar */}
+        {/* Password Change Modal */}
+        <AnimatePresence>
+          {showPasswordModal && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 200,
+                  width: "100vw", // Ensure full viewport width
+                  height: "100vh", // Ensure full viewport height
+                  backgroundColor: "black",
+                  zIndex: 1001,
+                  // Reset margin to avoid overflow
+                }}
+                onClick={() => setShowPasswordModal(false)}
+              />
+              {renderPasswordModal()}
+            </>
+          )}
+        </AnimatePresence>
+        {/* Forgot Password Modal - New addition */}
+        <AnimatePresence>
+          {showForgotPasswordModal && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "black",
+                  zIndex: 1001,
+                }}
+                onClick={() => setShowForgotPasswordModal(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: isMobile ? "90%" : "400px",
+                  backgroundColor: colors.sidebar.background,
+                  borderRadius: "12px",
+                  zIndex: 1002,
+                  boxShadow: "0 10px 35px rgba(0,0,0,0.25)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "20px 24px",
+                    borderBottom: `1px solid ${colors.sidebar.border}`,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: 0,
+                      color: colors.sidebar.text,
+                      fontSize: "18px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Reset Password
+                  </h3>
+                  <button
+                    onClick={() => setShowForgotPasswordModal(false)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: colors.sidebar.text,
+                      fontSize: "20px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+                <div style={{ padding: "20px 24px" }}>
+                  {resetEmailSent ? (
+                    <div
+                      style={{
+                        padding: "12px",
+                        backgroundColor: "rgba(39, 174, 96, 0.1)",
+                        borderRadius: "8px",
+                        marginBottom: "20px",
+                        color: "#27ae60",
+                        fontSize: "14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      Password reset email sent! Please check your inbox.
+                    </div>
+                  ) : (
+                    <>
+                      {resetEmailError && (
+                        <div
+                          style={{
+                            padding: "12px",
+                            backgroundColor: "rgba(235, 87, 87, 0.1)",
+                            borderRadius: "8px",
+                            marginBottom: "20px",
+                            color: "#eb5757",
+                            fontSize: "14px",
+                          }}
+                        >
+                          {resetEmailError}
+                        </div>
+                      )}
+                      <div style={{ marginBottom: "16px" }}>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            color: colors.sidebar.text,
+                          }}
+                        >
+                          Enter your email address and we'll send you a link to
+                          reset your password.
+                        </p>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "6px",
+                            fontSize: "14px",
+                            color: colors.sidebar.text,
+                            fontWeight: 500,
+                          }}
+                        >
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            border: `1px solid ${colors.sidebar.border}`,
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            backgroundColor:
+                              theme === "dark" ? "#1f2937" : "#fff",
+                            color: colors.sidebar.text,
+                            outline: "none",
+                          }}
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                          marginTop: "24px",
+                        }}
+                      >
+                        <button
+                          onClick={() => setShowForgotPasswordModal(false)}
+                          style={{
+                            padding: "10px 16px",
+                            border: `1px solid ${colors.sidebar.border}`,
+                            borderRadius: "8px",
+                            background: "transparent",
+                            color: colors.sidebar.text,
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleForgotPassword}
+                          style={{
+                            padding: "10px 20px",
+                            border: "none",
+                            borderRadius: "8px",
+                            background: colors.button.primary,
+                            color: "#fff",
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          Send Reset Link
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Session Expiry Modal */}
+        <AnimatePresence>
+          {isSessionExpired && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "black",
+                  zIndex: 2000,
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: isMobile ? "90%" : "400px",
+                  backgroundColor: colors.sidebar.background,
+                  borderRadius: "12px",
+                  zIndex: 2001,
+                  boxShadow: "0 10px 35px rgba(0,0,0,0.3)",
+                  overflow: "hidden",
+                  border: `1px solid ${colors.sidebar.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "24px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      borderRadius: "50%",
+                      background: "rgba(235, 87, 87, 0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 16px",
+                    }}
+                  >
+                    <FaExclamationTriangle size={24} color="#eb5757" />
+                  </div>
+                  <h3
+                    style={{
+                      margin: "0 0 12px 0",
+                      color: colors.sidebar.text,
+                      fontSize: "20px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Session Expired
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      color: colors.sidebar.text,
+                      marginBottom: "24px",
+                    }}
+                  >
+                    Your session has expired for security reasons. Please sign
+                    in again to continue.
+                  </p>
+                  <button
+                    onClick={handleSessionExpiry}
+                    style={{
+                      padding: "12px 24px",
+                      border: "none",
+                      borderRadius: "8px",
+                      background: colors.button.primary,
+                      color: "#fff",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      width: "100%",
+                    }}
+                  >
+                    Sign In Again
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
         <main
           style={{
             flex: 1,
             padding: isMobile ? "16px" : "24px",
-            paddingTop: isMobile ? "76px" : "84px", // This is relative to the container which already has marginTop
+            paddingTop: isMobile ? "76px" : "84px",
             background: colors.main.background,
             minHeight: 0,
             transition: "background 0.3s ease",

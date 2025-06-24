@@ -95,6 +95,25 @@ const ParentDashboard = () => {
     },
   };
 
+  // Desktop sidebar animation variant
+  const desktopSidebarAnimation = {
+    expanded: {
+      width: 240,
+      transition: {
+        duration: 0.3,
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      },
+    },
+    collapsed: {
+      width: 0,
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
+
   // Handle user logout
   const handleLogout = async () => {
     try {
@@ -2177,12 +2196,12 @@ const ParentDashboard = () => {
         minHeight: "100vh",
         background: colors.background,
         padding: 0,
-        marginTop: "50px",
         display: "flex",
         flexDirection: "column",
+        paddingTop: isMobile ? 55 : 55, // Adjust for topbar height
       }}
     >
-      {/* Topbar */}
+      {/* Enhanced Topbar */}
       <header
         style={{
           height: 64,
@@ -2195,11 +2214,13 @@ const ParentDashboard = () => {
           boxShadow: "0 2px 8px rgba(90, 115, 252, 0.04)",
           position: "sticky",
           top: 0,
-          zIndex: 10,
+          zIndex: 100,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={toggleSidebar}
             style={{
               background: "none",
@@ -2211,54 +2232,110 @@ const ParentDashboard = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              borderRadius: "8px",
             }}
           >
             {isMobile ? <FaBars /> : sidebarOpen ? <FaTimes /> : <FaBars />}
-          </button>
-          <img
+          </motion.button>
+          <motion.img
+            initial={{ rotate: -10 }}
+            animate={{ rotate: 0 }}
+            transition={{ duration: 0.5 }}
             src="/logo-01.jpg"
             alt="Sharpr Logo"
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              borderRadius: "12px",
               objectFit: "cover",
-              background: "#fff",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
             }}
           />
-          <span
+          <motion.span
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             style={{
               fontWeight: 700,
               fontSize: isMobile ? 16 : 20,
               color: "#232946",
-              letterSpacing: 1,
+              letterSpacing: 0.5,
               display: isMobile ? "none" : "block",
             }}
           >
             Sharpr Parent Dashboard
-          </span>
+          </motion.span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <FaUser style={{ fontSize: 22, color: "#232946" }} />
-          <span
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div
             style={{
-              fontWeight: 600,
-              fontSize: 16,
-              color: "#232946",
-              maxWidth: isMobile ? "100px" : "auto",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: "6px 12px",
+              background: colors.iconBg,
+              borderRadius: "24px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             }}
           >
-            {parent?.name}
-          </span>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: colors.highlight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+              }}
+            >
+              <FaUser size={16} />
+            </div>
+            <span
+              style={{
+                fontWeight: 600,
+                fontSize: 15,
+                color: colors.text,
+                maxWidth: isMobile ? "100px" : "160px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {parent?.name || "Parent"}
+            </span>
+          </div>
+
+          {!isMobile && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "none",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                color: colors.danger,
+                fontSize: 15,
+                fontWeight: 600,
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
+              <FaSignOutAlt size={15} />
+              <span>Logout</span>
+            </motion.button>
+          )}
         </div>
       </header>
 
-      {/* Main Content with Sidebar */}
+      {/* Main Content with Enhanced Sidebar */}
       <div style={{ display: "flex", flex: 1 }}>
-        {/* Mobile Sidebar with AnimatePresence */}
+        {/* Mobile Sidebar with AnimatePresence - REPLACE this section */}
         {isMobile && (
           <AnimatePresence>
             {sidebarOpen && (
@@ -2420,15 +2497,17 @@ const ParentDashboard = () => {
           </AnimatePresence>
         )}
 
-        {/* Desktop Sidebar */}
+        {/* Enhanced Desktop Sidebar */}
         {!isMobile && (
-          <div
+          <motion.aside
+            variants={desktopSidebarAnimation}
+            initial={false}
+            animate={sidebarOpen ? "expanded" : "collapsed"}
             style={{
-              width: sidebarOpen ? 240 : 0,
               background: colors.card,
               borderRight: `1px solid ${colors.border}`,
-              transition: "all 0.3s ease",
               overflowY: "auto",
+              overflowX: "hidden",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
               height: "calc(100vh - 64px)",
               position: "sticky",
@@ -2438,53 +2517,129 @@ const ParentDashboard = () => {
               justifyContent: "space-between",
             }}
           >
-            <nav style={{ padding: "16px 0" }}>
-              {navItems.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setActiveSection(item.id)}
+            <div>
+              {/* User Profile Section */}
+              <div
+                style={{
+                  padding: "24px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+
+                  textAlign: "center",
+                  borderBottom: `1px solid ${colors.border}`,
+                }}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
                   style={{
-                    padding: "12px 24px",
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "50%",
+                    background: colors.iconBg,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                    color:
-                      activeSection === item.id
-                        ? colors.highlight
-                        : colors.textSecondary,
-                    background:
-                      activeSection === item.id ? colors.iconBg : "transparent",
-                    fontWeight: activeSection === item.id ? 600 : 500,
-                    transition: "all 0.2s ease",
-                    borderLeft:
-                      activeSection === item.id
-                        ? `4px solid ${colors.highlight}`
-                        : "4px solid transparent",
+                    justifyContent: "center",
+                    marginBottom: "12px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                   }}
                 >
+                  <FaUser size={40} color={colors.highlight} />
+                </motion.div>
+                <div style={{ marginTop: "4px" }}>
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: colors.text,
+                    }}
                   >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
+                    {parent?.name || "Parent User"}
                   </div>
-                  <FaChevronRight size={12} />
+                  <div style={{ fontSize: 14, color: colors.textSecondary }}>
+                    {student?.class
+                      ? `Class ${student.class} Parent`
+                      : "Parent"}
+                  </div>
                 </div>
-              ))}
-            </nav>
+              </div>
 
-            {/* Logout Section at bottom of sidebar */}
+              {/* Navigation Menu */}
+              <nav style={{ padding: "12px 0" }}>
+                {navItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    whileHover={{ x: 4 }}
+                    onClick={() => setActiveSection(item.id)}
+                    style={{
+                      padding: "12px 20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      cursor: "pointer",
+                      color:
+                        activeSection === item.id
+                          ? colors.highlight
+                          : colors.textSecondary,
+                      background:
+                        activeSection === item.id
+                          ? colors.iconBg
+                          : "transparent",
+                      fontWeight: activeSection === item.id ? 600 : 500,
+                      transition: "all 0.2s ease",
+                      borderLeft:
+                        activeSection === item.id
+                          ? `4px solid ${colors.highlight}`
+                          : "4px solid transparent",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 12 }}
+                    >
+                      <div
+                        style={{
+                          width: "24px",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {item.icon}
+                      </div>
+                      <span>{item.label}</span>
+                    </div>
+                    <FaChevronRight
+                      size={12}
+                      style={{
+                        opacity: activeSection === item.id ? 1 : 0.4,
+                        transform:
+                          activeSection === item.id
+                            ? "translateX(0)"
+                            : "translateX(-4px)",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                  </motion.div>
+                ))}
+              </nav>
+            </div>
+
+            {/* Logout Section in Sidebar */}
             <div
               style={{
+                marginTop: "auto",
                 padding: "16px 0",
                 borderTop: `1px solid ${colors.border}`,
               }}
             >
-              <div
+              <motion.button
+                whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.08)" }}
                 onClick={handleLogout}
                 style={{
-                  padding: "12px 24px",
+                  width: "100%",
+                  padding: "12px 20px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -2493,23 +2648,30 @@ const ParentDashboard = () => {
                   color: colors.danger,
                   background: "transparent",
                   fontWeight: 600,
-                  transition: "all 0.2s ease",
-                  marginTop: "auto",
+                  border: "none",
+                  textAlign: "left",
+                  fontSize: "15px",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span>
+                  <div
+                    style={{
+                      width: "24px",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
                     <FaSignOutAlt />
-                  </span>
+                  </div>
                   <span>Logout</span>
                 </div>
                 <FaChevronRight size={12} />
-              </div>
+              </motion.button>
             </div>
-          </div>
+          </motion.aside>
         )}
 
-        {/* Main Content Area */}
+        {/* Main Content Area - keep your existing code */}
         <main
           style={{
             flex: 1,
@@ -2520,47 +2682,7 @@ const ParentDashboard = () => {
             overflowX: "hidden",
           }}
         >
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            style={{ marginBottom: isMobile ? "20px" : "32px" }}
-          >
-            <h1
-              style={{
-                fontSize: isMobile ? "22px" : "28px",
-                fontWeight: 700,
-                marginBottom: "10px",
-                color: colors.text,
-                letterSpacing: "-0.5px",
-              }}
-            >
-              {/* Show section specific title */}
-              {activeSection === "overview" && "Dashboard Overview"}
-              {activeSection === "attendance" && "Attendance Records"}
-              {activeSection === "homework" && "Homework Assignments"}
-              {activeSection === "testResults" && "Test Results"}
-              {activeSection === "fees" && "Fee Management"}
-              {activeSection === "notices" && "Notices"}
-            </h1>
-            <p
-              style={{
-                fontSize: isMobile ? "14px" : "16px",
-                color: colors.textSecondary,
-                maxWidth: "600px",
-                lineHeight: "1.5",
-              }}
-            >
-              {student && (
-                <>
-                  Student: {student.firstName} {student.lastName} | Class:{" "}
-                  {student.class}
-                </>
-              )}
-            </p>
-          </motion.div>
-
-          {/* Render section based on active tab and device type */}
+          {/* Keep your existing main content implementation */}
           {isMobile ? renderMobileContent() : renderContent()}
         </main>
       </div>
