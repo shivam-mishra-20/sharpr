@@ -44,6 +44,7 @@ import {
   FaBook, // Add this for course icon
   FaPlus, // Add this for adding courses
 } from "react-icons/fa";
+import bcryptjs from "bcryptjs"; // Add this import at the top
 
 const classOptions = [
   "Class 5",
@@ -279,7 +280,7 @@ const AdminStudents = () => {
     fetchCourses();
   }, []);
 
-  // Add or update student
+  // Replace the existing handleUserCreation function with this:
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -288,59 +289,64 @@ const AdminStudents = () => {
         const { password, ...formData } = form;
         await updateDoc(doc(db, "students", editId), {
           ...formData,
+          updatedAt: serverTimestamp(),
         });
       } else {
-        let userUid = null;
-        if (form.password && form.email) {
-          // Store the current user before creating new auth
-          const currentUser = auth.currentUser;
+        // Hash the password using bcryptjs
+        const salt = bcryptjs.genSaltSync(12);
+        const hashedPassword = bcryptjs.hashSync(form.password, salt);
 
-          // Create the new user account
-          const userCredential = await createUserWithEmailAndPassword(
-            auth,
-            form.email,
-            form.password
-          );
-          userUid = userCredential.user.uid;
+        // Create custom document ID
+        const now = new Date();
+        const dateString = `${now.getFullYear()}${(now.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}`;
+        const studentName = `${form.firstName}_${form.lastName}`
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+        const customDocId = `${studentName}_${dateString}`;
 
-          // Create parent user doc with UID as doc ID
-          await setDoc(doc(db, "users", userUid), {
-            uid: userUid,
-            name: form.firstName + " " + form.lastName,
-            email: form.email,
-            role: "parent",
-            createdAt: serverTimestamp(),
-          });
+        // Create a new document in the students collection with custom ID
+        const studentRef = doc(db, "students", customDocId);
+        await setDoc(studentRef, {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          class: form.class,
+          dob: form.dob,
+          email: form.email,
+          parentName: form.parentName,
+          parentContact: form.parentContact,
+          address: form.address || "",
+          password: hashedPassword, // Store hashed password instead of plaintext
+          role: "parent",
+          createdAt: serverTimestamp(),
+        });
 
-          // Create student doc with UID as doc ID
-          const { password, ...formData } = form;
-          await setDoc(doc(db, "students", userUid), {
-            ...formData,
-            authUid: userUid,
-            createdAt: serverTimestamp(),
-          });
+        // Also create a complete user document for authentication
+        await setDoc(doc(db, "users", customDocId), {
+          uid: customDocId,
+          name: `${form.firstName} ${form.lastName}`,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          password: hashedPassword,
+          role: "parent",
+          createdAt: serverTimestamp(),
+          class: form.class,
+          parentName: form.parentName,
+          parentContact: form.parentContact,
+        });
 
-          // Immediately sign back in with the admin account if there was one
-          if (currentUser) {
-            // Re-authenticate as the original admin user
-            // Note: You'll need to implement a function to sign back in with admin credentials
-            await signBackInAsAdmin(currentUser.email);
-          }
-        } else {
-          // If no password, fallback to addDoc (not recommended for parent login)
-          const { password, ...formData } = form;
-          await addDoc(collection(db, "students"), {
-            ...formData,
-            authUid: null,
-            createdAt: serverTimestamp(),
-          });
-        }
+        // Reset form
+        setForm(initialForm);
       }
+
+      // Close the form and refresh the list
       setShowForm(false);
-      setForm(initialForm);
       setEditId(null);
-      fetchStudents();
+      fetchStudentsWithCourses(); // Refresh the student list
     } catch (err) {
+      console.error("Error saving student:", err);
       setError("Failed to save student: " + err.message);
     }
   };
@@ -410,16 +416,16 @@ const AdminStudents = () => {
   // Add this new helper function to handle admin re-authentication
   const signBackInAsAdmin = async (adminEmail) => {
     try {
-      // You need to get these admin credentials securely - this is just a placeholder
-      // Consider using a more secure approach in production
       const adminPassword = sessionStorage.getItem("adminPassword");
-
       if (adminEmail && adminPassword) {
         await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+        console.log("Successfully signed back in as admin");
+        return true;
       }
+      return false;
     } catch (error) {
       console.error("Error signing back in as admin:", error);
-      // Add more error handling if needed
+      return false;
     }
   };
 

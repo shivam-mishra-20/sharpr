@@ -38,6 +38,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import ProtectedRoutes from "./pages/ProtectedRoutes";
 import Unauthorized from "./pages/Unauthorized";
+import ManualAuthRoutes from "./pages/ManualAuthRoutes";
 
 // Theme-based colors
 const getThemeColors = (theme) => ({
@@ -73,9 +74,10 @@ const AnimatedRoutes = () => {
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Protected Parent Routes */}
-        <Route element={<ProtectedRoutes allowedRoles={["parent"]} />}>
+        {/* <Route element={<ProtectedRoutes allowedRoles={["parent"]} />}>
           <Route path="/parent_dashboard" element={<ParentDashboard />} />
-        </Route>
+          
+        </Route> */}
 
         {/* Protected Admin Routes */}
         <Route element={<ProtectedRoutes allowedRoles={["admin"]} />}>
@@ -92,6 +94,21 @@ const AnimatedRoutes = () => {
             <Route path="help" element={<AdminHelp />} />
             <Route path="inquiry" element={<AdminInquiry />} />
           </Route>
+        </Route>
+
+        {/* Regular Firebase auth protected routes */}
+        <Route
+          element={<ProtectedRoutes allowedRoles={["admin", "teacher"]} />}
+        >
+          <Route path="/admin/*" element={<AdminDashboard />} />
+          {/* <Route path="/teacher/*" element={<TeacherDashboard />} /> */}
+        </Route>
+
+        {/* Manual auth routes for parents */}
+        <Route element={<ManualAuthRoutes allowedRoles={["parent"]} />}>
+          <Route path="/parent_dashboard/*" element={<ParentDashboard />} />
+          {/* <Route path="/parent/attendance" element={<ParentAttendance />} /> */}
+          {/* Other parent routes */}
         </Route>
       </Routes>
     </AnimatePresence>

@@ -112,40 +112,42 @@ const ParentDashboard = () => {
       setLoading(true);
       setError("");
       try {
-        // Get current user
-        const user = auth.currentUser;
-        if (!user) {
+        // Get parent info from localStorage instead of auth
+        const userId = localStorage.getItem("userId");
+        const userEmail = localStorage.getItem("userEmail");
+        const userName = localStorage.getItem("userName");
+
+        if (!userId || !userEmail) {
           setError("Not logged in.");
           setLoading(false);
           return;
         }
-        // Get parent user doc
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (!userDoc.exists() || userDoc.data().role !== "parent") {
-          setError("Not authorized.");
-          setLoading(false);
-          return;
-        }
-        setParent(userDoc.data());
 
-        // Get student record linked to this parent (by authUid)
-        const q = query(
+        // Set parent data from localStorage
+        setParent({
+          id: userId,
+          email: userEmail,
+          name: userName,
+          role: "parent",
+        });
+
+        // Get student record linked to this parent
+        const studentQuery = query(
           collection(db, "students"),
-          where("authUid", "==", user.uid)
+          where("email", "==", userEmail) // Match by email
         );
-        const studentSnap = await getDocs(q);
+
+        const studentSnap = await getDocs(studentQuery);
+
         if (studentSnap.empty) {
-          // Instead of showing an error, set up empty student data
+          // Set default student data if none found
           setStudent({
             id: null,
-            firstName: "Not",
-            lastName: "Available",
+            firstName: userName?.split(" ")[0] || "Not",
+            lastName: userName?.split(" ")[1] || "Available",
             class: "Not Assigned",
-            authUid: user.uid,
-            // Add more properties to match the structure expected by the UI
-            fullName: "Not Available", // Add this for consistent display
-            email: parent?.email || user.email || "Not Available",
-            enrollmentDate: "N/A",
+            email: userEmail,
+            fullName: userName || "Not Available",
             status: "Active",
           });
 
@@ -160,6 +162,8 @@ const ParentDashboard = () => {
           setLoading(false);
           return;
         }
+
+        // Continue with your existing code to fetch student data
         const studentData = {
           id: studentSnap.docs[0].id,
           ...studentSnap.docs[0].data(),
@@ -305,7 +309,7 @@ const ParentDashboard = () => {
         setRecentUpdates(updates.slice(0, 5));
       } catch (err) {
         console.error("Failed to load dashboard:", err);
-        setError("Failed to load dashboard.");
+        setError("Failed to load dashboard: " + err.message);
       }
       setLoading(false);
     };

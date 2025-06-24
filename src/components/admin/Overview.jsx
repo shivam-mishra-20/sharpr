@@ -350,18 +350,25 @@ const AdminOverview = () => {
     "Class 9",
     "Class 10",
   ];
-  // Update the submitStudentForm function to use authentication like Students.jsx
+  // Update the submitStudentForm function
+
   const submitStudentForm = async (e) => {
     e.preventDefault();
     try {
+      // Store admin credentials before doing anything
+      const adminEmail = auth.currentUser?.email;
+      let adminPassword = sessionStorage.getItem("adminPassword");
+
       if (studentForm.password && studentForm.email) {
+        // Create user account for the student
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           studentForm.email,
           studentForm.password
         );
         const userUid = userCredential.user.uid;
-        // Create parent user doc with UID as doc ID
+
+        // Create parent user doc
         await setDoc(doc(db, "users", userUid), {
           uid: userUid,
           name: studentForm.firstName + " " + studentForm.lastName,
@@ -369,15 +376,27 @@ const AdminOverview = () => {
           role: "parent",
           createdAt: serverTimestamp(),
         });
-        // Create student doc with UID as doc ID
+
+        // Create student doc
         const { password, ...formData } = studentForm;
         await setDoc(doc(db, "students", userUid), {
           ...formData,
           authUid: userUid,
           createdAt: serverTimestamp(),
         });
+
+        // IMPORTANT: Sign out the new user and sign back in as admin
+        await signOut(auth);
+
+        if (adminEmail && adminPassword) {
+          try {
+            await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+          } catch (signInError) {
+            console.error("Error signing back as admin:", signInError);
+          }
+        }
       } else {
-        // If no password, fallback to addDoc (not recommended for parent login)
+        // If no password, fallback to addDoc
         const { password, ...formData } = studentForm;
         await addDoc(collection(db, "students"), {
           ...formData,
@@ -385,6 +404,7 @@ const AdminOverview = () => {
           createdAt: serverTimestamp(),
         });
       }
+
       setShowStudentForm(false);
       setStudentForm({
         firstName: "",
@@ -397,12 +417,12 @@ const AdminOverview = () => {
         address: "",
         password: "",
       });
+
       await fetchData();
     } catch (err) {
       alert("Failed to add student: " + err.message);
     }
   };
-
   // Assign Homework
   // Fix the handleAssignHomework function in Overview.jsx to properly initialize form values
   const handleAssignHomework = () => {

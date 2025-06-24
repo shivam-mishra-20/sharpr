@@ -8,12 +8,17 @@ import {
   signOut,
   onAuthStateChanged, // Add this import
 } from "firebase/auth";
+import bcryptjs from "bcryptjs";
 import {
   doc,
   setDoc,
   getDoc,
   updateDoc,
   serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { motion, AnimatePresence, m } from "framer-motion";
 import { useTheme } from "../context/ThemeContext"; // Import the theme context hook
@@ -56,7 +61,7 @@ const SignUp = () => {
     setError("");
   };
 
-  // Parent Login
+  // Update the handleParentLogin function with this modified version:
   const handleParentLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -67,25 +72,62 @@ const SignUp = () => {
 
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        login.email,
-        login.password
-      );
-      // Optionally check if user is parent in Firestore
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      if (!userDoc.exists() || userDoc.data().role !== "parent") {
-        setError("Not authorized as parent.");
+      // Find user by email in the users collection
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", login.email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError("No account found with this email.");
         setLoading(false);
         return;
       }
 
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      // Check if this is a parent account
+      if (userData.role !== "parent") {
+        setError("This email is not registered as a parent account.");
+        setLoading(false);
+        return;
+      }
+
+      // Compare the password
+      const isPasswordCorrect = bcryptjs.compareSync(
+        login.password,
+        userData.password
+      );
+
+      if (!isPasswordCorrect) {
+        setError("Invalid password.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Authentication successful, storing user data");
+
+      // Set ESSENTIAL user data in localStorage
+      localStorage.setItem("userId", userDoc.id);
+      localStorage.setItem("userEmail", userData.email);
+      localStorage.setItem(
+        "userName",
+        userData.name ||
+          `${userData.firstName || ""} ${userData.lastName || ""}`
+      );
+      localStorage.setItem("userRole", userData.role);
+
       setSuccess("Login successful! Redirecting to dashboard...");
+
+      console.log("Redirecting to parent dashboard");
+
+      // Wait a moment to ensure storage is set
       setTimeout(() => {
-        navigate("/parent_dashboard");
+        navigate("/parent_dashboard", { replace: true });
       }, 1500);
     } catch (err) {
-      setError("Invalid credentials or user does not exist.");
+      console.error("Login error:", err);
+      setError("Error during login. Please try again.");
     } finally {
       setLoading(false);
     }
