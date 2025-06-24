@@ -544,9 +544,6 @@ const AdminDashboard = () => {
                 {passwordError && (
                   <div
                     style={{
-                      position: "fixed",
-                      top: "20%",
-                      left: "4%",
                       padding: "10px",
                       backgroundColor: "rgba(235, 87, 87, 0.1)",
                       borderRadius: "8px",
