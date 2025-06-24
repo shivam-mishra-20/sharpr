@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser,
   FaBook,
@@ -41,19 +41,17 @@ const ParentDashboard = () => {
   const [error, setError] = useState("");
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [activeSection, setActiveSection] = useState("overview");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Changed default to false for mobile
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
 
   // Check if the screen is mobile size
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Only auto-open sidebar on desktop
+      setSidebarOpen(!mobile);
     };
 
     handleResize(); // Check on initial render
@@ -74,6 +72,27 @@ const ParentDashboard = () => {
   // Toggle sidebar for mobile
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  // Animation variants for mobile sidebar
+  const mobileSidebarAnimation = {
+    hidden: { x: -300, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    exit: {
+      x: -300,
+      opacity: 0,
+      transition: {
+        duration: 0.2,
+      },
+    },
   };
 
   // Handle user logout
@@ -2194,7 +2213,7 @@ const ParentDashboard = () => {
               justifyContent: "center",
             }}
           >
-            {sidebarOpen ? <FaTimes /> : <FaBars />}
+            {isMobile ? <FaBars /> : sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
           <img
             src="/logo-01.jpg"
@@ -2238,37 +2257,192 @@ const ParentDashboard = () => {
       </header>
 
       {/* Main Content with Sidebar */}
-
       <div style={{ display: "flex", flex: 1 }}>
-        {/* Sidebar Navigation */}
-        {(sidebarOpen || !isMobile) && (
+        {/* Mobile Sidebar with AnimatePresence */}
+        {isMobile && (
+          <AnimatePresence>
+            {sidebarOpen && (
+              <>
+                {/* Backdrop for mobile sidebar */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.5 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "black",
+                    zIndex: 900,
+                  }}
+                />
+
+                {/* Mobile sidebar with improved animation */}
+                <motion.aside
+                  key="mobile-sidebar"
+                  variants={mobileSidebarAnimation}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  style={{
+                    width: "260px",
+                    background: colors.card,
+                    color: colors.text,
+                    display: "flex",
+                    flexDirection: "column",
+                    boxShadow: "1px 0 20px rgba(0,0,0,0.25)",
+                    zIndex: 1000,
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "28px 0 20px 0",
+                      textAlign: "center",
+                      borderBottom: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <img
+                        src="/logo-01.jpg"
+                        alt="Sharpr Logo"
+                        style={{
+                          width: 50,
+                          height: 50,
+                          borderRadius: "14px",
+                          marginBottom: 8,
+                          objectFit: "cover",
+                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                        }}
+                      />
+                    </motion.div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 20,
+                        letterSpacing: "0.5px",
+                        color: colors.text,
+                        marginTop: "10px",
+                      }}
+                    >
+                      Parent Dashboard
+                    </div>
+                  </div>
+                  <nav style={{ flex: 1, marginTop: 20, padding: "10px 0" }}>
+                    {navItems.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial="rest"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setSidebarOpen(false);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            padding: "12px 16px",
+                            marginLeft: "12px",
+                            marginRight: "12px",
+                            marginBottom: "2px",
+                            borderRadius: "8px",
+                            color:
+                              activeSection === item.id
+                                ? colors.highlight
+                                : colors.textSecondary,
+                            background:
+                              activeSection === item.id
+                                ? colors.iconBg
+                                : "transparent",
+                            fontWeight: activeSection === item.id ? 600 : 500,
+                            textDecoration: "none",
+                            fontSize: 15,
+                            cursor: "pointer",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                            }}
+                          >
+                            <span>{item.icon}</span>
+                            <span>{item.label}</span>
+                          </div>
+                          <FaChevronRight size={12} />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </nav>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleLogout}
+                    style={{
+                      margin: "16px 16px 24px 16px",
+                      padding: "12px 0",
+                      border: "none",
+                      borderRadius: 8,
+                      background: colors.highlight,
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: 15,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      boxShadow: "0 4px 12px rgba(79, 70, 229, 0.2)",
+                    }}
+                  >
+                    <FaSignOutAlt /> Sign Out
+                  </motion.button>
+                </motion.aside>
+              </>
+            )}
+          </AnimatePresence>
+        )}
+
+        {/* Desktop Sidebar */}
+        {!isMobile && (
           <div
             style={{
-              width: sidebarOpen ? (isMobile ? "100%" : 240) : 0,
+              width: sidebarOpen ? 240 : 0,
               background: colors.card,
               borderRight: `1px solid ${colors.border}`,
               transition: "all 0.3s ease",
               overflowY: "auto",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              zIndex: 20, // Increased z-index to be higher than topbar
-              height: isMobile ? "100vh" : "auto", // Changed to full viewport height for mobile
-              position: isMobile ? "fixed" : "sticky",
-              top: isMobile ? 0 : 64, // Start from top of viewport on mobile
-              left: 0,
+              height: "calc(100vh - 64px)",
+              position: "sticky",
+              top: 64,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              paddingTop: isMobile ? 64 : 0, // Add padding to account for topbar height on mobile
             }}
           >
             <nav style={{ padding: "16px 0" }}>
               {navItems.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => {
-                    setActiveSection(item.id);
-                    if (isMobile) setSidebarOpen(false);
-                  }}
+                  onClick={() => setActiveSection(item.id)}
                   style={{
                     padding: "12px 24px",
                     display: "flex",
@@ -2295,7 +2469,7 @@ const ParentDashboard = () => {
                     <span>{item.icon}</span>
                     <span>{item.label}</span>
                   </div>
-                  {isMobile && <FaChevronRight size={12} />}
+                  <FaChevronRight size={12} />
                 </div>
               ))}
             </nav>
@@ -2329,7 +2503,7 @@ const ParentDashboard = () => {
                   </span>
                   <span>Logout</span>
                 </div>
-                {isMobile && <FaChevronRight size={12} />}
+                <FaChevronRight size={12} />
               </div>
             </div>
           </div>
@@ -2341,8 +2515,7 @@ const ParentDashboard = () => {
             flex: 1,
             padding: isMobile ? "20px 16px" : "32px 24px",
             overflowY: "auto",
-            width: isMobile && sidebarOpen ? 0 : "100%",
-            maxWidth: !isMobile && sidebarOpen ? "calc(100% - 240px)" : "100%",
+            width: "100%",
             transition: "max-width 0.3s ease",
             overflowX: "hidden",
           }}
