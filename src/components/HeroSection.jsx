@@ -1,12 +1,318 @@
-import React from "react";
+import React, { useRef, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
+import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  Float,
+  Center,
+  OrbitControls,
+  Sphere,
+  Ring,
+  Trail,
+  Stars,
+} from "@react-three/drei";
+import * as THREE from "three";
+
+// Educational Solar System Component
+const EducationalElements = ({ isLight }) => {
+  const sunRef = useRef();
+  const orbitRefs = useRef([...Array(5)].map(() => React.createRef()));
+
+  // Colors based on theme
+  const sunColor = isLight ? "#ff9500" : "#ff7b00";
+  const sunEmissive = isLight ? "#ff5e00" : "#ff4500";
+  const planetColors = [
+    {
+      main: isLight ? "#4f46e5" : "#818cf8",
+      name: "Math",
+      texture: "earthlike",
+    },
+    { main: isLight ? "#059669" : "#10b981", name: "Science", texture: "gas" },
+    {
+      main: isLight ? "#ec4899" : "#f472b6",
+      name: "Language",
+      texture: "rocky",
+    },
+    { main: isLight ? "#eab308" : "#facc15", name: "Art", texture: "cloudy" },
+    {
+      main: isLight ? "#8b5cf6" : "#a78bfa",
+      name: "Social Studies",
+      texture: "ringed",
+    },
+  ];
+
+  // Rotate the sun
+  useFrame((state) => {
+    if (sunRef.current) {
+      sunRef.current.rotation.y += 0.002;
+    }
+
+    // Animate orbit paths
+    orbitRefs.current.forEach((ref, i) => {
+      if (ref.current) {
+        ref.current.rotation.y =
+          state.clock.getElapsedTime() * (0.09 - i * 0.01);
+      }
+    });
+  });
+
+  // Planet component with education subject icon
+  const Planet = ({
+    color,
+    position,
+    size,
+    orbitRadius,
+    orbitSpeed,
+    index,
+    textureName,
+  }) => {
+    const planetRef = useRef();
+    const ringRef = useRef();
+    const orbitAngle = useRef(Math.random() * Math.PI * 2);
+
+    useFrame((state) => {
+      if (planetRef.current) {
+        // Update planet's position in its orbit
+        orbitAngle.current += orbitSpeed;
+        const x = Math.sin(orbitAngle.current) * orbitRadius;
+        const z = Math.cos(orbitAngle.current) * orbitRadius;
+        planetRef.current.position.x = x;
+        planetRef.current.position.z = z;
+
+        // Rotate planet
+        planetRef.current.rotation.y += 0.005 + index * 0.001;
+
+        // Add a tilt to planet rotation
+        planetRef.current.rotation.x = Math.PI * 0.1 * (index % 3);
+
+        // If this is the ringed planet, update the ring position
+        if (ringRef.current) {
+          ringRef.current.position.x = x;
+          ringRef.current.position.z = z;
+        }
+      }
+    });
+
+    // Generate planet surface based on texture type
+    const renderPlanetSurface = () => {
+      switch (textureName) {
+        case "gas":
+          // Gas giant with simple material
+          return (
+            <mesh ref={planetRef} position={position}>
+              <sphereGeometry args={[size, 32, 32]} />
+              <meshStandardMaterial
+                color={color}
+                roughness={0.8}
+                metalness={0.1}
+                emissive={color}
+                emissiveIntensity={0.05}
+              />
+            </mesh>
+          );
+
+        case "rocky":
+          // Rocky planet with simple material
+          return (
+            <mesh ref={planetRef} position={position}>
+              <sphereGeometry args={[size, 32, 32]} />
+              <meshStandardMaterial
+                color={color}
+                roughness={1}
+                metalness={0.2}
+                emissive={color}
+                emissiveIntensity={0.03}
+              />
+            </mesh>
+          );
+
+        case "ringed":
+          // Planet with rings
+          return (
+            <>
+              <mesh ref={planetRef} position={position}>
+                <sphereGeometry args={[size, 32, 32]} />
+                <meshStandardMaterial
+                  color={color}
+                  roughness={0.6}
+                  metalness={0.3}
+                  emissive={color}
+                  emissiveIntensity={0.05}
+                />
+              </mesh>
+              <group
+                ref={ringRef}
+                position={position}
+                rotation={[Math.PI / 3, 0, 0]}
+              >
+                <Ring args={[size * 1.3, size * 1.8, 64]}>
+                  <meshBasicMaterial
+                    color={color}
+                    transparent
+                    opacity={0.7}
+                    side={THREE.DoubleSide}
+                  />
+                </Ring>
+              </group>
+            </>
+          );
+
+        case "cloudy":
+          // Planet with simple material
+          return (
+            <mesh ref={planetRef} position={position}>
+              <sphereGeometry args={[size, 32, 32]} />
+              <meshStandardMaterial
+                color={color}
+                roughness={0.6}
+                metalness={0.1}
+                emissive={color}
+                emissiveIntensity={0.1}
+              />
+            </mesh>
+          );
+
+        case "earthlike":
+        default:
+          // Earth-like planet with simple material
+          return (
+            <mesh ref={planetRef} position={position}>
+              <sphereGeometry args={[size, 32, 32]} />
+              <meshStandardMaterial
+                color={color}
+                roughness={0.7}
+                metalness={0.2}
+                emissive={color}
+                emissiveIntensity={0.05}
+              />
+            </mesh>
+          );
+      }
+    };
+
+    return <group>{renderPlanetSurface()}</group>;
+  };
+
+  return (
+    <group>
+      {/* Stars background - fewer and smaller */}
+      <Stars
+        radius={80}
+        depth={40}
+        count={3000}
+        factor={3}
+        saturation={0}
+        fade
+        speed={0.5}
+      />
+
+      {/* Sun at the center - smaller */}
+      <mesh ref={sunRef} position={[0, 0, 0]}>
+        <sphereGeometry args={[1.2, 32, 32]} />
+        <meshStandardMaterial
+          color={sunColor}
+          emissive={sunEmissive}
+          emissiveIntensity={1}
+          roughness={0.7}
+          metalness={0.3}
+        />
+      </mesh>
+
+      {/* Orbit paths - smaller radii */}
+      {[2.5, 4, 5.5, 7, 9].map((radius, i) => (
+        <group ref={orbitRefs.current[i]} key={`orbit-${i}`}>
+          <Ring
+            args={[radius - 0.03, radius + 0.03, 64]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <meshBasicMaterial
+              color={planetColors[i].main}
+              transparent
+              opacity={0.2}
+              side={THREE.DoubleSide}
+            />
+          </Ring>
+        </group>
+      ))}
+
+      {/* Planets - smaller sizes */}
+      {planetColors.map((planet, i) => (
+        <Planet
+          key={`planet-${i}`}
+          color={planet.main}
+          position={[i * 2 + 3, 0, 0]} // Starting positions
+          size={i === 2 ? 0.6 : i === 0 ? 0.7 : 0.4 + i * 0.1} // Smaller planet sizes
+          orbitRadius={
+            i === 0 ? 2.5 : i === 1 ? 4 : i === 2 ? 5.5 : i === 3 ? 7 : 9
+          } // Smaller orbit radii
+          orbitSpeed={0.007 / (i * 0.5 + 1)} // Slightly faster for smoother animation
+          index={i}
+          textureName={planet.texture}
+        />
+      ))}
+
+      {/* Fewer particles for cleaner look */}
+      {[...Array(10)].map((_, i) => (
+        <Float
+          key={`particle-${i}`}
+          speed={(1 + Math.random()) * 1.5}
+          rotationIntensity={0.8}
+          floatIntensity={1.5}
+        >
+          <mesh
+            position={[
+              (Math.random() - 0.5) * 15,
+              (Math.random() - 0.5) * 10,
+              (Math.random() - 0.5) * 15,
+            ]}
+          >
+            <sphereGeometry args={[0.05 + Math.random() * 0.1, 8, 8]} />
+            <meshStandardMaterial
+              color={
+                planetColors[Math.floor(Math.random() * planetColors.length)]
+                  .main
+              }
+              emissive={
+                planetColors[Math.floor(Math.random() * planetColors.length)]
+                  .main
+              }
+              emissiveIntensity={0.5}
+            />
+          </mesh>
+        </Float>
+      ))}
+    </group>
+  );
+};
+
+// 3D Scene Component
+const Scene = ({ isLight }) => {
+  return (
+    <Canvas camera={{ position: [0, 8, 18], fov: 45 }}>
+      <ambientLight intensity={isLight ? 0.3 : 0.2} />
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={isLight ? 1.5 : 1.2}
+        color={isLight ? "#fff9e5" : "#ffe0b3"}
+      />
+      <Suspense fallback={null}>
+        <EducationalElements isLight={isLight} />
+      </Suspense>
+      <OrbitControls
+        enableZoom={false}
+        enablePan={false}
+        rotateSpeed={0.15}
+        maxPolarAngle={Math.PI / 2}
+        minPolarAngle={Math.PI / 4}
+      />
+    </Canvas>
+  );
+};
 
 const HeroSection = () => {
   const { theme } = useTheme();
-
   const isLight = theme !== "dark";
 
   return (
@@ -25,6 +331,22 @@ const HeroSection = () => {
         overflow: "hidden",
       }}
     >
+      {/* 3D Background element */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0.7,
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      >
+        <Scene isLight={isLight} />
+      </div>
+
       {/* Background decoration */}
       <div
         style={{
