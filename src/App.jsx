@@ -30,6 +30,7 @@ import AdminHelp from "./components/admin/Help";
 import { useTheme } from "./context/ThemeContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
+import WelcomePopup from "./components/WelcomePopup";
 
 import NotFound from "./pages/404Notfound";
 import AdminInquiry from "./components/admin/Inquiry";
@@ -219,6 +220,8 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      {/* Add WelcomePopup here, outside of main structure so it can overlay */}
+      <WelcomePopup />
       <div
         className="min-h-screen flex flex-col"
         style={{

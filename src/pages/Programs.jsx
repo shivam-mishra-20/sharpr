@@ -180,7 +180,7 @@ const Programs = () => {
           <FaDownload style={{ marginRight: 8 }} />
           Download Brochure
         </ActionButton>
-        <ActionButton $colors={colors} primary onClick={handleAdvisor}>
+        <ActionButton $colors={colors} $primary={true} onClick={handleAdvisor}>
           <FaChalkboardTeacher style={{ marginRight: 8 }} />
           Talk to Academic Advisor
         </ActionButton>
@@ -225,7 +225,7 @@ const Programs = () => {
           <FaDownload style={{ marginRight: 8 }} />
           Download Brochure
         </ActionButton>
-        <ActionButton $colors={colors} primary onClick={handleAdvisor}>
+        <ActionButton $colors={colors} $primary={true} onClick={handleAdvisor}>
           <FaChalkboardTeacher style={{ marginRight: 8 }} />
           Talk to Academic Advisor
         </ActionButton>
