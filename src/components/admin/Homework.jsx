@@ -33,10 +33,6 @@ import {
 } from "../../utils/formHelpers";
 
 const classOptions = [
-  "Class 1",
-  "Class 2",
-  "Class 3",
-  "Class 4",
   "Class 5",
   "Class 6",
   "Class 7",
@@ -548,7 +544,7 @@ const AdminHomework = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaBook size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Homework</h1>
         </motion.div>
@@ -597,8 +593,8 @@ const AdminHomework = () => {
         {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: isMobile ? "1 0 100%" : 1,
-            minWidth: isMobile ? "100%" : 220,
+            flex: isMobile ? "92%" : 1,
+            minWidth: isMobile ? "92%" : 220,
             maxWidth: isMobile ? "100%" : 340,
             display: "flex",
             alignItems: "center",
@@ -1070,7 +1066,7 @@ const AdminHomework = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.3vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -1370,7 +1366,7 @@ const AdminHomework = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "92%",
                       }}
                     />
                   </div>
@@ -1414,7 +1410,7 @@ const AdminHomework = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "92%",
                       }}
                     />
                   </div>

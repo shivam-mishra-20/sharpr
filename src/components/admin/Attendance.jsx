@@ -25,6 +25,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaBars,
+  FaClipboardList,
   FaChevronRight,
 } from "react-icons/fa";
 
@@ -474,7 +475,7 @@ const AttendanceDashboard = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaClipboardList size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             Attendance
@@ -531,7 +532,7 @@ const AttendanceDashboard = () => {
         <div
           style={{
             flex: isMobile ? "1 0 100%" : 1,
-            minWidth: isMobile ? "100%" : 220,
+            minWidth: isMobile ? "92%" : 220,
             maxWidth: isMobile ? "100%" : 300,
             display: "flex",
             alignItems: "center",
@@ -704,7 +705,7 @@ const AttendanceDashboard = () => {
                 background: colors.card,
                 color: colors.text,
                 fontSize: 14,
-                width: "100%",
+                width: "92%",
               }}
             />
 
@@ -1130,7 +1131,7 @@ const AttendanceDashboard = () => {
                         }}
                         style={{ display: "inline-block", marginRight: 10 }}
                       >
-                        <FaUserGraduate size={16} color={colors.accent} />
+                        <FaClipboardList size={16} color={colors.accent} />
                       </motion.div>
                       Loading attendance records...
                     </td>
@@ -1338,7 +1339,7 @@ const AttendanceDashboard = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.4vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -1406,7 +1407,7 @@ const AttendanceDashboard = () => {
                       gap: 12,
                     }}
                   >
-                    <FaUserGraduate style={{ color: colors.accent }} />
+                    <FaClipboardList style={{ color: colors.accent }} />
                     {editId ? "Edit Attendance" : "Add Attendance"}
                   </h2>
                   <motion.button
@@ -1480,7 +1481,7 @@ const AttendanceDashboard = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "93.3%",
                       }}
                     />
                   </div>

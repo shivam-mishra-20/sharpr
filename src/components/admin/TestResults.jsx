@@ -517,7 +517,7 @@ const AdminTestResults = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaTrophy size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             Test Results
@@ -1287,7 +1287,7 @@ const AdminTestResults = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "95vw",
+              width: "93vw",
               height: "100vh",
               background: "rgba(0,0,0,0.6)",
               zIndex: 1000,
@@ -1338,6 +1338,7 @@ const AdminTestResults = () => {
                   flexDirection: "column",
                   gap: isSmallMobile ? 16 : 18,
                   width: "90%",
+                  paddingBottom: isMobile ? 24 : 32,
                 }}
               >
                 <div
@@ -1400,7 +1401,7 @@ const AdminTestResults = () => {
                     display: "flex",
                     flexDirection: "column",
                     gap: isSmallMobile ? 8 : 10,
-                    width: "100%",
+                    width: "98%",
                   }}
                 >
                   <label
@@ -1462,7 +1463,7 @@ const AdminTestResults = () => {
                     gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                     gap: isSmallMobile ? 28 : isMobile ? 28 : 45,
                     justifyContent: "space-between",
-                    width: "98%",
+                    width: "90%",
                   }}
                 >
                   <div
@@ -1470,7 +1471,7 @@ const AdminTestResults = () => {
                       display: "flex",
                       flexDirection: "column",
                       gap: isSmallMobile ? 8 : 10,
-                      maxWidth: "100%",
+                      maxWidth: "98%",
                     }}
                   >
                     <label
@@ -1515,7 +1516,7 @@ const AdminTestResults = () => {
                       flexDirection: "column",
                       gap: isSmallMobile ? 8 : 10,
 
-                      width: "90%",
+                      width: "98%",
                     }}
                   >
                     <label
@@ -1564,7 +1565,7 @@ const AdminTestResults = () => {
                     display: "flex",
                     flexDirection: "column",
                     gap: isSmallMobile ? 8 : 10,
-                    width: "94%",
+                    width: "90%",
                   }}
                 >
                   <label
@@ -1610,7 +1611,7 @@ const AdminTestResults = () => {
                     gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                     gap: isSmallMobile ? 22 : isMobile ? 24 : 45,
                     justifyContent: "space-between",
-                    width: "94%",
+                    width: "90%",
                   }}
                 >
                   <div
@@ -1718,7 +1719,7 @@ const AdminTestResults = () => {
                     flexDirection: isMobile ? "column-reverse" : "row",
                     borderTop: `1px solid ${colors.border}`,
                     paddingTop: isSmallMobile ? 16 : 20,
-                    width: "90%",
+                    width: "98%",
                   }}
                 >
                   <motion.button

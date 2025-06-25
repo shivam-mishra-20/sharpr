@@ -391,7 +391,7 @@ function MobileNav({
                 marginTop: 2,
               }}
             >
-              Sharper Minds. Stronger Futures.
+              Sharper Minds. Stronger Future.
             </span>
           </div>
         </Link>

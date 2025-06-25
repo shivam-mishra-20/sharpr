@@ -671,7 +671,7 @@ const AdminDashboard = () => {
                 </button>
 
                 <div style={{ textAlign: "center" }}>
-                  <button
+                  {/* <button
                     onClick={() => {
                       setShowPasswordModal(false);
                       setShowForgotPasswordModal(true);
@@ -687,7 +687,7 @@ const AdminDashboard = () => {
                     }}
                   >
                     Forgot your password?
-                  </button>
+                  </button> */}
                 </div>
               </>
             )}
@@ -915,7 +915,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
               <div style={{ marginTop: "12px", textAlign: "center" }}>
-                <button
+                {/* <button
                   onClick={() => {
                     setShowPasswordModal(false);
                     setShowForgotPasswordModal(true);
@@ -930,7 +930,7 @@ const AdminDashboard = () => {
                   }}
                 >
                   Forgot your password?
-                </button>
+                </button> */}
               </div>
             </>
           )}
@@ -1616,8 +1616,8 @@ const AdminDashboard = () => {
                 transition={{ duration: 0.2 }}
                 style={{
                   position: "fixed",
-                  top: "50%",
-                  left: "50%",
+                  top: "30%",
+                  left: "5%",
                   transform: "translate(-50%, -50%)",
                   width: isMobile ? "90%" : "400px",
                   backgroundColor: colors.sidebar.background,

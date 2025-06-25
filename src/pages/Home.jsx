@@ -15,10 +15,11 @@ import HeroSection from "../components/HeroSection";
 import Results from "../components/Results";
 import Testimonials from "../components/Testimonials";
 import Locations from "../components/Locations";
+import Interactive3D from "../components/Interactive3D";
 
 import Programs from "./Programs";
 // import { Contact } from "lucide-react";
-import Contact from "./Contact"; // Assuming you have a Contact component
+import Contact from "./Contact";
 import PricingOffer from "../components/PricingOffer";
 import NotFound from "./404Notfound";
 import ChatBot from "../components/ChatBot";
@@ -45,6 +46,7 @@ const Home = () => {
   return (
     <>
       <HeroSection />
+
       <Programs />
 
       {/* ...existing or future home page content... */}

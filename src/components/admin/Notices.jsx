@@ -589,7 +589,7 @@ const NoticesDashboard = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaBullhorn size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Notices</h1>
         </motion.div>
@@ -656,8 +656,8 @@ const NoticesDashboard = () => {
         {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: isMobile ? "1 0 100%" : 1,
-            minWidth: isMobile ? "100%" : 220,
+            flex: isMobile ? "100%" : 1,
+            minWidth: isMobile ? "93.3%" : 220,
             maxWidth: isMobile ? "100%" : 340,
             display: "flex",
             alignItems: "center",
@@ -1438,7 +1438,7 @@ const NoticesDashboard = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.3vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -1868,7 +1868,7 @@ const NoticesDashboard = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "93.3%",
                       }}
                     />
                   </div>

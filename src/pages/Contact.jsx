@@ -53,6 +53,7 @@ function ContactMobile({
           flexDirection: "column",
           gap: 24,
           maxWidth: "100%",
+          paddingTop: 50, // No top padding for mobile
         }}
       >
         <motion.div
@@ -176,19 +177,25 @@ function ContactMobile({
               noValidate
               style={{
                 ...styles.mobileForm,
+                width: "100%", // Ensure full width
+                display: "flex",
+                flexDirection: "column",
                 alignItems: "center", // Center the form elements
               }}
             >
               <div
                 style={{
                   ...styles.formGroup,
-                  maxWidth: "90%", // Limit width to prevent overflow
+                  width: "100%", // Full width container
+                  maxWidth: "380px", // Consistent max width
                 }}
               >
                 <input
                   ref={nameInputRef}
                   style={{
                     ...styles.input,
+                    width: "100%", // Full width input
+                    boxSizing: "border-box",
                     ...(focus.name || fields.name ? styles.inputFocus : {}),
                     ...(errors.name && touched.name ? styles.inputError : {}),
                   }}
@@ -236,12 +243,15 @@ function ContactMobile({
               <div
                 style={{
                   ...styles.formGroup,
-                  maxWidth: "90%", // Limit width to prevent overflow
+                  width: "100%", // Full width container
+                  maxWidth: "380px", // Consistent max width
                 }}
               >
                 <input
                   style={{
                     ...styles.input,
+                    width: "100%", // Full width input
+                    boxSizing: "border-box",
                     ...(focus.email || fields.email ? styles.inputFocus : {}),
                     ...(errors.email && touched.email ? styles.inputError : {}),
                   }}
@@ -289,12 +299,15 @@ function ContactMobile({
               <div
                 style={{
                   ...styles.formGroup,
-                  maxWidth: "90%", // Limit width to prevent overflow
+                  width: "100%", // Full width container
+                  maxWidth: "380px", // Consistent max width
                 }}
               >
                 <textarea
                   style={{
                     ...styles.input,
+                    width: "100%", // Full width textarea
+                    boxSizing: "border-box",
                     minHeight: "120px",
                     resize: "vertical",
                     ...(focus.message || fields.message
@@ -350,7 +363,11 @@ function ContactMobile({
 
               <button
                 type="submit"
-                style={{ ...styles.mobileButton, maxWidth: "90%" }} // Also limit button width
+                style={{
+                  ...styles.mobileButton,
+                  width: "100%", // Full width button
+                  maxWidth: "380px", // Match other elements
+                }}
                 disabled={isSubmitting || submitted}
               >
                 {isSubmitting ? (
@@ -512,12 +529,9 @@ const Contact = () => {
       background: colors.inputBackground,
       transition: "all 0.25s ease", // Smoother transitions
       color: colors.text,
+      boxSizing: "border-box", // Important for consistent sizing
       "-webkit-appearance": "none",
       "-moz-appearance": "none",
-      "&:focus": {
-        borderColor: colors.primary,
-        boxShadow: `0 0 0 4px rgba(99, 102, 241, 0.15)`,
-      },
     },
     inputFocus: {
       borderColor: colors.primary,
@@ -729,7 +743,8 @@ const Contact = () => {
       width: "100%",
       display: "flex",
       flexDirection: "column",
-      gap: "4px", // Added small gap
+      alignItems: "center",
+      gap: "16px", // Consistent spacing between elements
     },
     "@media (max-width: 1100px)": {
       contentWrapper: {
@@ -797,7 +812,9 @@ const Contact = () => {
       },
       formGroup: {
         marginBottom: "20px",
-        width: "100%", // Changed from 80% to 100% for proper mobile layout
+        width: "100%",
+        boxSizing: "border-box",
+        padding: "0 8px", // Add some padding on very small screens
       },
       input: {
         fontSize: "16px", // Prevents zoom on input focus on iOS
@@ -1350,6 +1367,8 @@ const Contact = () => {
                 <textarea
                   style={{
                     ...styles.input,
+                    width: "100%", // Full width textarea
+                    boxSizing: "border-box",
                     minHeight: "140px", // Increased height for better UX
                     resize: "vertical",
                     ...(focus.message || fields.message

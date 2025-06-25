@@ -524,7 +524,7 @@ const AdminFeeManagement = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaMoneyBill size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             Fee Management
@@ -1296,7 +1296,7 @@ const AdminFeeManagement = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.3vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -1525,7 +1525,7 @@ const AdminFeeManagement = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "93.3%",
                       }}
                       placeholder="Enter fee amount"
                     />
@@ -1569,7 +1569,7 @@ const AdminFeeManagement = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "93.3%",
                       }}
                     />
                   </div>
@@ -1667,7 +1667,7 @@ const AdminFeeManagement = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
+                        width: "93.3%",
                       }}
                     />
                   </div>

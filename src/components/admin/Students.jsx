@@ -41,6 +41,7 @@ import {
   FaHome,
   FaBirthdayCake,
   FaUserFriends,
+  // Add this for student icon
   FaBook, // Add this for course icon
   FaPlus, // Add this for adding courses
 } from "react-icons/fa";
@@ -925,7 +926,7 @@ const AdminStudents = () => {
             }}
             aria-label="Toggle Sidebar"
           >
-            <FaBars size={16} />
+            <FaUserFriends size={16} />
           </motion.button>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Students</h1>
         </motion.div>
@@ -975,9 +976,9 @@ const AdminStudents = () => {
         {/* Search Box - Full width on mobile */}
         <div
           style={{
-            flex: isMobile ? "1 0 100%" : 1,
-            minWidth: isMobile ? "100%" : 220,
-            maxWidth: isMobile ? "100%" : 340,
+            flex: isMobile ? "100%" : 1,
+            minWidth: isMobile ? "92%" : 220,
+            maxWidth: isMobile ? "92%" : 340,
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -1878,7 +1879,7 @@ const AdminStudents = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.3vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -2005,7 +2006,6 @@ const AdminStudents = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
                       }}
                     />
                   </div>
@@ -2040,7 +2040,6 @@ const AdminStudents = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
                       }}
                     />
                   </div>
@@ -2129,7 +2128,6 @@ const AdminStudents = () => {
                         background: colors.inputBg,
                         color: colors.text,
                         fontSize: isSmallMobile ? 14 : 15,
-                        width: "100%",
                       }}
                     />
                   </div>
@@ -2478,7 +2476,7 @@ const AdminStudents = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.3vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
@@ -2938,7 +2936,7 @@ const AdminStudents = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "93.4vw",
               height: "100vh",
               background: "rgba(0,0,0,0.5)",
               zIndex: 1000,
