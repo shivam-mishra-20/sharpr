@@ -2559,9 +2559,7 @@ const ParentDashboard = () => {
                     {parent?.name || "Parent User"}
                   </div>
                   <div style={{ fontSize: 14, color: colors.textSecondary }}>
-                    {student?.class
-                      ? `Class ${student.class} Parent`
-                      : "Parent"}
+                    {student?.class ? `${student.class}` : ""}
                   </div>
                 </div>
               </div>

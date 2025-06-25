@@ -15,7 +15,6 @@ import HeroSection from "../components/HeroSection";
 import Results from "../components/Results";
 import Testimonials from "../components/Testimonials";
 import Locations from "../components/Locations";
-import Interactive3D from "../components/Interactive3D";
 
 import Programs from "./Programs";
 // import { Contact } from "lucide-react";
