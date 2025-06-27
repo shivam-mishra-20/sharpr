@@ -20,8 +20,8 @@ import Programs from "./Programs";
 // import { Contact } from "lucide-react";
 import Contact from "./Contact";
 import PricingOffer from "../components/PricingOffer";
-import NotFound from "./404Notfound";
-import ChatBot from "../components/ChatBot";
+
+import ChatBot from "../components/Chatbot";
 
 const Home = () => {
   useEffect(() => {

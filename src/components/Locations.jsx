@@ -171,12 +171,7 @@ const Locations = () => {
                 fontSize: isMobile ? "1.8rem" : "2.2rem",
                 fontWeight: 700,
                 margin: 0,
-                background:
-                  theme === "dark"
-                    ? "linear-gradient(90deg, #e5e7eb 0%, #9ca3af 100%)"
-                    : "linear-gradient(90deg, #1e293b 0%, #334155 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                color: colors.text, // Direct color instead of gradient
                 textAlign: isMobile ? "center" : "left",
               }}
             >

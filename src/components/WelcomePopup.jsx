@@ -10,6 +10,7 @@ import {
   FaStar,
   FaCheckCircle,
   FaArrowRight,
+  FaUserPlus,
 } from "react-icons/fa";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
@@ -64,16 +65,20 @@ const WelcomePopup = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Check if the popup has been shown before
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowPopup(true);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+  // Remove automatic popup trigger
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setShowPopup(true);
+  //   }, 800);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const handleClose = () => {
     setShowPopup(false);
+  };
+
+  const handleOpen = () => {
+    setShowPopup(true);
   };
 
   const handleChange = (e) => {
@@ -165,6 +170,7 @@ const WelcomePopup = () => {
       // Keep popup open to show success message
       setTimeout(() => {
         setShowPopup(false);
+        setSubmitted(false); // Reset for next time
       }, 5000);
     } catch (error) {
       console.error("Error submitting to waitlist:", error);
@@ -341,7 +347,7 @@ const WelcomePopup = () => {
       exit={{ opacity: 0 }}
       style={{
         position: "fixed",
-        top: 50,
+        top: 0,
         left: 0,
         right: 0,
         bottom: 0,
@@ -1528,10 +1534,46 @@ const WelcomePopup = () => {
     </motion.div>
   );
 
+  // New floating button to open the popup
+  const FloatingButton = () => (
+    <motion.button
+      whileHover={{
+        scale: 1.05,
+        boxShadow: "0 8px 20px rgba(124, 58, 237, 0.3)",
+      }}
+      whileTap={{ scale: 0.95 }}
+      onClick={handleOpen}
+      style={{
+        position: "fixed",
+        bottom: isMobile ? "80px" : "96px", // Position above the chat button
+        right: isMobile ? "16px" : "24px",
+        width: isMobile ? "50px" : "54px",
+        height: isMobile ? "50px" : "54px",
+        borderRadius: "50%",
+        background: `linear-gradient(135deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`,
+        color: "#ffffff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "none",
+        cursor: "pointer",
+        boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)",
+        zIndex: 999,
+        padding: 0,
+      }}
+      aria-label="Join Waitlist"
+    >
+      <FaUserPlus size={isMobile ? 20 : 22} />
+    </motion.button>
+  );
+
   return (
-    <AnimatePresence>
-      {showPopup && (isMobile ? renderMobilePopup() : renderDesktopPopup())}
-    </AnimatePresence>
+    <>
+      <FloatingButton />
+      <AnimatePresence>
+        {showPopup && (isMobile ? renderMobilePopup() : renderDesktopPopup())}
+      </AnimatePresence>
+    </>
   );
 };
 
