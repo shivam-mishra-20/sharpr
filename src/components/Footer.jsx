@@ -32,12 +32,12 @@ const themeColors = {
 
 const socials = [
   {
-    href: "mailto:contact@yourdomain.com",
+    href: "mailto:thesharpr1@gmail.com",
     icon: <FaEnvelope />,
     label: "Email",
   },
   {
-    href: "https://linkedin.com",
+    href: "https://www.linkedin.com/company/thesharpr1/",
     icon: <FaLinkedin />,
     label: "LinkedIn",
   },

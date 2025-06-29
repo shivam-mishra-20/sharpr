@@ -883,7 +883,7 @@ const Contact = () => {
       label: "Email",
     },
     {
-      href: "https://linkedin.com",
+      href: "https://www.linkedin.com/company/thesharpr1/",
       icon: (
         <svg
           aria-hidden="true"
@@ -911,7 +911,7 @@ const Contact = () => {
       label: "Twitter",
     },
     {
-      href: "https://instagram.com",
+      href: "https://www.instagram.com/sharpr.in?igsh=MWxmN3F4c3ltcGx5cA==",
       icon: (
         <svg
           aria-hidden="true"

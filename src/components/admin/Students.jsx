@@ -562,43 +562,30 @@ const AdminStudents = () => {
         batch.push(deleteDoc(doc.ref));
       });
 
-      // Step 3: Handle authentication data if exists
+      // Step 3: Delete user document in the users collection (always attempt)
+      try {
+        await deleteDoc(doc(db, "users", id));
+      } catch (error) {
+        console.error("Error deleting user document:", error);
+      }
+
+      // Step 4: Handle authentication data if exists
       if (studentData.authUid) {
-        // Store the admin user details for signing back in later
-        const adminUser = auth.currentUser;
-        const adminEmail = adminUser?.email;
-        const adminPassword = sessionStorage.getItem("adminPassword");
-
-        // Delete user document in the users collection
-        try {
-          await deleteDoc(doc(db, "users", studentData.authUid));
-        } catch (error) {
-          console.error("Error deleting user document:", error);
-        }
-
         // Mark auth account for deletion (would need Firebase Admin SDK for direct deletion)
         await addDoc(collection(db, "deletedUsers"), {
           uid: studentData.authUid,
           email: studentData.email,
           deletedAt: serverTimestamp(),
         });
-
-        // You could alternatively use Firebase Auth directly if your authentication allows:
-        // try {
-        //   await deleteUser(auth.currentUser);
-        //   await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-        // } catch(authError) {
-        //   console.error("Error with auth operation:", authError);
-        // }
       }
 
-      // Step 4: Execute all deletion operations
+      // Step 5: Execute all deletion operations
       await Promise.all(batch);
 
-      // Step 5: Finally delete the student document itself
+      // Step 6: Finally delete the student document itself
       await deleteDoc(doc(db, "students", id));
 
-      // Step 6: Update UI and display success
+      // Step 7: Update UI and display success
       setStudents(students.filter((s) => s.id !== id));
       console.log("Student and all related data deleted successfully");
     } catch (err) {

@@ -246,20 +246,23 @@ const ParentDashboard = () => {
         setTestResults(testSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
         // Fetch notices with proper filtering:
-        // 1. Notices for all students/parents
-        // 2. Notices specific to student's class
-        // 3. Notices targeting this specific student
+        // 1. Notices for all students
+        // 2. Notices for this student's class
+        // 3. Notices for this specific student
         const noticeQueries = [
-          query(collection(db, "notices"), where("audience", "==", "All")),
-          query(collection(db, "notices"), where("audience", "==", "Parents")),
-          query(collection(db, "notices"), where("audience", "==", "Students")),
           query(
             collection(db, "notices"),
+            where("audience", "==", "All Students")
+          ),
+          query(
+            collection(db, "notices"),
+            where("audience", "==", "Class"),
             where("targetClass", "==", studentData.class)
           ),
           query(
             collection(db, "notices"),
-            where("targetStudentId", "==", studentData.id)
+            where("audience", "==", "Individual Student"),
+            where("targetStudent", "==", studentData.id)
           ),
         ];
 
@@ -286,9 +289,9 @@ const ParentDashboard = () => {
             title: data.title || "Untitled Notice",
             content: data.content || "",
             priority: data.priority || "Medium",
-            audience: data.audience || "All",
-            targetClass: data.targetClass || "All",
-            targetStudentId: data.targetStudentId || null,
+            audience: data.audience || "All Students",
+            targetClass: data.targetClass || "",
+            targetStudent: data.targetStudent || null,
             createdAt: data.createdAt || new Date(),
           };
         });

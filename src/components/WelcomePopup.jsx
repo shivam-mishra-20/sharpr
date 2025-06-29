@@ -1547,9 +1547,9 @@ const WelcomePopup = () => {
         position: "fixed",
         bottom: isMobile ? "80px" : "96px", // Position above the chat button
         right: isMobile ? "16px" : "24px",
-        width: isMobile ? "50px" : "54px",
+        width: isMobile ? "auto" : "auto",
         height: isMobile ? "50px" : "54px",
-        borderRadius: "50%",
+        borderRadius: "30px",
         background: `linear-gradient(135deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`,
         color: "#ffffff",
         display: "flex",
@@ -1559,11 +1559,26 @@ const WelcomePopup = () => {
         cursor: "pointer",
         boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)",
         zIndex: 999,
-        padding: 0,
+        padding: isMobile ? "0 18px" : "0 22px",
+        fontWeight: 600,
+        fontSize: isMobile ? "16px" : "17px",
+        gap: "10px",
+        transition: "all 0.2s",
       }}
       aria-label="Join Waitlist"
     >
       <FaUserPlus size={isMobile ? 20 : 22} />
+      <span
+        style={{
+          fontWeight: 500,
+          fontSize: isMobile ? "15px" : "16px",
+          letterSpacing: "0.01em",
+          marginLeft: "4px",
+          userSelect: "none",
+        }}
+      >
+        Join Waitlist
+      </span>
     </motion.button>
   );
 
